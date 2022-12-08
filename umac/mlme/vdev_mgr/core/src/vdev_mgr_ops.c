@@ -238,6 +238,8 @@ static QDF_STATUS vdev_mgr_start_param_update(
 		param->channel.set_agile = set_agile;
 	}
 
+	param->special_vdev_mode = mlme_obj->mgmt.generic.special_vdev_mode;
+
 	wlan_objmgr_pdev_release_ref(pdev, WLAN_MLME_SB_ID);
 	return QDF_STATUS_SUCCESS;
 }

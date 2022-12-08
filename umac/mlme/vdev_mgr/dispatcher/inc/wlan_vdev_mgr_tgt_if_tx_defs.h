@@ -496,6 +496,7 @@ struct vdev_start_params {
 	bool ldpc_rx_enabled;
 	uint32_t mbssid_flags;
 	uint8_t vdevid_trans;
+	bool special_vdev_mode;
 };
 
 /**
