@@ -587,6 +587,8 @@ static QDF_STATUS vdev_mgr_start_param_update(
 	param->ieee_link_id = wlan_vdev_get_link_id(vdev);
 	param->mlo_flags.mlo_ieee_link_id_valid = true;
 
+	param->special_vdev_mode = mlme_obj->mgmt.generic.special_vdev_mode;
+
 	wlan_objmgr_pdev_release_ref(pdev, WLAN_MLME_SB_ID);
 	return QDF_STATUS_SUCCESS;
 }
