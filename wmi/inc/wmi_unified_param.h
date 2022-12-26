@@ -4851,6 +4851,7 @@ typedef enum {
 	wmi_pdev_set_halphy_cal_event_id,
 	wmi_pdev_get_ani_err_event_id,
 	wmi_pdev_get_measured_ul_rtd_event_id,
+	wmi_pdev_hpa_event_id,
 	wmi_events_max,
 } wmi_conv_event_id;
 
@@ -5437,6 +5438,7 @@ typedef enum {
 	wmi_service_rtt_ap_initiator_staggered_mode_supported,
 	wmi_service_rtt_ap_initiator_bursted_mode_supported,
 	wmi_service_peer_ul_rtd_estimate,
+	wmi_service_hpa_support,
 	wmi_services_max,
 } wmi_conv_service_ids;
 #define WMI_SERVICE_UNAVAILABLE 0xFFFF
@@ -8354,5 +8356,11 @@ struct wmi_host_send_start_measure_ul_rtd {
 	uint8_t pdev_id;
 	uint8_t start_win;
 	u_int8_t macaddr[QDF_MAC_ADDR_SIZE];
+};
+
+struct wmi_host_send_hpa {
+	uint32_t base_paddr_low;
+	uint32_t base_paddr_high;
+	uint32_t len;
 };
 #endif /* _WMI_UNIFIED_PARAM_H_ */

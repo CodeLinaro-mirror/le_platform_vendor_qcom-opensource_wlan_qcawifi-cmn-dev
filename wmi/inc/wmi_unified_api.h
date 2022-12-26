@@ -4397,4 +4397,6 @@ wmi_unified_send_start_measure_ul_rtd(wmi_unified_t wmi_handle,
 				      struct wmi_host_send_start_measure_ul_rtd
 				      *param);
 
+QDF_STATUS
+wmi_unified_send_hpa_smck_tlv(wmi_unified_t wmi_handle, struct wmi_host_send_hpa *param);
 #endif /* _WMI_UNIFIED_API_H_ */

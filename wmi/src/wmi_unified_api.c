@@ -3501,3 +3501,13 @@ wmi_unified_send_start_measure_ul_rtd(wmi_unified_t wmi_handle,
 
 	return QDF_STATUS_E_FAILURE;
 }
+
+QDF_STATUS
+wmi_unified_send_hpa_smck_tlv(wmi_unified_t wmi_handle, struct wmi_host_send_hpa *param)
+{
+	if (wmi_handle->ops->send_hpa_smck_tlv)
+		return wmi_handle->ops->send_hpa_smck_tlv(wmi_handle, param);
+
+	return QDF_STATUS_E_FAILURE;
+}
+
