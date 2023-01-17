@@ -2553,6 +2553,15 @@ QDF_STATUS
 (*extract_halphy_get_ani_err_ev_param)(wmi_unified_t wmi_handle,
 					void *evt_buf,
 					struct wmi_host_halphy_get_ani_err_event *param);
+QDF_STATUS (*send_get_ulrtd_time)(wmi_unified_t wmi_handle,
+				  struct wmi_host_send_get_ulrtd_time *param);
+QDF_STATUS
+(*extract_get_ulrtd_time_ev_param)(wmi_unified_t wmi_handle,
+				   void *evt_buf,
+				   struct wmi_host_get_ulrtd_time_event *param);
+QDF_STATUS
+(*send_start_measure_ul_rtd)(wmi_unified_t wmi_handle,
+			     struct wmi_host_send_start_measure_ul_rtd *param);
 QDF_STATUS
 	(*pack_rate_upper_cap)(wmi_unified_t wmi_handle,
 			 uint32_t *pdev_param, struct wmi_rc_params *param);

@@ -14869,6 +14869,105 @@ extract_halphy_get_ani_err_ev_param_tlv(wmi_unified_t wmi_handle,
 	return QDF_STATUS_SUCCESS;
 }
 
+static QDF_STATUS
+send_get_ulrtd_time_tlv(wmi_unified_t wmi_handle,
+			struct wmi_host_send_get_ulrtd_time *param)
+{
+	wmi_buf_t buf;
+	wmi_pdev_get_measured_ul_rtd_cmd_fixed_param *cmd;
+	QDF_STATUS ret;
+	uint32_t len;
+
+	len = sizeof(*cmd);
+
+	buf = wmi_buf_alloc(wmi_handle, len);
+	if (!buf)
+		return QDF_STATUS_E_FAILURE;
+
+	cmd = (void *)wmi_buf_data(buf);
+
+	WMITLV_SET_HDR(&cmd->tlv_header,
+			WMITLV_TAG_STRUC_wmi_pdev_get_measured_ul_rtd_cmd_fixed_param,
+			WMITLV_GET_STRUCT_TLVLEN(wmi_pdev_get_measured_ul_rtd_cmd_fixed_param));
+
+	cmd->pdev_id = param->pdev_id;
+	ret = wmi_unified_cmd_send(wmi_handle, buf, len,
+				   WMI_PDEV_GET_MEASURED_UL_RTD_CMDID);
+	if (QDF_IS_STATUS_ERROR(ret)) {
+		wmi_err("WMI_PDEV_GET_MEASURED_UL_RTD_CMDID send returned Error %d", ret);
+		wmi_buf_free(buf);
+	}
+
+	return ret;
+}
+
+/**
+ * extract_get_ulrtd_time_ev_param_tlv() - extract ulrtd_time from FW
+ * @wmi_handle: wmi handle
+ * @evt_buf: event buffer
+ * @param: ulrtd_time value
+ *
+ * Return: QDF_STATUS_SUCCESS for success or error code
+ */
+static QDF_STATUS
+extract_get_ulrtd_time_ev_param_tlv(wmi_unified_t wmi_handle,
+				    void *evt_buf,
+				    struct wmi_host_get_ulrtd_time_event *param)
+{
+	WMI_PDEV_GET_MEASURED_UL_RTD_EVENTID_param_tlvs *param_buf;
+	wmi_pdev_get_measured_ul_rtd_event_fixed_param *get_ulrtd_time;
+
+	param_buf = (WMI_PDEV_GET_MEASURED_UL_RTD_EVENTID_param_tlvs *)evt_buf;
+	if (!param_buf) {
+		wmi_err("Invalid Event get_ulrtd_time");
+		return QDF_STATUS_E_INVAL;
+	}
+
+	get_ulrtd_time = param_buf->fixed_param;
+	param->pdev_id = wmi_handle->ops->convert_pdev_id_target_to_host
+		(wmi_handle, get_ulrtd_time->pdev_id);
+	param->rtd_time = get_ulrtd_time->ul_rtd_timing_err;
+	WMI_HOST_MAC_ADDR_TO_CHAR_ARRAY(&get_ulrtd_time->peer_macaddr, param->macaddr);
+
+	return QDF_STATUS_SUCCESS;
+}
+
+static QDF_STATUS
+send_start_measure_ul_rtd_tlv(wmi_unified_t wmi_handle,
+			struct wmi_host_send_start_measure_ul_rtd *param)
+{
+	wmi_buf_t buf;
+	wmi_pdev_start_measure_ul_rtd_cmd_fixed_param *cmd;
+	QDF_STATUS ret;
+	uint32_t len;
+
+
+	len = sizeof(*cmd);
+
+	buf = wmi_buf_alloc(wmi_handle, len);
+	if (!buf)
+		return QDF_STATUS_E_FAILURE;
+
+	cmd = (void *)wmi_buf_data(buf);
+
+	WMITLV_SET_HDR(&cmd->tlv_header,
+			WMITLV_TAG_STRUC_wmi_pdev_start_measure_ul_rtd_cmd_fixed_param,
+			WMITLV_GET_STRUCT_TLVLEN(wmi_pdev_start_measure_ul_rtd_cmd_fixed_param));
+
+	cmd->pdev_id = param->pdev_id;
+
+	WMI_CHAR_ARRAY_TO_MAC_ADDR(param->macaddr, &cmd->peer_macaddr);
+	cmd->start_win = param->start_win;
+	ret = wmi_unified_cmd_send(wmi_handle, buf, len,
+				   WMI_PDEV_START_MEASURE_UL_RTD_CMDID);
+	if (QDF_IS_STATUS_ERROR(ret)) {
+		wmi_err("WMI_PDEV_START_MEASURE_UL_RTD_CMDID send returned Error %d", ret);
+		wmi_buf_free(buf);
+	}
+
+	return ret;
+}
+
 struct wmi_ops tlv_ops =  {
 	.send_vdev_create_cmd = send_vdev_create_cmd_tlv,
 	.send_vdev_delete_cmd = send_vdev_delete_cmd_tlv,
@@ -15244,6 +15343,10 @@ struct wmi_ops tlv_ops =  {
 	.send_get_ani_err = send_get_ani_err_tlv,
 	.extract_halphy_get_ani_err_ev_param =
 		extract_halphy_get_ani_err_ev_param_tlv,
+	.send_get_ulrtd_time = send_get_ulrtd_time_tlv,
+	.extract_get_ulrtd_time_ev_param = extract_get_ulrtd_time_ev_param_tlv,
+	.send_start_measure_ul_rtd = send_start_measure_ul_rtd_tlv,
+
 };
 
 /**
@@ -15654,6 +15757,8 @@ event_ids[wmi_roam_scan_chan_list_id] =
 			WMI_PDEV_SET_HALPHY_CAL_BMAP_EVENTID;
 	event_ids[wmi_pdev_get_ani_err_event_id] =
 			WMI_PDEV_GET_ANI_ERR_EVENTID;
+	event_ids[wmi_pdev_get_measured_ul_rtd_event_id] =
+			WMI_PDEV_GET_MEASURED_UL_RTD_EVENTID;
 }
 
 #ifdef WLAN_FEATURE_LINK_LAYER_STATS
@@ -16052,6 +16157,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 			WMI_SERVICE_RTT_AP_INITIATOR_STAGGERED_MODE_SUPPORTED;
 	wmi_service[wmi_service_rtt_ap_initiator_bursted_mode_supported] =
 			WMI_SERVICE_RTT_AP_INITIATOR_BURSTED_MODE_SUPPORTED;
+	wmi_service[wmi_service_peer_ul_rtd_estimate] =
+			WMI_SERVICE_PEER_UL_RTD_ESTIMATE;
 }
 
 /**

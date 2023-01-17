@@ -4360,4 +4360,41 @@ QDF_STATUS
 wmi_unified_send_set_ack_cts_resp_rate(wmi_unified_t wmi_handle,
 				       struct wmi_host_send_set_ack_cts_resp_rate_info *param);
 
+/**
+ * wmi_unified_send_get_ulrtd_time() - send command to get the ulrtd time
+ * @wmi_handle: wmi handle
+ * @param: ulrtd time info
+ *
+ * Return: QDF_STATUS_SUCCESS for success or error code
+ */
+QDF_STATUS wmi_unified_send_get_ulrtd_time(wmi_unified_t wmi_handle,
+					   struct wmi_host_send_get_ulrtd_time
+					   *param);
+
+/**
+ * wmi_extract_get_ulrtd_time_ev_param() - extract ulrtd time from FW event
+ * @wmi_handle: wmi handle
+ * @evt_buf: pointer to event buf
+ * @param: ulrtd time info
+ *
+ * Return: QDF_STATUS_SUCCESS for success or error code
+ */
+QDF_STATUS
+wmi_extract_get_ulrtd_time_ev_param(wmi_unified_t wmi_handle,
+				    void *evt_buf,
+				    struct wmi_host_get_ulrtd_time_event
+				    *param);
+
+/**
+ * wmi_unified_start_measure_ul_rtd() - send start measure ul_rtd for peer
+ * @wmi_handle: wmi handle
+ * @param: start measure ul_rtd for peer perameters
+ *
+ * Return: QDF_STATUS_SUCCESS for success or error code
+ */
+QDF_STATUS
+wmi_unified_send_start_measure_ul_rtd(wmi_unified_t wmi_handle,
+				      struct wmi_host_send_start_measure_ul_rtd
+				      *param);
+
 #endif /* _WMI_UNIFIED_API_H_ */

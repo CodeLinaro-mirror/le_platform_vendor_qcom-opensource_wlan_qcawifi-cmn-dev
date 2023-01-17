@@ -3470,3 +3470,34 @@ wmi_extract_halphy_get_ani_err_ev_param(wmi_unified_t wmi_handle,
 	return QDF_STATUS_E_FAILURE;
 }
 
+QDF_STATUS
+wmi_unified_send_get_ulrtd_time(wmi_unified_t wmi_handle,
+				struct wmi_host_send_get_ulrtd_time *param)
+{
+	if (wmi_handle->ops->send_get_ulrtd_time)
+		return wmi_handle->ops->send_get_ulrtd_time(wmi_handle, param);
+
+	return QDF_STATUS_E_FAILURE;
+}
+
+QDF_STATUS
+wmi_extract_get_ulrtd_time_ev_param(wmi_unified_t wmi_handle,
+				    void *evt_buf,
+				    struct wmi_host_get_ulrtd_time_event *param)
+{
+	if (wmi_handle->ops->extract_get_ulrtd_time_ev_param)
+		return wmi_handle->ops->extract_get_ulrtd_time_ev_param(
+			wmi_handle, evt_buf, param);
+
+	return QDF_STATUS_E_FAILURE;
+}
+
+QDF_STATUS
+wmi_unified_send_start_measure_ul_rtd(wmi_unified_t wmi_handle,
+				      struct wmi_host_send_start_measure_ul_rtd *param)
+{
+	if (wmi_handle->ops->send_start_measure_ul_rtd)
+		return wmi_handle->ops->send_start_measure_ul_rtd(wmi_handle, param);
+
+	return QDF_STATUS_E_FAILURE;
+}
