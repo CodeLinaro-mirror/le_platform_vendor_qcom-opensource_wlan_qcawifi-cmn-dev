@@ -5300,6 +5300,7 @@ typedef enum {
 	wmi_pdev_set_rf_path_resp_eventid,
 	wmi_pdev_get_ani_err_event_id,
 	wmi_pdev_hpa_event_id,
+	wmi_pdev_get_measured_ul_rtd_event_id,
 	wmi_events_max,
 } wmi_conv_event_id;
 
@@ -6390,6 +6391,7 @@ typedef enum {
 	wmi_service_vdev_pure11ax_support,
 	wmi_service_halphy_get_ani_err_support,
 	wmi_service_hpa_support,
+	wmi_service_peer_ul_rtd_estimate,
 	wmi_services_max,
 } wmi_conv_service_ids;
 #define WMI_SERVICE_UNAVAILABLE 0xFFFF
@@ -10032,5 +10034,35 @@ struct wmi_host_send_hpa {
 	uint32_t base_paddr_low;
 	uint32_t base_paddr_high;
 	uint32_t len;
+};
+
+/**
+ * struct wmi_host_send_get_ulrtd_time
+ * @pdev_id: pdev id
+ */
+struct wmi_host_send_get_ulrtd_time {
+	uint8_t pdev_id;
+};
+
+/**
+ * struct wmi_host_get_ulrtd_time_event
+ * @pdev_id: pdev id
+ * @rtd_time : ulrtd_time value
+ */
+struct wmi_host_get_ulrtd_time_event {
+	uint32_t pdev_id;
+	uint32_t rtd_time;
+	u_int8_t macaddr[QDF_MAC_ADDR_SIZE];
+};
+
+/**
+ * struct wmi_host_send_set_ack_cts_resp_rate_info
+ * @pdev_id: pdev id
+ * @ack_cts_resp_rate: ack_cts_resp_rate value
+ */
+struct wmi_host_send_start_measure_ul_rtd {
+	uint8_t pdev_id;
+	uint8_t start_win;
+	u_int8_t macaddr[QDF_MAC_ADDR_SIZE];
 };
 #endif /* _WMI_UNIFIED_PARAM_H_ */
