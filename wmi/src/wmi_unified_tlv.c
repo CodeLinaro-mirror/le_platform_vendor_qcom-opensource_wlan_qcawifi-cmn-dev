@@ -14890,7 +14890,9 @@ send_get_ulrtd_time_tlv(wmi_unified_t wmi_handle,
 			WMITLV_TAG_STRUC_wmi_pdev_get_measured_ul_rtd_cmd_fixed_param,
 			WMITLV_GET_STRUCT_TLVLEN(wmi_pdev_get_measured_ul_rtd_cmd_fixed_param));
 
-	cmd->pdev_id = param->pdev_id;
+	cmd->pdev_id = wmi_handle->ops->convert_pdev_id_host_to_target(wmi_handle,
+								param->pdev_id);
+
 	ret = wmi_unified_cmd_send(wmi_handle, buf, len,
 				   WMI_PDEV_GET_MEASURED_UL_RTD_CMDID);
 	if (QDF_IS_STATUS_ERROR(ret)) {
@@ -14954,7 +14956,8 @@ send_start_measure_ul_rtd_tlv(wmi_unified_t wmi_handle,
 			WMITLV_TAG_STRUC_wmi_pdev_start_measure_ul_rtd_cmd_fixed_param,
 			WMITLV_GET_STRUCT_TLVLEN(wmi_pdev_start_measure_ul_rtd_cmd_fixed_param));
 
-	cmd->pdev_id = param->pdev_id;
+	cmd->pdev_id = wmi_handle->ops->convert_pdev_id_host_to_target(wmi_handle,
+								param->pdev_id);
 
 	WMI_CHAR_ARRAY_TO_MAC_ADDR(param->macaddr, &cmd->peer_macaddr);
 	cmd->start_win = param->start_win;
