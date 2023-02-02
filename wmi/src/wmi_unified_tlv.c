@@ -363,6 +363,7 @@ static const uint32_t pdev_param_tlv[] = {
 	[wmi_pdev_param_stats_observe_period] = WMI_PDEV_PARAM_STATS_OBSERVATION_PERIOD,
 	[wmi_pdev_param_ul_ofdma_rtd] = WMI_PDEV_PARAM_UL_OFDMA_RTD,
 	[wmi_pdev_param_preamble_power_removal] = WMI_PDEV_PARAM_PREAMBLE_POWER_REMOVAL,
+	[wmi_pdev_param_pre_11ax_packet_removal] = WMI_PDEV_PARAM_PRE_11AX_PACKET_REMOVAL,
 };
 
 /**
