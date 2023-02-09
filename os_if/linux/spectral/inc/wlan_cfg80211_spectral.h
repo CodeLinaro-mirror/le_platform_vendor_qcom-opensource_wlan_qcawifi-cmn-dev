@@ -36,6 +36,10 @@ extern const struct nla_policy
 	spectral_scan_policy
 	[QCA_WLAN_VENDOR_ATTR_SPECTRAL_SCAN_CONFIG_MAX + 1];
 
+extern const struct nla_policy
+    spectral_scan_get_status_policy
+    [QCA_WLAN_VENDOR_ATTR_SPECTRAL_SCAN_STATUS_MAX + 1];
+
 #define CONFIG_REQUESTED(type)    ((type == \
 	QCA_WLAN_VENDOR_ATTR_SPECTRAL_SCAN_REQUEST_TYPE_SCAN_AND_CONFIG) || \
 	(type == QCA_WLAN_VENDOR_ATTR_SPECTRAL_SCAN_REQUEST_TYPE_CONFIG))

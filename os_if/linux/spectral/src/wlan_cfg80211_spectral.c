@@ -93,6 +93,16 @@ const struct nla_policy spectral_scan_policy[
 							.type = NLA_U8},
 };
 
+const struct nla_policy spectral_scan_get_status_policy[
+		QCA_WLAN_VENDOR_ATTR_SPECTRAL_SCAN_STATUS_MAX + 1] = {
+	[QCA_WLAN_VENDOR_ATTR_SPECTRAL_SCAN_STATUS_IS_ENABLED] = {
+							.type = NLA_FLAG},
+	[QCA_WLAN_VENDOR_ATTR_SPECTRAL_SCAN_STATUS_IS_ACTIVE] = {
+							.type = NLA_FLAG},
+	[QCA_WLAN_VENDOR_ATTR_SPECTRAL_SCAN_STATUS_MODE] = {
+							.type = NLA_U32},
+};
+
 static void wlan_spectral_intit_config(struct spectral_config *config_req)
 {
 	config_req->ss_period =          SPECTRAL_PHYERR_PARAM_NOVAL;
@@ -909,7 +919,7 @@ int wlan_cfg80211_spectral_scan_get_status(struct wiphy *wiphy,
 			QCA_WLAN_VENDOR_ATTR_SPECTRAL_SCAN_STATUS_MAX,
 			data,
 			data_len,
-			NULL)) {
+			spectral_scan_get_status_policy)) {
 		osif_err("Invalid Spectral Scan config ATTR");
 		return -EINVAL;
 	}
