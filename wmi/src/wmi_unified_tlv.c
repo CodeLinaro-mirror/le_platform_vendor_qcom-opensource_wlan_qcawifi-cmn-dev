@@ -16198,7 +16198,7 @@ static void populate_tlv_service(uint32_t *wmi_service)
 			WMI_SERVICE_RTT_AP_INITIATOR_BURSTED_MODE_SUPPORTED;
 	wmi_service[wmi_service_peer_ul_rtd_estimate] =
 			WMI_SERVICE_PEER_UL_RTD_ESTIMATE;
-	wmi_service[wmi_service_peer_ul_rtd_estimate] =
+	wmi_service[wmi_service_hpa_support] =
 			WMI_SERVICE_HPA_SUPPORT;
 }
 
