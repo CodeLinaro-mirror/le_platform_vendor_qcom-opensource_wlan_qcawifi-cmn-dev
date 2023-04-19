@@ -19,7 +19,7 @@
 #ifndef _DP_RATES_H_
 #define _DP_RATES_H_
 
-#define CMN_DP_ASSERT(__bool)
+#define CMN_DP_ASSERT(__bool) qdf_assert(__bool)
 
 /*
  *Band Width Types
