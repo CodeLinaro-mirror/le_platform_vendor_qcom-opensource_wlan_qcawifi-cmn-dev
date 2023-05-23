@@ -1108,7 +1108,7 @@ static QDF_STATUS send_vdev_start_cmd_tlv(wmi_unified_t wmi_handle,
 		cmd->flags |= WMI_UNIFIED_VDEV_START_HIDDEN_SSID;
 
 	if (req->special_vdev_mode)
-		cmd->flags |= WMI_UNIFIED_VDEV_START_SPECIAL_AP_BCAST_ENABLED;
+		cmd->flags |= WMI_UNIFIED_VDEV_START_CONNECTIONLESS_ALLOWED;
 
 	cmd->flags |= WMI_UNIFIED_VDEV_START_LDPC_RX_ENABLED;
 	cmd->num_noa_descriptors = req->num_noa_descriptors;
