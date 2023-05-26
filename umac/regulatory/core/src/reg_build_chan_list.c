@@ -1866,7 +1866,7 @@ static void reg_init_chan(struct regulatory_channel *dst_list,
 			  struct wlan_regulatory_psoc_priv_obj *soc_reg)
 {
 	enum channel_enum chan_enum;
-	uint8_t dst_idx;
+	uint16_t dst_idx;
 
 	for (chan_enum = beg_enum; chan_enum <= end_enum; chan_enum++) {
 		dst_idx = chan_enum - dst_idx_adj;

@@ -11406,7 +11406,8 @@ static QDF_STATUS extract_reg_cap_service_ready_ext_tlv(
 	param->high_2ghz_chan = ext_reg_cap->high_2ghz_chan;
 	param->low_5ghz_chan = ext_reg_cap->low_5ghz_chan;
 	param->high_5ghz_chan = ext_reg_cap->high_5ghz_chan;
-
+	if (param->high_5ghz_chan > 5925)
+		param->high_5ghz_chan = 5925;
 	return QDF_STATUS_SUCCESS;
 }
 
@@ -11924,6 +11925,17 @@ static struct cur_reg_rule
 		reg_rule_ptr[count].psd_eirp =
 			WMI_REG_RULE_PSD_EIRP_GET(
 					wmi_reg_rule[count].psd_power_info);
+		if (reg_rule_ptr[count].start_freq == 2402) {
+			reg_rule_ptr[count].start_freq = 2399;
+			reg_rule_ptr[count].end_freq = 2505;
+		}
+		if (reg_rule_ptr[count].start_freq == 5170 ||
+			reg_rule_ptr[count].start_freq == 4910)
+				reg_rule_ptr[count].start_freq = 5000;
+
+		if (reg_rule_ptr[count].end_freq == 5895 ||
+			reg_rule_ptr[count].end_freq == 5980)
+				reg_rule_ptr[count].end_freq = 5925;
 	}
 
 	return reg_rule_ptr;
