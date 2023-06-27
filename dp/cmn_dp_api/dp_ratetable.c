@@ -18,6 +18,7 @@
 
 #include "dp_ratetable.h"
 #include "qdf_module.h"
+#include "qdf_util.h"
 #include "cdp_txrx_mon_struct.h"
 
 enum {
