@@ -14817,7 +14817,7 @@ send_set_ack_cts_resp_rate_tlv(wmi_unified_t wmi_handle,
 
 	cmd->pdev_id = wmi_handle->ops->convert_pdev_id_host_to_target(wmi_handle,
 								       param->pdev_id);
-	cmd->ack_cts_resp_rate = param->ack_cts_resp_rate;
+	cmd->ack_cts_resp_rate = (WMI_ACK_CTS_RESP_RATE)param->ack_cts_resp_rate;
 
 	ret = wmi_unified_cmd_send(wmi_handle, buf, len,
 				   WMI_PDEV_SET_ACK_CTS_RESP_RATE_CMDID);
