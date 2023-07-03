@@ -2023,6 +2023,8 @@ target_if_spectral_sbs_segs_get(struct target_if_spectral *spectral)
 		return 2;
 	case CH_WIDTH_80MHZ:
 		return 4;
+	default:
+		break;
 	}
 
 	QDF_ASSERT(0);
