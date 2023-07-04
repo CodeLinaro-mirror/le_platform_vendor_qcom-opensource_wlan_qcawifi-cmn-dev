@@ -111,6 +111,7 @@ wlan_cfg80211_ftm_testmode_cmd(struct wlan_objmgr_pdev *pdev,
 
 qdf_export_symbol(wlan_cfg80211_ftm_testmode_cmd);
 
+#if QCA_WIFI_FTM_NL80211
 QDF_STATUS
 wlan_cfg80211_ftm_rx_event(struct wlan_objmgr_pdev *pdev,
 				uint8_t *data, uint32_t len)
@@ -131,7 +132,7 @@ wlan_cfg80211_ftm_rx_event(struct wlan_objmgr_pdev *pdev,
 
 	ftm_debug("Testmode response event generated");
 	skb = cfg80211_testmode_alloc_event_skb(pdev_ospriv->wiphy,
-						len, GFP_ATOMIC);
+						(int)len, GFP_ATOMIC);
 	if (!skb)
 		return QDF_STATUS_E_NOMEM;
 
@@ -150,3 +151,4 @@ nla_put_failure:
 
 	return QDF_STATUS_E_INVAL;
 }
+#endif
