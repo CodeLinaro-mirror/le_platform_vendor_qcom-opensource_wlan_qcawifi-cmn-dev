@@ -27,6 +27,8 @@
 #ifndef _I_QDF_NBUF_W_H
 #define _I_QDF_NBUF_W_H
 
+#include <linux/libnvdimm.h>
+
 /* ext_cb accesor macros and internal API's */
 
 #define QDF_NBUF_CB_EXT_CB(skb) \
@@ -145,7 +147,11 @@ static inline void qdf_nbuf_deinit_replenish_timer(void) {}
 static inline void
 __qdf_nbuf_dma_inv_range(const void *buf_start, const void *buf_end)
 {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0))
+	arch_invalidate_pmem((void *)buf_start, (size_t)(buf_end - buf_start));
+#else
 	dmac_inv_range(buf_start, buf_end);
+#endif
 }
 #elif defined(__LINUX_MIPS32_ARCH__) || defined(__LINUX_MIPS64_ARCH__)
 static inline void
