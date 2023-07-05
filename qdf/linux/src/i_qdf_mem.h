@@ -222,6 +222,14 @@ static inline bool __qdf_mem_smmu_s1_enabled(qdf_device_t osdev)
 	return osdev->smmu_s1_enabled;
 }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
+#define __qdf_ioremap(HOST_CE_ADDRESS, HOST_CE_SIZE) \
+					ioremap(HOST_CE_ADDRESS, HOST_CE_SIZE)
+#else
+#define __qdf_ioremap(HOST_CE_ADDRESS, HOST_CE_SIZE) \
+					ioremap_nocache(HOST_CE_ADDRESS, HOST_CE_SIZE)
+#endif
+
 #if IS_ENABLED(CONFIG_ARM_SMMU) && defined(ENABLE_SMMU_S1_TRANSLATION)
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
 /**

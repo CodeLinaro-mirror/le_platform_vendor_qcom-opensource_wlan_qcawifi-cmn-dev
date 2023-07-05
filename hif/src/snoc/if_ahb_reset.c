@@ -175,7 +175,7 @@ int hif_ahb_enable_radio(struct hif_pci_softc *sc,
 			}
 		}
 
-		mem_gcc = ioremap_nocache(GCC_BASE, GCC_SIZE);
+		mem_gcc = qdf_ioremap(GCC_BASE, GCC_SIZE);
 		if (IS_ERR(mem_gcc)) {
 			hif_err("GCC ioremap failed");
 			return PTR_ERR(mem_gcc);
@@ -305,7 +305,7 @@ void hif_ahb_device_reset(struct hif_softc *scn)
 	haltack_offset = (wifi_core_id == 0) ? TCSR_WCSS0_HALTACK :
 							TCSR_WCSS1_HALTACK;
 
-	mem_tcsr = ioremap_nocache(TCSR_BASE, TCSR_SIZE);
+	mem_tcsr = qdf_ioremap(TCSR_BASE, TCSR_SIZE);
 	if (IS_ERR(mem_tcsr)) {
 		hif_err("TCSR ioremap failed");
 		return;

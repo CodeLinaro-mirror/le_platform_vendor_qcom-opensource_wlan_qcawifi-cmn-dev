@@ -1172,4 +1172,6 @@ int32_t qdf_mem_dp_rx_skb_max_cnt_read(void);
 void qdf_mem_tx_desc_cnt_update(qdf_atomic_t pending_tx_descs,
 				int32_t tx_descs_max);
 
+#define qdf_ioremap(HOST_CE_ADDRESS, HOST_CE_SIZE) \
+				__qdf_ioremap(HOST_CE_ADDRESS, HOST_CE_SIZE)
 #endif /* __QDF_MEMORY_H */

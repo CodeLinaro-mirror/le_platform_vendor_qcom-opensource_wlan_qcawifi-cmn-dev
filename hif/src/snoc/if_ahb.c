@@ -655,7 +655,7 @@ QDF_STATUS hif_ahb_enable_bus(struct hif_softc *ol_sc,
 	if (tgt_info->target_type == TARGET_TYPE_QCA5018) {
 		struct hif_softc *scn = HIF_GET_SOFTC(sc);
 
-		sc->mem_ce = ioremap_nocache(HOST_CE_ADDRESS, HOST_CE_SIZE);
+		sc->mem_ce = qdf_ioremap(HOST_CE_ADDRESS, HOST_CE_SIZE);
 		if (IS_ERR(sc->mem_ce)) {
 			hif_err("CE: ioremap failed");
 			return QDF_STATUS_E_IO;
