@@ -444,4 +444,29 @@ wlan_cfg80211_nla_put_u64(struct sk_buff *skb, int attrtype, u64 value)
 	return nla_put_u64_64bit(skb, attrtype, value, NL80211_ATTR_PAD);
 }
 #endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0)
+static inline int wlan_cfg80211_register_netdevice(struct net_device *dev)
+{
+	return cfg80211_register_netdevice(dev);
+}
+#else
+static inline int wlan_cfg80211_register_netdevice(struct net_device *dev)
+{
+	return register_netdevice(dev);
+}
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0)
+static inline void wlan_cfg80211_unregister_netdevice(struct net_device *dev)
+{
+	cfg80211_unregister_netdevice(dev);
+}
+#else
+static inline void wlan_cfg80211_unregister_netdevice(struct net_device *dev)
+{
+	unregister_netdevice(dev);
+}
+#endif
+
 #endif
