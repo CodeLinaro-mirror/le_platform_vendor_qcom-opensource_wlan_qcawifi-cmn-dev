@@ -3511,3 +3511,13 @@ wmi_unified_send_hpa_smck_tlv(wmi_unified_t wmi_handle, struct wmi_host_send_hpa
 	return QDF_STATUS_E_FAILURE;
 }
 
+QDF_STATUS
+wmi_extract_vendor_pdev_event(wmi_unified_t wmi_handle,
+			      void *evt_buf,
+			      struct wmi_host_vendor_pdev_event *param) {
+	if (wmi_handle->ops->extract_vendor_pdev_event)
+		return wmi_handle->ops->extract_vendor_pdev_event(
+			wmi_handle, evt_buf, param);
+
+	return QDF_STATUS_E_FAILURE;
+}

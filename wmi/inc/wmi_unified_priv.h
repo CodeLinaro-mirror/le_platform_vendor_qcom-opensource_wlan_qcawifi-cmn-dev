@@ -2578,6 +2578,9 @@ QDF_STATUS
 uint32_t (*get_stats_buf_length)(wmi_unified_t wmi_handle, void *evt_buf);
 QDF_STATUS
 	(*send_hpa_smck_tlv)(wmi_unified_t wmi_handle, struct wmi_host_send_hpa *param);
+QDF_STATUS
+	(*extract_vendor_pdev_event)(wmi_unified_t wmi_handle, void *evt_buf,
+			      struct wmi_host_vendor_pdev_event *param);
 };
 /* Forward declartion for psoc*/
 struct wlan_objmgr_psoc;

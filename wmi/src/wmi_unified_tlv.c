@@ -15051,6 +15051,38 @@ send_hpa_smck_tlv(wmi_unified_t wmi_handle,
 	return ret;
 }
 
+static QDF_STATUS
+extract_vendor_pdev_event_tlv(wmi_unified_t wmi_handle,
+			      void *evt_buf,
+			      struct wmi_host_vendor_pdev_event *param)
+{
+	WMI_VENDOR_PDEV_EVENTID_param_tlvs *param_buf;
+	wmi_pdev_vendor_event_fixed_param *pdev_vendor;
+
+	param_buf = (WMI_VENDOR_PDEV_EVENTID_param_tlvs *)evt_buf;
+	if (!param_buf) {
+		wmi_err("Invalid vendor Event");
+		return QDF_STATUS_E_INVAL;
+	}
+
+	pdev_vendor = param_buf->fixed_param;
+	wmi_debug("pdev_id=%u, sub_type=%u",
+		  pdev_vendor->pdev_id, pdev_vendor->sub_type);
+
+	param->pdev_id = pdev_vendor->pdev_id;
+	param->sub_type = pdev_vendor->sub_type;
+	if (param->sub_type == WMI_PDEV_VENDOR_EVT_PRIV_CSA) {
+		wmi_pdev_vendor_csa_param *csa_param =
+			(wmi_pdev_vendor_csa_param *)&pdev_vendor->evt;
+		wmi_debug("channel width = %u, channel number = %u",
+			  csa_param->channel_bw, csa_param->channel_num);
+		param->evt.csa_param.chwidth = csa_param->channel_bw;
+		param->evt.csa_param.chan_num = csa_param->channel_num;
+	}
+
+	return QDF_STATUS_SUCCESS;
+}
+
 struct wmi_ops tlv_ops =  {
 	.send_vdev_create_cmd = send_vdev_create_cmd_tlv,
 	.send_vdev_delete_cmd = send_vdev_delete_cmd_tlv,
@@ -15430,6 +15462,7 @@ struct wmi_ops tlv_ops =  {
 	.extract_get_ulrtd_time_ev_param = extract_get_ulrtd_time_ev_param_tlv,
 	.send_start_measure_ul_rtd = send_start_measure_ul_rtd_tlv,
 	.send_hpa_smck_tlv = send_hpa_smck_tlv,
+	.extract_vendor_pdev_event = extract_vendor_pdev_event_tlv,
 };
 
 /**
@@ -15843,6 +15876,7 @@ event_ids[wmi_roam_scan_chan_list_id] =
 	event_ids[wmi_pdev_get_measured_ul_rtd_event_id] =
 			WMI_PDEV_GET_MEASURED_UL_RTD_EVENTID;
 	event_ids[wmi_pdev_hpa_event_id] = WMI_HPA_EVENTID;
+	event_ids[wmi_vendor_pdev_event_id] = WMI_VENDOR_PDEV_EVENTID;
 }
 
 #ifdef WLAN_FEATURE_LINK_LAYER_STATS
@@ -16249,6 +16283,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 			WMI_SERVICE_VDEV_PURE11AX_SUPPORT;
 	wmi_service[wmi_service_dcm_ulofdma_support] =
 			WMI_SERVICE_DCM_ULOFDMA_SUPPORT;
+	wmi_service[wmi_service_private_acs_support] =
+			WMI_SERVICE_PRIVATE_CSA_SUPPORT;
 }
 
 /**
