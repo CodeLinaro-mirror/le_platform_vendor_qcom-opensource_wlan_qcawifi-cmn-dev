@@ -32,7 +32,7 @@ uint16_t wlan_2pt5mhz_step_chan_to_freq(uint8_t chan)
 {
 	qdf_freq_t start_freq = WLAN_24_GHZ_2PT5MHZ_CHAN_BASE_FREQ;
 	uint8_t start_chan = WLAN_24_GHZ_2PT5MHZ_BASECHAN;
-	uint8_t channel;
+	uint16_t channel;
 	if (chan >= WLAN_24_GHZ_2PT5MHZ_CHAN_221) {
 		start_freq = WLAN_24_GHZ_2PT5MHZ_CHAN_221_FREQ;
 		start_chan = WLAN_24_GHZ_2PT5MHZ_CHAN_221;
