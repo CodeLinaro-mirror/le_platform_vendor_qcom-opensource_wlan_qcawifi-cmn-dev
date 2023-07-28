@@ -673,4 +673,5 @@ dp_send_completion_to_pkt_capture(struct dp_soc *soc,
 {
 }
 #endif
+void dp_raw_strip_overhead(struct sk_buff *nbuf);
 #endif
