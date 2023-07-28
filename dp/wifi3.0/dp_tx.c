@@ -1124,6 +1124,8 @@ static qdf_nbuf_t dp_tx_prepare_raw(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 	    (qos_wh->i_qos[0] & IEEE80211_QOS_AMSDU))
 		qos_wh->i_fc[1] |= IEEE80211_FC1_WEP;
 
+	dp_raw_strip_overhead(nbuf);
+
 	for (curr_nbuf = nbuf, i = 0; curr_nbuf;
 			curr_nbuf = qdf_nbuf_next(curr_nbuf), i++) {
 		/*
@@ -1390,6 +1392,68 @@ dp_tx_ring_access_end_wrapper(struct dp_soc *soc,
 			      int coalesce)
 {
 	dp_tx_ring_access_end(soc, hal_ring_hdl, coalesce);
+}
+#endif
+
+#ifdef WLAN_SHORT_MAC_HEADER_FEATURE
+
+#define LLC_MAGIC		0x55
+
+void dp_raw_strip_overhead(struct sk_buff *nbuf)
+{
+	unsigned char *transport_hdr, *ip_hdr, *llc_hdr;
+	unsigned int clen=0, transport_hdr_len = 0;
+	struct iphdr *ipHeader;
+	uint8_t ip_protocol;
+
+	if (nbuf->data!= NULL) {
+		/* get the pointers for the start of LLC HDR and the IP HDR */
+		llc_hdr = nbuf->data + sizeof(qdf_dot3_qosframe_t);
+		ip_hdr =  llc_hdr + sizeof(qdf_llc_t);
+		transport_hdr = ip_hdr + sizeof(struct iphdr);
+
+		/*
+		 * Check if the packet is TCP or UDP and get the transport
+		 * layer header length
+		 */
+		ipHeader = (struct iphdr *)(ip_hdr);
+		ip_protocol = ipHeader->protocol;
+		transport_hdr_len = (ip_protocol == IPPROTO_TCP) ?
+				sizeof(struct tcphdr) : sizeof(struct udphdr);
+
+		/* check for TCP or UDP */
+		if  ((ip_protocol == IPPROTO_TCP) ||
+		     (ip_protocol == IPPROTO_UDP)) {
+			/*
+			 * Modify the LLC SNAP header with 0x55 to
+			 * bypass parsing of pkt by MAC
+			 */
+			memset(llc_hdr, LLC_MAGIC, 1);
+
+			/*
+			 * Length of data to be copied after the IP and
+			 * Transport layer header
+			 */
+			clen = nbuf->len - sizeof(qdf_dot3_qosframe_t)
+			                 - sizeof(qdf_llc_t)
+			                 - sizeof(struct iphdr)
+			                 - transport_hdr_len;
+
+			/*
+			 * Copy the data after the the IP and Transport layer
+			 * header
+			 */
+			if (clen > 0)
+				memcpy(llc_hdr+1,
+				       transport_hdr + transport_hdr_len,
+				       clen);
+			nbuf->len = sizeof(qdf_dot3_qosframe_t) + 1 + clen;
+		}
+	}
+}
+#else
+void dp_raw_strip_overhead(struct sk_buff *nbuf)
+{
 }
 #endif
 
