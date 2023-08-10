@@ -5181,6 +5181,7 @@ typedef enum {
 	wmi_vdev_param_nan_config_features,
 	wmi_vdev_param_enable_disable_rtt_responder_role,
 	wmi_vdev_param_enable_disable_rtt_initiator_role,
+	wmi_vdev_param_pure_11ax_mode,
 } wmi_conv_vdev_param_id;
 
 /**
@@ -5441,6 +5442,7 @@ typedef enum {
 	wmi_service_rtt_ap_initiator_bursted_mode_supported,
 	wmi_service_peer_ul_rtd_estimate,
 	wmi_service_hpa_support,
+	wmi_service_vdev_pure11ax_support,
 	wmi_services_max,
 } wmi_conv_service_ids;
 #define WMI_SERVICE_UNAVAILABLE 0xFFFF
