@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -732,6 +733,12 @@ util_scan_copy_beacon_data(struct scan_cache_entry *new_entry,
 	ie_lst->sbw = conv_ptr(ie_lst->sbw, old_ptr, new_ptr);
 	ie_lst->sta_scan_param = conv_ptr(ie_lst->sta_scan_param, old_ptr, new_ptr);
 
+#ifdef IOT_DRONE_MESH
+	ie_lst->iot_drone_mesh_node_ie =
+		conv_ptr(ie_lst->iot_drone_mesh_node_ie, old_ptr, new_ptr);
+	ie_lst->iot_drone_mesh_edge_node_ie =
+		conv_ptr(ie_lst->iot_drone_mesh_edge_node_ie, old_ptr, new_ptr);
+#endif
 	return QDF_STATUS_SUCCESS;
 }
 /**
@@ -1775,5 +1782,34 @@ static inline bool util_scan_is_null_ssid(struct wlan_ssid *ssid)
 
 	return false;
 }
+#ifdef IOT_DRONE_MESH
+/**
+ * util_scan_entry_d_mesh_ie() - function to read Drone Mesh Node IE
+ * @scan_entry: scan entry
+ *
+ * API, function to read Drone Mesh IE
+ *
+ * Return: iot_drone_mesh_node_ie or NULL if ie is not present
+ */
+static inline uint8_t*
+util_scan_entry_iot_drone_mesh_node_ie(struct scan_cache_entry *scan_entry)
+{
+	return scan_entry->ie_list.iot_drone_mesh_node_ie;
+}
 
+/**
+ * util_scan_entry_iot_drone_mesh_edge_node_ie() - function to read Drone Mesh
+ *                                                 Edge Node IE
+ * @scan_entry: scan entry
+ *
+ * API, function to read Drone Mesh IE
+ *
+ * Return: iot_drone_mesh_edge_node_ie or NULL if ie is not present
+ */
+static inline uint8_t*
+util_scan_entry_iot_drone_mesh_edge_node_ie(struct scan_cache_entry *scan_entry)
+{
+	return scan_entry->ie_list.iot_drone_mesh_edge_node_ie;
+}
+#endif
 #endif
