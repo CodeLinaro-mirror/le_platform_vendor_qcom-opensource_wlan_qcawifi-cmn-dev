@@ -184,7 +184,7 @@ struct _NIC_DEV {
 	void *osdev_acfg_handle;
 #endif /* ACFG_NETLINK_TX */
 #endif /* UMAC_SUPPORT_ACFG */
-	int (*vap_hardstart)(struct sk_buff *skb, struct net_device *dev);
+	netdev_tx_t (*vap_hardstart)(struct sk_buff *skb, struct net_device *dev);
 };
 
 #define __QDF_SYSCTL_PROC_DOINTVEC(ctl, write, filp, buffer, lenp, ppos) \
