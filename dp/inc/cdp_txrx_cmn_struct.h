@@ -765,7 +765,7 @@ typedef bool (*ol_txrx_tx_flow_control_is_pause_fp)(void *osif_dev);
  * @data_vdev - handle to the OSIF virtual device object
  * @msdu_list - list of network buffers
  */
-typedef QDF_STATUS(*ol_txrx_rx_fp)(void *osif_dev, qdf_nbuf_t msdu_list);
+typedef void (*ol_txrx_rx_fp)(void *osif_dev, qdf_nbuf_t msdu_list);
 
 typedef QDF_STATUS(*ol_txrx_fisa_rx_fp)(void *soc,
 					void *dp_vdev,
@@ -833,21 +833,21 @@ typedef void (*ol_txrx_tx_free_ext_fp)(qdf_nbuf_t netbuf);
 /**
  * ol_txrx_rx_check_wai_fp - OSIF WAPI receive function
 */
-typedef bool (*ol_txrx_rx_check_wai_fp)(ol_osif_vdev_handle vdev,
+typedef bool (*ol_txrx_rx_check_wai_fp)(void *osif_vdev,
 					    qdf_nbuf_t mpdu_head,
 					    qdf_nbuf_t mpdu_tail);
 /**
  * ol_txrx_rx_mon_fp - OSIF monitor mode receive function for single
  * MPDU (802.11 format)
  */
-typedef void (*ol_txrx_rx_mon_fp)(ol_osif_vdev_handle vdev,
+typedef void (*ol_txrx_rx_mon_fp)(void *osif_vdev,
 					    qdf_nbuf_t mpdu,
 					    void *rx_status);
 
 /**
  * ol_txrx_proxy_arp_fp - proxy arp function pointer
 */
-typedef int (*ol_txrx_proxy_arp_fp)(ol_osif_vdev_handle vdev,
+typedef int (*ol_txrx_proxy_arp_fp)(void *osif_vdev,
 					    qdf_nbuf_t netbuf);
 
 /*
