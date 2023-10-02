@@ -537,6 +537,8 @@ static const uint32_t vdev_param_tlv[] = {
 			WMI_VDEV_PARAM_ENABLE_DISABLE_RTT_INITIATOR_ROLE,
 	[wmi_vdev_param_pure_11ax_mode] =
 			WMI_VDEV_PARAM_PURE_11AX_MODE,
+	[wmi_vdev_param_he_ulofdma_dcm] =
+			WMI_VDEV_PARAM_HE_ULOFDMA_DCM,
 };
 #endif
 
@@ -16233,6 +16235,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 			WMI_SERVICE_HPA_SUPPORT;
 	wmi_service[wmi_service_vdev_pure11ax_support] =
 			WMI_SERVICE_VDEV_PURE11AX_SUPPORT;
+	wmi_service[wmi_service_dcm_ulofdma_support] =
+			WMI_SERVICE_DCM_ULOFDMA_SUPPORT;
 }
 
 /**
