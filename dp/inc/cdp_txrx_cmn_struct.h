@@ -1083,6 +1083,9 @@ enum cdp_pdev_param_type {
 	CDP_SET_ATF_STATS_ENABLE,
 	CDP_CONFIG_SPECIAL_VAP,
 	CDP_MONITOR_CHAN_FLAG,
+#ifdef IOT_DRONE_MESH
+	CDP_CONFIG_IOT_MESH_EN,
+#endif
 };
 
 /*
@@ -1217,6 +1220,9 @@ typedef union cdp_config_param_t {
 	uint32_t cdp_pdev_param_tx_pending;
 	bool cdp_pdev_param_atf_stats_enable;
 	bool cdp_pdev_param_config_special_vap;
+#ifdef IOT_DRONE_MESH
+        uint8_t cdp_pdev_param_iot_mesh_en;
+#endif
 
 	/* psoc params */
 	bool cdp_psoc_param_en_rate_stats;

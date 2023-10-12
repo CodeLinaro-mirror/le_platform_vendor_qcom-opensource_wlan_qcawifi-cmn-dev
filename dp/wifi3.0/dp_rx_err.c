@@ -1096,6 +1096,7 @@ dp_rx_null_q_desc_handle(struct dp_soc *soc, qdf_nbuf_t nbuf,
 	uint16_t sa_idx = 0;
 	bool is_eapol;
 	bool is_not_match;
+	struct dp_pdev *pdev = dp_get_pdev_for_lmac_id(soc, pool_id);
 
 	qdf_nbuf_set_rx_chfrag_start(nbuf,
 				hal_rx_msdu_end_first_msdu_get(soc->hal_soc,
@@ -1145,7 +1146,6 @@ dp_rx_null_q_desc_handle(struct dp_soc *soc, qdf_nbuf_t nbuf,
 
 	if (!peer) {
 		bool mpdu_done = false;
-		struct dp_pdev *pdev = dp_get_pdev_for_lmac_id(soc, pool_id);
 
 		if (!pdev) {
 			dp_err_rl("pdev is null for pool_id = %d", pool_id);
@@ -1237,12 +1237,17 @@ dp_rx_null_q_desc_handle(struct dp_soc *soc, qdf_nbuf_t nbuf,
 		dp_err_rl("mcast Policy Check Drop pkt");
 		goto drop_nbuf;
 	}
-	/* WDS Source Port Learning */
-	if (qdf_likely(vdev->rx_decap_type == htt_cmn_pkt_type_ethernet &&
-		vdev->wds_enabled))
-		dp_rx_wds_srcport_learn(soc, rx_tlv_hdr, peer, nbuf,
-					msdu_metadata);
-
+#ifdef IOT_DRONE_MESH
+	if (!pdev->iot_mesh_en) {
+#endif
+		/* WDS Source Port Learning */
+		if (qdf_likely(vdev->rx_decap_type == htt_cmn_pkt_type_ethernet &&
+			vdev->wds_enabled))
+			dp_rx_wds_srcport_learn(soc, rx_tlv_hdr, peer, nbuf,
+						msdu_metadata);
+#ifdef IOT_DRONE_MESH
+	}
+#endif
 	if (hal_rx_is_unicast(soc->hal_soc, rx_tlv_hdr)) {
 		tid = hal_rx_tid_get(soc->hal_soc, rx_tlv_hdr);
 		if (!peer->rx_tid[tid].hw_qdesc_vaddr_unaligned)
