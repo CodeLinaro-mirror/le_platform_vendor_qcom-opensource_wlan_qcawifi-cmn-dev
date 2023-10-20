@@ -187,7 +187,7 @@ QDF_STATUS osif_disconnect_handler(struct wlan_objmgr_vdev *vdev,
 
 	osif_cm_disconnect_comp_ind(vdev, rsp, OSIF_POST_USERSPACE_UPDATE);
 #ifdef IOT_DRONE_MESH
-        if (wlan_pdev_nif_feat_cap_get(pdev, WLAN_PDEV_FEXT_IOT_DRONE_MESH_EN)) {
+        if (wlan_pdev_nif_feat_ext_cap_get(pdev, WLAN_PDEV_FEXT_IOT_DRONE_MESH_EN)) {
             ieee80211_delete_iot_drone_mesh_node_entry_sta(vdev);
         }
 #endif
