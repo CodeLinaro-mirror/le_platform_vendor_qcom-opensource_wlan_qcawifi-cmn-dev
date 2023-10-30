@@ -1366,7 +1366,7 @@ int wlan_cfg80211_scan(struct wlan_objmgr_vdev *vdev,
 	struct wlan_ssid *pssid;
 	uint32_t i;
 	int ret = 0;
-	uint8_t *scan_req_chan_cnt = NULL;
+	uint16_t *scan_req_chan_cnt = NULL;
 	uint32_t c_freq;
 	struct wlan_objmgr_pdev *pdev = wlan_vdev_get_pdev(vdev);
 	wlan_scan_requester req_id;

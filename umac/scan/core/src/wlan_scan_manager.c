@@ -940,7 +940,7 @@ static void
 scm_update_channel_list(struct scan_start_request *req,
 			struct wlan_scan_obj *scan_obj)
 {
-	uint8_t i;
+	uint16_t i;
 	uint8_t num_scan_channels = 0;
 	struct scan_vdev_obj *scan_vdev_obj;
 	struct wlan_objmgr_pdev *pdev;
