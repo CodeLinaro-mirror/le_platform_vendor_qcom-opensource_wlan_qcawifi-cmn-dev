@@ -53,6 +53,9 @@
 #include <cdp_txrx_misc.h>
 #endif
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
+#include <linux/panic_notifier.h>
+#endif
 
 #define MAX_NUM_PKT_LOG 32
 
