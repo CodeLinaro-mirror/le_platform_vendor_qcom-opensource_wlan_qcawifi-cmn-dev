@@ -3887,7 +3887,13 @@ qdf_freq_t reg_chan_band_to_freq(struct wlan_objmgr_pdev *pdev,
 						min_chan,
 						max_chan);
 	} else {
-		if (BAND_2G_PRESENT(band_mask)) {
+
+		/*
+		 * Because of the new added channels in 2.4G band (191 ~ 230),
+		 * 5G channels would fall in the range of 2.4G channels.
+		 */
+		if (BAND_2G_PRESENT(band_mask) &&
+		    !(chan_num >= 36 && chan_num < 190)) {
 			min_chan = MIN_24GHZ_CHANNEL;
 			max_chan = MAX_24GHZ_CHANNEL;
 			freq = reg_compute_chan_to_freq(pdev, chan_num,
