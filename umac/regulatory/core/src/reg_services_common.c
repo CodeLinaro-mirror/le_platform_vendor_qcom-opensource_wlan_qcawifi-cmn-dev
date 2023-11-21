@@ -2955,6 +2955,9 @@ uint16_t reg_legacy_chan_to_freq(struct wlan_objmgr_pdev *pdev,
 		return 0;
 	}
 
+	if (chan_num >= 36 && chan_num <= 183)
+		min_chan_range = MIN_5GHZ_CHANNEL;
+
 	return reg_compute_chan_to_freq(pdev, chan_num,
 					min_chan_range,
 					max_chan_range);
