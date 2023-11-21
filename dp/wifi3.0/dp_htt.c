@@ -2651,7 +2651,7 @@ static void dp_process_ppdu_stats_user_rate_tlv(struct dp_pdev *pdev,
 	ppdu_user_desc->txbf =
 		HTT_PPDU_STATS_USER_RATE_TLV_TXBF_GET(*tag_buf);
 	ppdu_user_desc->bw =
-		HTT_PPDU_STATS_USER_RATE_TLV_BW_GET(*tag_buf) - 2;
+		HTT_PPDU_STATS_USER_RATE_TLV_BW_GET(*tag_buf);
 	ppdu_user_desc->nss = HTT_PPDU_STATS_USER_RATE_TLV_NSS_GET(*tag_buf);
 	ppdu_desc->usr_nss_sum += ppdu_user_desc->nss;
 	ppdu_user_desc->mcs = HTT_PPDU_STATS_USER_RATE_TLV_MCS_GET(*tag_buf);
