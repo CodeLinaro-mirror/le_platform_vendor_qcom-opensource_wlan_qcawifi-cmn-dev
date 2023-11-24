@@ -90,4 +90,12 @@ qdf_net_if_release_dev(struct qdf_net_if *nif)
  * Return: netdevice name
  */
 char *qdf_net_if_get_devname(struct qdf_net_if *nif);
+
+/**
+ * qdf_net_if_dev_close() - shutdown a network device
+ * @nif: network device
+ *
+ * This function checks lock before shutdown a network device
+ */
+void qdf_net_if_dev_close(struct qdf_net_if *nif);
 #endif /* __QDF_NET_IF_H */
