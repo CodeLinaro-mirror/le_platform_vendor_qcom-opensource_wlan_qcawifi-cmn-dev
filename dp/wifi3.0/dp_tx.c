@@ -3805,7 +3805,17 @@ dp_tx_update_peer_stats(struct dp_tx_desc_s *tx_desc,
 
 	if (ts->status != HAL_TX_TQM_RR_FRAME_ACKED) {
 		dp_update_no_ack_stats(tx_desc->nbuf, peer);
+		/* Update Tx MSDU Failed Status to calc the path metric */
+#ifdef IOT_DRONE_MESH
+		if (peer->vdev->pdev->iot_mesh_en)
+			DP_STATS_UPD(peer, tx.msdu_failed_status, 1);
+#endif
 		return;
+#ifdef IOT_DRONE_MESH
+	} else {
+		if (peer->vdev->pdev->iot_mesh_en)
+			DP_STATS_UPD(peer, tx.msdu_failed_status, 0);
+#endif
 	}
 
 	DP_STATS_INCC(peer, tx.ofdma, 1, ts->ofdma);
