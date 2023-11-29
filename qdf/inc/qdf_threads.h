@@ -28,7 +28,7 @@
 #include "i_qdf_threads.h"
 
 typedef __qdf_thread_t qdf_thread_t;
-typedef QDF_STATUS (*qdf_thread_func)(void *context);
+typedef int (*qdf_thread_func)(void *context);
 
 /* Function declarations and documenation */
 
