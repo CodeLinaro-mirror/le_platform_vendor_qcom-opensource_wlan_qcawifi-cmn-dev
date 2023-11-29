@@ -452,13 +452,27 @@ static inline hal_ring_handle_t dp_tx_get_hal_ring_hdl(struct dp_soc *soc,
  * @dp_soc - DP soc structure pointer
  * @ring_id - Transmit Queue/ring_id to be used when XPS is enabled
  *
- * Return - HAL ring handle
+ * Return - RBM ID
  */
 static inline uint8_t dp_tx_get_rbm_id(struct dp_soc *doc,
 				       uint8_t ring_id)
 {
 	return (ring_id ? HAL_WBM_SW0_BM_ID + (ring_id - 1) :
 			  HAL_WBM_SW2_BM_ID);
+}
+
+/*
+ * dp_tx_get_comp_ring_id()- Get the comp ring id for data transmission
+ * completion.
+ * @dp_soc - DP soc structure pointer
+ * @rbm_id - RBM ID
+ *
+ * Return - Transmission completion ring id
+ */
+static inline uint8_t dp_tx_get_comp_ring_id(struct dp_soc *doc,
+					     uint8_t rbm_id)
+{
+	return (rbm_id - HAL_WBM_SW0_BM_ID);
 }
 
 #else /* QCA_OL_TX_MULTIQ_SUPPORT */
@@ -483,6 +497,12 @@ static inline uint8_t dp_tx_get_rbm_id(struct dp_soc *soc,
 				       uint8_t ring_id)
 {
 	return (ring_id + HAL_WBM_SW0_BM_ID);
+}
+
+static inline uint8_t dp_tx_get_comp_ring_id(struct dp_soc *doc,
+					     uint8_t rbm_id)
+{
+	return (rbm_id - HAL_WBM_SW0_BM_ID);
 }
 #endif
 
