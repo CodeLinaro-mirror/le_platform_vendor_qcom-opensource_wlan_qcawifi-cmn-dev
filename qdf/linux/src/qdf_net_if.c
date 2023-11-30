@@ -25,6 +25,7 @@
 #include "qdf_module.h"
 #include "qdf_util.h"
 #include <linux/netdevice.h>
+#include <net/cfg80211.h>
 
 QDF_STATUS
 qdf_net_if_create_dummy_if(struct qdf_net_if *nif)
@@ -87,3 +88,31 @@ qdf_net_if_release_dev(struct qdf_net_if  *nif)
 }
 
 qdf_export_symbol(qdf_net_if_release_dev);
+
+/**
+ * qdf_net_if_dev_close() - shutdown a network device
+ * @nif: network device
+ *
+ * This function checks lock before shutdown a network device
+ */
+void qdf_net_if_dev_close(struct qdf_net_if *nif)
+{
+	struct net_device *dev = (struct net_device *)nif;
+	struct wireless_dev *wdev = dev->ieee80211_ptr;
+	bool locked;
+
+	if (!wdev || !wdev->wiphy)
+		return;
+
+	locked = mutex_is_locked(&wdev->wiphy->mtx);
+
+	if (locked)
+		mutex_unlock(&wdev->wiphy->mtx);
+
+	dev_close(dev);
+
+	if (locked)
+		mutex_lock(&wdev->wiphy->mtx);
+}
+
+qdf_export_symbol(qdf_net_if_dev_close);
