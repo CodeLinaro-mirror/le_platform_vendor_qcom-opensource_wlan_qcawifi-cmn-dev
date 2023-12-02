@@ -4591,6 +4591,23 @@ struct wmi_host_tsf_event {
 	uint64_t tsf;
 };
 
+/**
+ * struct wmi_host_tsf_qtimer_info - Get tsf qtimer info
+ * @vdev_id: vdev id
+ * @tsf_low: low 32bit of tsf
+ * @tsf_high: high 32 bit of tsf
+ * @qtimer_low: low 32bit of qtimer
+ * @qtimer_high: high 32 bit of qtimer
+ */
+struct wmi_host_tsf_qtimer_info {
+	uint32_t vdev_id;
+	uint32_t tsf_low;
+	uint32_t tsf_high;
+	uint32_t qtimer_low;
+	uint32_t qtimer_high;
+};
+
+
 #define WMI_EVENT_ID_INVALID 0
 /**
  * Host based ENUM IDs for events to abstract target enums for event_id

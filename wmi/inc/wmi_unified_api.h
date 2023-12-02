@@ -4241,6 +4241,10 @@ wmi_unified_extract_cp_stats_more_pending(wmi_unified_t wmi_handle,
 QDF_STATUS wmi_unified_send_vdev_tsf_tstamp_action_cmd(wmi_unified_t wmi_hdl,
 						       uint8_t vdev_id);
 
+QDF_STATUS wmi_unified_send_vdev_tsf_qtimer_action_cmd(
+		wmi_unified_t wmi_hdl,
+		uint8_t vdev_id, uint32_t value);
+
 /**
  * wmi_extract_vdev_tsf_report_event() - extract vdev tsf report from event
  * @wmi_handle: wmi handle
@@ -4249,9 +4253,10 @@ QDF_STATUS wmi_unified_send_vdev_tsf_tstamp_action_cmd(wmi_unified_t wmi_hdl,
  *
  * Return: QDF_STATUS_SUCCESS on success and QDF_STATUS_E_FAILURE for failure
  */
-QDF_STATUS wmi_extract_vdev_tsf_report_event(wmi_unified_t wmi_hdl,
-					     uint8_t *evt_buf,
-					     struct wmi_host_tsf_event *param);
+QDF_STATUS wmi_extract_vdev_tsf_report_event(
+		wmi_unified_t wmi_hdl,
+		uint8_t *evt_buf,
+		struct wmi_host_tsf_qtimer_info *param);
 
 /**
  * wmi_extract_pdev_csa_switch_count_status() - extract CSA switch count status

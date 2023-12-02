@@ -14566,6 +14566,38 @@ send_vdev_tsf_tstamp_action_cmd_tlv(wmi_unified_t wmi, uint8_t vdev_id)
 	return QDF_STATUS_SUCCESS;
 }
 
+static QDF_STATUS
+send_vdev_tsf_qtimer_action_cmd_tlv(wmi_unified_t wmi,
+		uint8_t vdev_id, uint32_t value)
+{
+	wmi_vdev_tsf_tstamp_action_cmd_fixed_param *cmd;
+	wmi_buf_t buf;
+	uint32_t len = sizeof(*cmd);
+
+	buf = wmi_buf_alloc(wmi, len);
+	if (!buf)
+		return QDF_STATUS_E_NOMEM;
+
+	cmd = (wmi_vdev_tsf_tstamp_action_cmd_fixed_param *)wmi_buf_data(buf);
+	WMITLV_SET_HDR(&cmd->tlv_header,
+		WMITLV_TAG_STRUC_wmi_vdev_tsf_tstamp_action_cmd_fixed_param,
+		WMITLV_GET_STRUCT_TLVLEN(
+			wmi_vdev_tsf_tstamp_action_cmd_fixed_param));
+	cmd->vdev_id = vdev_id;
+	cmd->tsf_action = TSF_TSTAMP_PERIODIC_REPORT_REQ;
+	cmd->period = value * 1000;  //ms
+	cmd->flags = TSF_TSTAMP_REPORT_TTIMER | TSF_TSTAMP_REPORT_QTIMER;
+	wmi_mtrace(WMI_VDEV_TSF_TSTAMP_ACTION_CMDID, cmd->vdev_id, 0);
+	if (wmi_unified_cmd_send(wmi, buf, len,
+				 WMI_VDEV_TSF_TSTAMP_ACTION_CMDID)) {
+		wmi_err("Failed to send WMI_VDEV_TSF_TSTAMP_ACTION_CMDID");
+		wmi_buf_free(buf);
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	return QDF_STATUS_SUCCESS;
+}
+
 /**
  * extract_vdev_tsf_report_event_tlv() - extract vdev tsf report from event
  * @wmi_handle: wmi handle
@@ -14576,7 +14608,7 @@ send_vdev_tsf_tstamp_action_cmd_tlv(wmi_unified_t wmi, uint8_t vdev_id)
  */
 static QDF_STATUS
 extract_vdev_tsf_report_event_tlv(wmi_unified_t wmi_handle, void *evt_buf,
-				  struct wmi_host_tsf_event *param)
+				  struct wmi_host_tsf_qtimer_info *param)
 {
 	WMI_VDEV_TSF_REPORT_EVENTID_param_tlvs *param_buf;
 	wmi_vdev_tsf_report_event_fixed_param *evt;
@@ -14588,9 +14620,11 @@ extract_vdev_tsf_report_event_tlv(wmi_unified_t wmi_handle, void *evt_buf,
 	}
 
 	evt = param_buf->fixed_param;
-	param->tsf = ((uint64_t)(evt->tsf_high) << 32) | evt->tsf_low;
 	param->vdev_id = evt->vdev_id;
-
+	param->tsf_low = evt->tsf_low;
+	param->tsf_high = evt->tsf_high;
+	param->qtimer_low = evt->qtimer_low;
+	param->qtimer_high = evt->qtimer_high;
 	return QDF_STATUS_SUCCESS;
 }
 
@@ -15447,6 +15481,7 @@ struct wmi_ops tlv_ops =  {
 	.extract_cp_stats_more_pending =
 				extract_cp_stats_more_pending_tlv,
 	.send_vdev_tsf_tstamp_action_cmd = send_vdev_tsf_tstamp_action_cmd_tlv,
+	.send_vdev_tsf_qtimer_action_cmd = send_vdev_tsf_qtimer_action_cmd_tlv,
 	.extract_vdev_tsf_report_event = extract_vdev_tsf_report_event_tlv,
 	.extract_pdev_csa_switch_count_status =
 		extract_pdev_csa_switch_count_status_tlv,
