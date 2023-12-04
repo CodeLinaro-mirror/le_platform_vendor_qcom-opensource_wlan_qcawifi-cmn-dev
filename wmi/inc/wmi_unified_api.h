@@ -4253,10 +4253,9 @@ QDF_STATUS wmi_unified_send_vdev_tsf_qtimer_action_cmd(
  *
  * Return: QDF_STATUS_SUCCESS on success and QDF_STATUS_E_FAILURE for failure
  */
-QDF_STATUS wmi_extract_vdev_tsf_report_event(
-		wmi_unified_t wmi_hdl,
-		uint8_t *evt_buf,
-		struct wmi_host_tsf_qtimer_info *param);
+QDF_STATUS wmi_extract_vdev_tsf_report_event(wmi_unified_t wmi_hdl,
+					     uint8_t *evt_buf,
+					     struct wmi_host_tsf_event *param);
 
 /**
  * wmi_extract_pdev_csa_switch_count_status() - extract CSA switch count status

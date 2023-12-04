@@ -14608,7 +14608,7 @@ send_vdev_tsf_qtimer_action_cmd_tlv(wmi_unified_t wmi,
  */
 static QDF_STATUS
 extract_vdev_tsf_report_event_tlv(wmi_unified_t wmi_handle, void *evt_buf,
-				  struct wmi_host_tsf_qtimer_info *param)
+				  struct wmi_host_tsf_event *param)
 {
 	WMI_VDEV_TSF_REPORT_EVENTID_param_tlvs *param_buf;
 	wmi_vdev_tsf_report_event_fixed_param *evt;
@@ -14620,11 +14620,10 @@ extract_vdev_tsf_report_event_tlv(wmi_unified_t wmi_handle, void *evt_buf,
 	}
 
 	evt = param_buf->fixed_param;
+	param->tsf = ((uint64_t)(evt->tsf_high) << 32) | evt->tsf_low;
+	param->qtimer = ((uint64_t)(evt->qtimer_high) << 32) | evt->qtimer_low;
 	param->vdev_id = evt->vdev_id;
-	param->tsf_low = evt->tsf_low;
-	param->tsf_high = evt->tsf_high;
-	param->qtimer_low = evt->qtimer_low;
-	param->qtimer_high = evt->qtimer_high;
+
 	return QDF_STATUS_SUCCESS;
 }
 

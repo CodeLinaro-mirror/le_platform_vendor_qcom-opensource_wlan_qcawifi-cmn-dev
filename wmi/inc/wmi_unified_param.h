@@ -4585,28 +4585,13 @@ struct ftm_time_sync_offset {
  * struct wmi_host_tsf_event_- Get tsf event info
  * @vdev_id: vdev id
  * @tsf: tsf
+ * @qtimer: qtimer
  */
 struct wmi_host_tsf_event {
 	uint32_t vdev_id;
 	uint64_t tsf;
+	uint64_t qtimer;
 };
-
-/**
- * struct wmi_host_tsf_qtimer_info - Get tsf qtimer info
- * @vdev_id: vdev id
- * @tsf_low: low 32bit of tsf
- * @tsf_high: high 32 bit of tsf
- * @qtimer_low: low 32bit of qtimer
- * @qtimer_high: high 32 bit of qtimer
- */
-struct wmi_host_tsf_qtimer_info {
-	uint32_t vdev_id;
-	uint32_t tsf_low;
-	uint32_t tsf_high;
-	uint32_t qtimer_low;
-	uint32_t qtimer_high;
-};
-
 
 #define WMI_EVENT_ID_INVALID 0
 /**
