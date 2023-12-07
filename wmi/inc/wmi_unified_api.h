@@ -4241,6 +4241,10 @@ wmi_unified_extract_cp_stats_more_pending(wmi_unified_t wmi_handle,
 QDF_STATUS wmi_unified_send_vdev_tsf_tstamp_action_cmd(wmi_unified_t wmi_hdl,
 						       uint8_t vdev_id);
 
+QDF_STATUS wmi_unified_send_vdev_tsf_qtimer_action_cmd(
+		wmi_unified_t wmi_hdl,
+		uint8_t vdev_id, uint32_t value);
+
 /**
  * wmi_extract_vdev_tsf_report_event() - extract vdev tsf report from event
  * @wmi_handle: wmi handle
@@ -4399,4 +4403,9 @@ wmi_unified_send_start_measure_ul_rtd(wmi_unified_t wmi_handle,
 
 QDF_STATUS
 wmi_unified_send_hpa_smck_tlv(wmi_unified_t wmi_handle, struct wmi_host_send_hpa *param);
+
+QDF_STATUS
+wmi_extract_vendor_pdev_event(wmi_unified_t wmi_handle,
+			      void *evt_buf,
+			      struct wmi_host_vendor_pdev_event *param);
 #endif /* _WMI_UNIFIED_API_H_ */

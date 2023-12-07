@@ -1030,13 +1030,13 @@ enum scan_mode_6ghz {
 #ifdef CONFIG_WIFI_EMULATION_WIFI_3_0
 #define CFG_SCAN_AGING_TIME_DEFAULT (90)
 #else
-#define CFG_SCAN_AGING_TIME_DEFAULT (30)
+#define CFG_SCAN_AGING_TIME_DEFAULT (180)
 #endif
 
 #define CFG_SCAN_AGING_TIME CFG_INI_UINT( \
 			"gScanAgingTime", \
 			0, \
-			200, \
+			300, \
 			CFG_SCAN_AGING_TIME_DEFAULT, \
 			CFG_VALUE_OR_DEFAULT, \
 			"scan aging time")

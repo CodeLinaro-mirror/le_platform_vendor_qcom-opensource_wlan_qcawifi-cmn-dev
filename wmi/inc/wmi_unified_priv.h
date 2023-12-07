@@ -2499,9 +2499,13 @@ QDF_STATUS
 QDF_STATUS (*send_vdev_tsf_tstamp_action_cmd)(wmi_unified_t wmi,
 					      uint8_t vdev_id);
 
+QDF_STATUS (*send_vdev_tsf_qtimer_action_cmd)(wmi_unified_t wmi,
+					      uint8_t vdev_id, uint32_t value);
+
 QDF_STATUS (*extract_vdev_tsf_report_event)(wmi_unified_t wmi_handle,
 					    void *evt_buf,
 					    struct wmi_host_tsf_event *param);
+
 #ifdef WMI_AP_SUPPORT
 QDF_STATUS (*set_radio_tx_mode_select_cmd)(
 				wmi_unified_t wmi,
@@ -2578,6 +2582,9 @@ QDF_STATUS
 uint32_t (*get_stats_buf_length)(wmi_unified_t wmi_handle, void *evt_buf);
 QDF_STATUS
 	(*send_hpa_smck_tlv)(wmi_unified_t wmi_handle, struct wmi_host_send_hpa *param);
+QDF_STATUS
+	(*extract_vendor_pdev_event)(wmi_unified_t wmi_handle, void *evt_buf,
+			      struct wmi_host_vendor_pdev_event *param);
 };
 /* Forward declartion for psoc*/
 struct wlan_objmgr_psoc;

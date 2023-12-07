@@ -225,6 +225,10 @@ enum phy_ch_width get_next_lower_bandwidth(enum phy_ch_width ch_width)
 
 const struct chan_map channel_map_us[NUM_CHANNELS] = {
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_2402] = {2402, 191, 5, 10},
+	[CHAN_ENUM_2404] = {2404, 192, 5, 10},
+	[CHAN_ENUM_2407] = {2407, 193, 5, 10},
+	[CHAN_ENUM_2409] = {2409, 194, 5, 10},
 	[CHAN_ENUM_2412] = {2412, 1, 5, 40},
 	[CHAN_ENUM_2414] = {2414, 203, 5, 10},
 	[CHAN_ENUM_2417] = {2417, 2, 5, 40},
@@ -257,6 +261,9 @@ const struct chan_map channel_map_us[NUM_CHANNELS] = {
 	[CHAN_ENUM_2484] = {2484, 14, 5, 20},
 	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
 	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
+	[CHAN_ENUM_2494] = {2494, 228, 5, 10},
+	[CHAN_ENUM_2497] = {2497, 229, 5, 10},
+	[CHAN_ENUM_2499] = {2499, 230, 5, 10},
 #else
 	[CHAN_ENUM_2412] = {2412, 1, 20, 40},
 	[CHAN_ENUM_2417] = {2417, 2, 20, 40},
@@ -304,20 +311,43 @@ const struct chan_map channel_map_us[NUM_CHANNELS] = {
 	[CHAN_ENUM_4982] = {4982, 9, 5, 5},
 	[CHAN_ENUM_4985] = {4985, 19, 10, 10},
 	[CHAN_ENUM_4987] = {4987, 10, 5, 5},
+	[CHAN_ENUM_5010] = {5010, 2, 2, 10},
+	[CHAN_ENUM_5015] = {5015, 3, 2, 10},
+	[CHAN_ENUM_5020] = {5020, 4, 2, 10},
+	[CHAN_ENUM_5025] = {5025, 5, 2, 10},
+	[CHAN_ENUM_5030] = {5030, 6, 2, 10},
 	[CHAN_ENUM_5032] = {5032, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5035] = {5035, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5035] = {5035, 7, 2, 10},
 	[CHAN_ENUM_5037] = {5037, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5040] = {5040, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5040] = {5040, 8, 2, 10},
 	[CHAN_ENUM_5042] = {5042, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5045] = {5045, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5045] = {5045, 9, 2, 10},
 	[CHAN_ENUM_5047] = {5047, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5050] = {5050, 10, 2, 10},
 	[CHAN_ENUM_5052] = {5052, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5055] = {5055, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5055] = {5055, 11, 2, 10},
 	[CHAN_ENUM_5057] = {5057, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5060] = {5060, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5080] = {5080, INVALID_CHANNEL_NUM, 2, 20},
-#endif /* CONFIG_49GHZ_CHAN */
+	[CHAN_ENUM_5060] = {5060, 12, 2, 10},
+	[CHAN_ENUM_5065] = {5065, 13, 2, 10},
+	[CHAN_ENUM_5070] = {5070, 14, 2, 10},
+	[CHAN_ENUM_5075] = {5075, 15, 2, 10},
+	[CHAN_ENUM_5080] = {5080, 16, 2, 10},
+#endif
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_5085] = {5085, 17, 2, 10},
+	[CHAN_ENUM_5090] = {5090, 18, 2, 10},
+	[CHAN_ENUM_5095] = {5095, 19, 2, 10},
+	[CHAN_ENUM_5100] = {5100, 20, 2, 10},
+	[CHAN_ENUM_5105] = {5105, 21, 2, 10},
+	[CHAN_ENUM_5110] = {5110, 22, 2, 10},
+	[CHAN_ENUM_5115] = {5115, 23, 2, 10},
+	[CHAN_ENUM_5120] = {5120, 24, 2, 10},
+	[CHAN_ENUM_5125] = {5125, 25, 2, 10},
+	[CHAN_ENUM_5130] = {5130, 26, 2, 10},
+	[CHAN_ENUM_5135] = {5135, 27, 2, 10},
+	[CHAN_ENUM_5140] = {5140, 28, 2, 10},
+	[CHAN_ENUM_5145] = {5145, 29, 2, 10},
+	[CHAN_ENUM_5150] = {5150, 30, 2, 10},
 	[CHAN_ENUM_5175] = {5175, 35, 2, 10},
 #endif
 	[CHAN_ENUM_5180] = {5180, 36, 2, 160},
@@ -495,6 +525,12 @@ const struct chan_map channel_map_us[NUM_CHANNELS] = {
 	[CHAN_ENUM_5885] = {5885, 177, 2, 160},
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
 	[CHAN_ENUM_5890] = {5890, 178, 2, 10},
+	[CHAN_ENUM_5895] = {5895, 179, 2, 10},
+	[CHAN_ENUM_5900] = {5900, 180, 2, 10},
+	[CHAN_ENUM_5905] = {5905, 181, 2, 10},
+	[CHAN_ENUM_5910] = {5910, 182, 2, 10},
+	[CHAN_ENUM_5915] = {5915, 183, 2, 10},
+	[CHAN_ENUM_5920] = {5920, 184, 2, 10},
 #else
 #ifdef WLAN_FEATURE_DSRC
 	[CHAN_ENUM_5890] = {5890, 178, 2, 160},
@@ -574,6 +610,10 @@ const struct chan_map channel_map_us[NUM_CHANNELS] = {
 
 const struct chan_map channel_map_eu[NUM_CHANNELS] = {
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_2402] = {2402, 191, 5, 10},
+	[CHAN_ENUM_2404] = {2404, 192, 5, 10},
+	[CHAN_ENUM_2407] = {2407, 193, 5, 10},
+	[CHAN_ENUM_2409] = {2409, 194, 5, 10},
 	[CHAN_ENUM_2412] = {2412, 1, 5, 40},
 	[CHAN_ENUM_2414] = {2414, 203, 5, 10},
 	[CHAN_ENUM_2417] = {2417, 2, 5, 40},
@@ -606,6 +646,9 @@ const struct chan_map channel_map_eu[NUM_CHANNELS] = {
 	[CHAN_ENUM_2484] = {2484, 14, 5, 20},
 	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
 	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
+	[CHAN_ENUM_2494] = {2494, 228, 5, 10},
+	[CHAN_ENUM_2497] = {2497, 229, 5, 10},
+	[CHAN_ENUM_2499] = {2499, 230, 5, 10},
 #else
 	[CHAN_ENUM_2412] = {2412, 1, 20, 40},
 	[CHAN_ENUM_2417] = {2417, 2, 20, 40},
@@ -653,20 +696,45 @@ const struct chan_map channel_map_eu[NUM_CHANNELS] = {
 	[CHAN_ENUM_4982] = {4982, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4985] = {4985, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4987] = {4987, INVALID_CHANNEL_NUM, 2, 20},
+#endif
+#if defined(CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS) || defined(CONFIG_49GHZ_CHAN)
+	[CHAN_ENUM_5010] = {5010, 2, 2, 10},
+	[CHAN_ENUM_5015] = {5015, 3, 2, 10},
+	[CHAN_ENUM_5020] = {5020, 4, 2, 10},
+	[CHAN_ENUM_5025] = {5025, 5, 2, 10},
+	[CHAN_ENUM_5030] = {5030, 6, 2, 10},
 	[CHAN_ENUM_5032] = {5032, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5035] = {5035, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5035] = {5035, 7, 2, 10},
 	[CHAN_ENUM_5037] = {5037, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5040] = {5040, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5040] = {5040, 8, 2, 10},
 	[CHAN_ENUM_5042] = {5042, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5045] = {5045, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5045] = {5045, 9, 2, 10},
 	[CHAN_ENUM_5047] = {5047, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5050] = {5050, 10, 2, 10},
 	[CHAN_ENUM_5052] = {5052, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5055] = {5055, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5055] = {5055, 11, 2, 10},
 	[CHAN_ENUM_5057] = {5057, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5060] = {5060, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5080] = {5080, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5060] = {5060, 12, 2, 10},
+	[CHAN_ENUM_5065] = {5065, 13, 2, 10},
+	[CHAN_ENUM_5070] = {5070, 14, 2, 10},
+	[CHAN_ENUM_5075] = {5075, 15, 2, 10},
+	[CHAN_ENUM_5080] = {5080, 16, 2, 10},
 #endif /* CONFIG_49GHZ_CHAN */
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_5085] = {5085, 17, 2, 10},
+	[CHAN_ENUM_5090] = {5090, 18, 2, 10},
+	[CHAN_ENUM_5095] = {5095, 19, 2, 10},
+	[CHAN_ENUM_5100] = {5100, 20, 2, 10},
+	[CHAN_ENUM_5105] = {5105, 21, 2, 10},
+	[CHAN_ENUM_5110] = {5110, 22, 2, 10},
+	[CHAN_ENUM_5115] = {5115, 23, 2, 10},
+	[CHAN_ENUM_5120] = {5120, 24, 2, 10},
+	[CHAN_ENUM_5125] = {5125, 25, 2, 10},
+	[CHAN_ENUM_5130] = {5130, 26, 2, 10},
+	[CHAN_ENUM_5135] = {5135, 27, 2, 10},
+	[CHAN_ENUM_5140] = {5140, 28, 2, 10},
+	[CHAN_ENUM_5145] = {5145, 29, 2, 10},
+	[CHAN_ENUM_5150] = {5150, 30, 2, 10},
 	[CHAN_ENUM_5175] = {5175, 35, 2, 10},
 #endif
 	[CHAN_ENUM_5180] = {5180, 36, 2, 160},
@@ -844,6 +912,12 @@ const struct chan_map channel_map_eu[NUM_CHANNELS] = {
 	[CHAN_ENUM_5885] = {5885, 177, 2, 160},
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
 	[CHAN_ENUM_5890] = {5890, INVALID_CHANNEL_NUM, 2, 10},
+	[CHAN_ENUM_5895] = {5895, 179, 2, 10},
+	[CHAN_ENUM_5900] = {5900, 180, 2, 10},
+	[CHAN_ENUM_5905] = {5905, 181, 2, 10},
+	[CHAN_ENUM_5910] = {5910, 182, 2, 10},
+	[CHAN_ENUM_5915] = {5915, 183, 2, 10},
+	[CHAN_ENUM_5920] = {5920, 184, 2, 10},
 #else
 #ifdef WLAN_FEATURE_DSRC
 	[CHAN_ENUM_5890] = {5890, 178, 2, 160},
@@ -923,6 +997,10 @@ const struct chan_map channel_map_eu[NUM_CHANNELS] = {
 
 const struct chan_map channel_map_jp[NUM_CHANNELS] = {
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_2402] = {2402, 191, 5, 10},
+	[CHAN_ENUM_2404] = {2404, 192, 5, 10},
+	[CHAN_ENUM_2407] = {2407, 193, 5, 10},
+	[CHAN_ENUM_2409] = {2409, 194, 5, 10},
 	[CHAN_ENUM_2412] = {2412, 1, 5, 40},
 	[CHAN_ENUM_2414] = {2414, 203, 5, 10},
 	[CHAN_ENUM_2417] = {2417, 2, 5, 40},
@@ -952,6 +1030,9 @@ const struct chan_map channel_map_jp[NUM_CHANNELS] = {
 	[CHAN_ENUM_2484] = {2484, 14, 5, 20},
 	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
 	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
+	[CHAN_ENUM_2494] = {2494, 228, 5, 10},
+	[CHAN_ENUM_2497] = {2497, 229, 5, 10},
+	[CHAN_ENUM_2499] = {2499, 230, 5, 10},
 #else
 	[CHAN_ENUM_2412] = {2412, 1, 20, 40},
 	[CHAN_ENUM_2417] = {2417, 2, 20, 40},
@@ -999,20 +1080,45 @@ const struct chan_map channel_map_jp[NUM_CHANNELS] = {
 	[CHAN_ENUM_4982] = {4982, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4985] = {4985, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4987] = {4987, INVALID_CHANNEL_NUM, 2, 20},
+#endif
+#if defined(CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS) || defined(CONFIG_49GHZ_CHAN)
+	[CHAN_ENUM_5010] = {5010, 2, 2, 10},
+	[CHAN_ENUM_5015] = {5015, 3, 2, 10},
+	[CHAN_ENUM_5020] = {5020, 4, 2, 10},
+	[CHAN_ENUM_5025] = {5025, 5, 2, 10},
+	[CHAN_ENUM_5030] = {5030, 6, 2, 10},
 	[CHAN_ENUM_5032] = {5032, 6, 5, 5},
-	[CHAN_ENUM_5035] = {5035, 7, 10, 10},
+	[CHAN_ENUM_5035] = {5035, 7, 2, 10},
 	[CHAN_ENUM_5037] = {5037, 7, 5, 5},
-	[CHAN_ENUM_5040] = {5040, 8, 10, 20},
+	[CHAN_ENUM_5040] = {5040, 8, 2, 10},
 	[CHAN_ENUM_5042] = {5042, 8, 5, 5},
-	[CHAN_ENUM_5045] = {5045, 9, 10, 10},
+	[CHAN_ENUM_5045] = {5045, 9, 2, 10},
 	[CHAN_ENUM_5047] = {5047, 9, 5, 5},
+	[CHAN_ENUM_5050] = {5050, 10, 2, 10},
 	[CHAN_ENUM_5052] = {5052, 10, 5, 5},
-	[CHAN_ENUM_5055] = {5055, 11, 10, 10},
+	[CHAN_ENUM_5055] = {5055, 11, 2, 10},
 	[CHAN_ENUM_5057] = {5057, 11, 5, 5},
-	[CHAN_ENUM_5060] = {5060, 12, 20, 20},
-	[CHAN_ENUM_5080] = {5080, 16, 20, 20},
+	[CHAN_ENUM_5060] = {5060, 12, 2, 10},
+	[CHAN_ENUM_5065] = {5065, 13, 2, 10},
+	[CHAN_ENUM_5070] = {5070, 14, 2, 10},
+	[CHAN_ENUM_5075] = {5075, 15, 2, 10},
+	[CHAN_ENUM_5080] = {5080, 16, 2, 10},
 #endif /* CONFIG_49GHZ_CHAN */
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_5085] = {5085, 17, 2, 10},
+	[CHAN_ENUM_5090] = {5090, 18, 2, 10},
+	[CHAN_ENUM_5095] = {5095, 19, 2, 10},
+	[CHAN_ENUM_5100] = {5100, 20, 2, 10},
+	[CHAN_ENUM_5105] = {5105, 21, 2, 10},
+	[CHAN_ENUM_5110] = {5110, 22, 2, 10},
+	[CHAN_ENUM_5115] = {5115, 23, 2, 10},
+	[CHAN_ENUM_5120] = {5120, 24, 2, 10},
+	[CHAN_ENUM_5125] = {5125, 25, 2, 10},
+	[CHAN_ENUM_5130] = {5130, 26, 2, 10},
+	[CHAN_ENUM_5135] = {5135, 27, 2, 10},
+	[CHAN_ENUM_5140] = {5140, 28, 2, 10},
+	[CHAN_ENUM_5145] = {5145, 29, 2, 10},
+	[CHAN_ENUM_5150] = {5150, 30, 2, 10},
 	[CHAN_ENUM_5175] = {5175, 35, 2, 10},
 #endif
 	[CHAN_ENUM_5180] = {5180, 36, 2, 160},
@@ -1190,6 +1296,12 @@ const struct chan_map channel_map_jp[NUM_CHANNELS] = {
 	[CHAN_ENUM_5885] = {5885, INVALID_CHANNEL_NUM, 2, 160},
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
 	[CHAN_ENUM_5890] = {5890, INVALID_CHANNEL_NUM, 2, 10},
+	[CHAN_ENUM_5895] = {5895, 179, 2, 10},
+	[CHAN_ENUM_5900] = {5900, 180, 2, 10},
+	[CHAN_ENUM_5905] = {5905, 181, 2, 10},
+	[CHAN_ENUM_5910] = {5910, 182, 2, 10},
+	[CHAN_ENUM_5915] = {5915, 183, 2, 10},
+	[CHAN_ENUM_5920] = {5920, 184, 2, 10},
 #else
 #ifdef WLAN_FEATURE_DSRC
 	[CHAN_ENUM_5890] = {5890, INVALID_CHANNEL_NUM, 2, 160},
@@ -1269,6 +1381,10 @@ const struct chan_map channel_map_jp[NUM_CHANNELS] = {
 
 const struct chan_map channel_map_global[NUM_CHANNELS] = {
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_2402] = {2401, 191, 5, 10},
+	[CHAN_ENUM_2404] = {2404, 192, 5, 10},
+	[CHAN_ENUM_2407] = {2407, 193, 5, 10},
+	[CHAN_ENUM_2409] = {2409, 194, 5, 10},
 	[CHAN_ENUM_2412] = {2412, 1, 5, 40},
 	[CHAN_ENUM_2414] = {2414, 203, 5, 10},
 	[CHAN_ENUM_2417] = {2417, 2, 5, 40},
@@ -1301,6 +1417,9 @@ const struct chan_map channel_map_global[NUM_CHANNELS] = {
 	[CHAN_ENUM_2484] = {2484, 14, 5, 20},
 	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
 	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
+	[CHAN_ENUM_2494] = {2494, 228, 5, 10},
+	[CHAN_ENUM_2497] = {2497, 229, 5, 10},
+	[CHAN_ENUM_2499] = {2499, 230, 5, 10},
 #else
 	[CHAN_ENUM_2412] = {2412, 1, 20, 40},
 	[CHAN_ENUM_2417] = {2417, 2, 20, 40},
@@ -1348,20 +1467,45 @@ const struct chan_map channel_map_global[NUM_CHANNELS] = {
 	[CHAN_ENUM_4982] = {4982, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4985] = {4985, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4987] = {4987, INVALID_CHANNEL_NUM, 2, 20},
+#endif
+#if defined(CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS) || defined(CONFIG_49GHZ_CHAN)
+	[CHAN_ENUM_5010] = {5010, 2, 2, 10},
+	[CHAN_ENUM_5015] = {5015, 3, 2, 10},
+	[CHAN_ENUM_5020] = {5020, 4, 2, 10},
+	[CHAN_ENUM_5025] = {5025, 5, 2, 10},
+	[CHAN_ENUM_5030] = {5030, 6, 2, 10},
 	[CHAN_ENUM_5032] = {5032, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5035] = {5035, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5035] = {5035, 7, 2, 10},
 	[CHAN_ENUM_5037] = {5037, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5040] = {5040, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5040] = {5040, 8, 2, 10},
 	[CHAN_ENUM_5042] = {5042, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5045] = {5045, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5045] = {5045, 9, 2, 10},
 	[CHAN_ENUM_5047] = {5047, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5050] = {5050, 10, 2, 10},
 	[CHAN_ENUM_5052] = {5052, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5055] = {5055, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5055] = {5055, 11, 2, 10},
 	[CHAN_ENUM_5057] = {5057, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5060] = {5060, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5080] = {5080, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5060] = {5060, 12, 2, 10},
+	[CHAN_ENUM_5065] = {5065, 13, 2, 10},
+	[CHAN_ENUM_5070] = {5070, 14, 2, 10},
+	[CHAN_ENUM_5075] = {5075, 15, 2, 10},
+	[CHAN_ENUM_5080] = {5080, 16, 2, 10},
 #endif /* CONFIG_49GHZ_CHAN */
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_5085] = {5085, 17, 2, 10},
+	[CHAN_ENUM_5090] = {5090, 18, 2, 10},
+	[CHAN_ENUM_5095] = {5095, 19, 2, 10},
+	[CHAN_ENUM_5100] = {5100, 20, 2, 10},
+	[CHAN_ENUM_5105] = {5105, 21, 2, 10},
+	[CHAN_ENUM_5110] = {5110, 22, 2, 10},
+	[CHAN_ENUM_5115] = {5115, 23, 2, 10},
+	[CHAN_ENUM_5120] = {5120, 24, 2, 10},
+	[CHAN_ENUM_5125] = {5125, 25, 2, 10},
+	[CHAN_ENUM_5130] = {5130, 26, 2, 10},
+	[CHAN_ENUM_5135] = {5135, 27, 2, 10},
+	[CHAN_ENUM_5140] = {5140, 28, 2, 10},
+	[CHAN_ENUM_5145] = {5145, 29, 2, 10},
+	[CHAN_ENUM_5150] = {5150, 30, 2, 10},
 	[CHAN_ENUM_5175] = {5175, 35, 2, 10},
 #endif
 	[CHAN_ENUM_5180] = {5180, 36, 2, 160},
@@ -1539,6 +1683,12 @@ const struct chan_map channel_map_global[NUM_CHANNELS] = {
 	[CHAN_ENUM_5885] = {5885, INVALID_CHANNEL_NUM, 2, 160},
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
 	[CHAN_ENUM_5890] = {5890, INVALID_CHANNEL_NUM, 2, 10},
+	[CHAN_ENUM_5895] = {5895, 179, 2, 10},
+	[CHAN_ENUM_5900] = {5900, 180, 2, 10},
+	[CHAN_ENUM_5905] = {5905, 181, 2, 10},
+	[CHAN_ENUM_5910] = {5910, 182, 2, 10},
+	[CHAN_ENUM_5915] = {5915, 183, 2, 10},
+	[CHAN_ENUM_5920] = {5920, 184, 2, 10},
 #else
 #ifdef WLAN_FEATURE_DSRC
 	[CHAN_ENUM_5890] = {5890, INVALID_CHANNEL_NUM, 2, 160},
@@ -1618,6 +1768,10 @@ const struct chan_map channel_map_global[NUM_CHANNELS] = {
 
 const struct chan_map channel_map_china[NUM_CHANNELS] = {
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_2402] = {2409, 191, 5, 10},
+	[CHAN_ENUM_2404] = {2409, 192, 5, 10},
+	[CHAN_ENUM_2407] = {2409, 193, 5, 10},
+	[CHAN_ENUM_2409] = {2409, 194, 5, 10},
 	[CHAN_ENUM_2412] = {2412, 1, 5, 40},
 	[CHAN_ENUM_2414] = {2414, 203, 5, 10},
 	[CHAN_ENUM_2417] = {2417, 2, 5, 40},
@@ -1650,6 +1804,9 @@ const struct chan_map channel_map_china[NUM_CHANNELS] = {
 	[CHAN_ENUM_2484] = {2484, 14, 5, 20},
 	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
 	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
+	[CHAN_ENUM_2494] = {2494, 228, 5, 10},
+	[CHAN_ENUM_2497] = {2497, 229, 5, 10},
+	[CHAN_ENUM_2499] = {2499, 230, 5, 10},
 #else
 	[CHAN_ENUM_2412] = {2412, 1, 20, 40},
 	[CHAN_ENUM_2417] = {2417, 2, 20, 40},
@@ -1697,20 +1854,45 @@ const struct chan_map channel_map_china[NUM_CHANNELS] = {
 	[CHAN_ENUM_4982] = {4982, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4985] = {4985, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4987] = {4987, INVALID_CHANNEL_NUM, 2, 20},
+#endif
+#if defined(CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS) || defined(CONFIG_49GHZ_CHAN)
+	[CHAN_ENUM_5010] = {5010, 2, 2, 10},
+	[CHAN_ENUM_5015] = {5015, 3, 2, 10},
+	[CHAN_ENUM_5020] = {5020, 4, 2, 10},
+	[CHAN_ENUM_5025] = {5025, 5, 2, 10},
+	[CHAN_ENUM_5030] = {5030, 6, 2, 10},
 	[CHAN_ENUM_5032] = {5032, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5035] = {5035, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5035] = {5035, 7, 2, 10},
 	[CHAN_ENUM_5037] = {5037, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5040] = {5040, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5040] = {5040, 8, 2, 10},
 	[CHAN_ENUM_5042] = {5042, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5045] = {5045, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5045] = {5045, 9, 2, 10},
 	[CHAN_ENUM_5047] = {5047, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5050] = {5050, 10, 2, 10},
 	[CHAN_ENUM_5052] = {5052, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5055] = {5055, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5055] = {5055, 11, 2, 10},
 	[CHAN_ENUM_5057] = {5057, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5060] = {5060, INVALID_CHANNEL_NUM, 2, 20},
-	[CHAN_ENUM_5080] = {5080, INVALID_CHANNEL_NUM, 2, 20},
+	[CHAN_ENUM_5060] = {5060, 12, 2, 10},
+	[CHAN_ENUM_5065] = {5065, 13, 2, 10},
+	[CHAN_ENUM_5070] = {5070, 14, 2, 10},
+	[CHAN_ENUM_5075] = {5075, 15, 2, 10},
+	[CHAN_ENUM_5080] = {5080, 16, 2, 10},
 #endif /* CONFIG_49GHZ_CHAN */
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+	[CHAN_ENUM_5085] = {5085, 17, 2, 10},
+	[CHAN_ENUM_5090] = {5090, 18, 2, 10},
+	[CHAN_ENUM_5095] = {5095, 19, 2, 10},
+	[CHAN_ENUM_5100] = {5100, 20, 2, 10},
+	[CHAN_ENUM_5105] = {5105, 21, 2, 10},
+	[CHAN_ENUM_5110] = {5110, 22, 2, 10},
+	[CHAN_ENUM_5115] = {5115, 23, 2, 10},
+	[CHAN_ENUM_5120] = {5120, 24, 2, 10},
+	[CHAN_ENUM_5125] = {5125, 25, 2, 10},
+	[CHAN_ENUM_5130] = {5130, 26, 2, 10},
+	[CHAN_ENUM_5135] = {5135, 27, 2, 10},
+	[CHAN_ENUM_5140] = {5140, 28, 2, 10},
+	[CHAN_ENUM_5145] = {5145, 29, 2, 10},
+	[CHAN_ENUM_5150] = {5150, 30, 2, 10},
 	[CHAN_ENUM_5175] = {5175, 35, 2, 10},
 #endif
 	[CHAN_ENUM_5180] = {5180, 36, 2, 160},
@@ -1888,6 +2070,12 @@ const struct chan_map channel_map_china[NUM_CHANNELS] = {
 	[CHAN_ENUM_5885] = {5885, INVALID_CHANNEL_NUM, 2, 160},
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
 	[CHAN_ENUM_5890] = {5890, INVALID_CHANNEL_NUM, 2, 10},
+	[CHAN_ENUM_5895] = {5895, 179, 2, 10},
+	[CHAN_ENUM_5900] = {5900, 180, 2, 10},
+	[CHAN_ENUM_5905] = {5905, 181, 2, 10},
+	[CHAN_ENUM_5910] = {5910, 182, 2, 10},
+	[CHAN_ENUM_5915] = {5915, 183, 2, 10},
+	[CHAN_ENUM_5920] = {5920, 184, 2, 10},
 #else
 #ifdef WLAN_FEATURE_DSRC
 	[CHAN_ENUM_5890] = {5890, INVALID_CHANNEL_NUM, 2, 160},
@@ -2674,7 +2862,9 @@ static bool reg_is_freq_2pt5mhz(qdf_freq_t freq)
 {
 	if ((freq == WLAN_24_GHZ_2PT5MHZ_CHAN_222_FREQ) ||
 		(freq == WLAN_24_GHZ_2PT5MHZ_CHAN_221_FREQ) ||
-		 WLAN_IS_FREQ_2P5MHZ(freq))
+		 WLAN_IS_FREQ_2P5MHZ(freq) ||
+		((freq >= WLAN_24_GHZ_2PT5MHZ_CHAN_BASE_FREQ) &&
+			(freq <= WLAN_24_GHZ_2PT5MHZ_CHAN_198_FREQ)))
 		return true;
 	return false;
 }
@@ -2764,6 +2954,9 @@ uint16_t reg_legacy_chan_to_freq(struct wlan_objmgr_pdev *pdev,
 		reg_err_rl("Invalid channel %d", chan_num);
 		return 0;
 	}
+
+	if (chan_num >= 36 && chan_num <= 183)
+		min_chan_range = MIN_5GHZ_CHANNEL;
 
 	return reg_compute_chan_to_freq(pdev, chan_num,
 					min_chan_range,
@@ -3697,7 +3890,13 @@ qdf_freq_t reg_chan_band_to_freq(struct wlan_objmgr_pdev *pdev,
 						min_chan,
 						max_chan);
 	} else {
-		if (BAND_2G_PRESENT(band_mask)) {
+
+		/*
+		 * Because of the new added channels in 2.4G band (191 ~ 230),
+		 * 5G channels would fall in the range of 2.4G channels.
+		 */
+		if (BAND_2G_PRESENT(band_mask) &&
+		    !(chan_num >= 36 && chan_num < 190)) {
 			min_chan = MIN_24GHZ_CHANNEL;
 			max_chan = MAX_24GHZ_CHANNEL;
 			freq = reg_compute_chan_to_freq(pdev, chan_num,
@@ -4846,7 +5045,7 @@ uint8_t  reg_get_max_tx_power(struct wlan_objmgr_pdev *pdev)
 {
 	struct regulatory_channel *cur_chan_list;
 	struct wlan_regulatory_pdev_priv_obj *pdev_priv_obj;
-	uint8_t i, max_tx_power = 0;
+	uint16_t i, max_tx_power = 0;
 
 	pdev_priv_obj = reg_get_pdev_obj(pdev);
 

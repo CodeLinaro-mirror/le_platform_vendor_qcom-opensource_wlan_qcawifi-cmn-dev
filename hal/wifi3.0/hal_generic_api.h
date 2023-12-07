@@ -467,6 +467,8 @@ static inline void hal_get_radiotap_he_gi_ltf(uint16_t *he_gi, uint16_t *he_ltf)
 #define CHANNEL_NUM_197 197
 #define CHANNEL_FREQ_2484 2484
 #define CHANNEL_FREQ_2407 2407
+#define CHANNEL_FREQ_2409 2409
+#define CHANNEL_FREQ_2492 2492
 #define CHANNEL_FREQ_2512 2512
 #define CHANNEL_FREQ_5000 5000
 #define CHANNEL_FREQ_5950 5950
@@ -480,6 +482,7 @@ static inline void hal_get_radiotap_he_gi_ltf(uint16_t *he_gi, uint16_t *he_ltf)
 #define BASE_CHANNEL_NUM_2PT5MHZ 200
 #define BASE_CHANNEL_FREQ_2PT5MHZ 2399
 #define CHANNEL_NUMBER_221 221
+#define CHANNEL_NUMBER_190 190
 #define CHANNEL_FREQ_2477 2477
 #define IS_FREQ_2P5MHZ(freq) \
     (((freq - CHANNEL_FREQ_2407) % FREQ_MULTIPLIER_CONST_5MHZ) && \
@@ -508,6 +511,12 @@ static uint8_t hal_rx_radiotap_freq_to_num(uint16_t freq)
 		 */
 		start_chan = CHANNEL_NUMBER_221;
 		start_freq = CHANNEL_FREQ_2477;
+	} else if ((freq >= BASE_CHANNEL_FREQ_2PT5MHZ && freq <= CHANNEL_FREQ_2409)
+			|| (freq >= CHANNEL_FREQ_2492)) {
+		start_chan = CHANNEL_NUMBER_190;
+		start_freq = BASE_CHANNEL_FREQ_2PT5MHZ;
+
+		return (start_chan + (freq - start_freq) - 2);
 	}
 
 	return start_chan + (freq - start_freq) / FREQ_MULTIPLIER_CONST_5MHZ;

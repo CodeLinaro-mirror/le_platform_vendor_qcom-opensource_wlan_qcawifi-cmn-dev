@@ -403,9 +403,6 @@ dp_tx_stats_update(struct dp_pdev *pdev, struct dp_peer *peer,
 	DP_STATS_INC(peer, tx.transmit_type[ppdu->ppdu_type].mpdu_tried,
 		     mpdu_tried);
 
-	DP_STATS_INC_PKT(peer, tx.comp_pkt,
-			num_msdu, (ppdu->success_bytes +
-				ppdu->retry_bytes + ppdu->failed_bytes));
 	DP_STATS_UPD(peer, tx.tx_rate, ppdu->tx_rate);
 	DP_STATS_INC(peer, tx.sgi_count[ppdu->gi], num_msdu);
 	DP_STATS_INC(peer, tx.bw[ppdu->bw], num_msdu);
@@ -2651,7 +2648,7 @@ static void dp_process_ppdu_stats_user_rate_tlv(struct dp_pdev *pdev,
 	ppdu_user_desc->txbf =
 		HTT_PPDU_STATS_USER_RATE_TLV_TXBF_GET(*tag_buf);
 	ppdu_user_desc->bw =
-		HTT_PPDU_STATS_USER_RATE_TLV_BW_GET(*tag_buf) - 2;
+		HTT_PPDU_STATS_USER_RATE_TLV_BW_GET(*tag_buf);
 	ppdu_user_desc->nss = HTT_PPDU_STATS_USER_RATE_TLV_NSS_GET(*tag_buf);
 	ppdu_desc->usr_nss_sum += ppdu_user_desc->nss;
 	ppdu_user_desc->mcs = HTT_PPDU_STATS_USER_RATE_TLV_MCS_GET(*tag_buf);

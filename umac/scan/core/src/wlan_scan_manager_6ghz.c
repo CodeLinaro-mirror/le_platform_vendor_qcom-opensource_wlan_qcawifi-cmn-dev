@@ -51,7 +51,8 @@ static void
 scm_sort_6ghz_channel_list(struct wlan_objmgr_vdev *vdev,
 			   struct chan_list *chan_list)
 {
-	uint8_t i, j = 0, max, tmp_list_count;
+	uint16_t i, j = 0;
+	uint8_t max, tmp_list_count;
 	struct meta_rnr_channel *channel;
 	struct chan_info temp_list[MAX_6GHZ_CHANNEL];
 	struct rnr_chan_weight *rnr_chan_info, temp;

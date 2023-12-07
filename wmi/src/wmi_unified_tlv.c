@@ -11406,7 +11406,8 @@ static QDF_STATUS extract_reg_cap_service_ready_ext_tlv(
 	param->high_2ghz_chan = ext_reg_cap->high_2ghz_chan;
 	param->low_5ghz_chan = ext_reg_cap->low_5ghz_chan;
 	param->high_5ghz_chan = ext_reg_cap->high_5ghz_chan;
-
+	if (param->high_5ghz_chan > 5925)
+		param->high_5ghz_chan = 5925;
 	return QDF_STATUS_SUCCESS;
 }
 
@@ -11924,6 +11925,17 @@ static struct cur_reg_rule
 		reg_rule_ptr[count].psd_eirp =
 			WMI_REG_RULE_PSD_EIRP_GET(
 					wmi_reg_rule[count].psd_power_info);
+		if (reg_rule_ptr[count].start_freq == 2402) {
+			reg_rule_ptr[count].start_freq = 2399;
+			reg_rule_ptr[count].end_freq = 2505;
+		}
+		if (reg_rule_ptr[count].start_freq == 5170 ||
+			reg_rule_ptr[count].start_freq == 4910)
+				reg_rule_ptr[count].start_freq = 5000;
+
+		if (reg_rule_ptr[count].end_freq == 5895 ||
+			reg_rule_ptr[count].end_freq == 5980)
+				reg_rule_ptr[count].end_freq = 5925;
 	}
 
 	return reg_rule_ptr;
@@ -14554,6 +14566,38 @@ send_vdev_tsf_tstamp_action_cmd_tlv(wmi_unified_t wmi, uint8_t vdev_id)
 	return QDF_STATUS_SUCCESS;
 }
 
+static QDF_STATUS
+send_vdev_tsf_qtimer_action_cmd_tlv(wmi_unified_t wmi,
+		uint8_t vdev_id, uint32_t value)
+{
+	wmi_vdev_tsf_tstamp_action_cmd_fixed_param *cmd;
+	wmi_buf_t buf;
+	uint32_t len = sizeof(*cmd);
+
+	buf = wmi_buf_alloc(wmi, len);
+	if (!buf)
+		return QDF_STATUS_E_NOMEM;
+
+	cmd = (wmi_vdev_tsf_tstamp_action_cmd_fixed_param *)wmi_buf_data(buf);
+	WMITLV_SET_HDR(&cmd->tlv_header,
+		WMITLV_TAG_STRUC_wmi_vdev_tsf_tstamp_action_cmd_fixed_param,
+		WMITLV_GET_STRUCT_TLVLEN(
+			wmi_vdev_tsf_tstamp_action_cmd_fixed_param));
+	cmd->vdev_id = vdev_id;
+	cmd->tsf_action = TSF_TSTAMP_PERIODIC_REPORT_REQ;
+	cmd->period = value * 1000;  //ms
+	cmd->flags = TSF_TSTAMP_REPORT_TTIMER | TSF_TSTAMP_REPORT_QTIMER;
+	wmi_mtrace(WMI_VDEV_TSF_TSTAMP_ACTION_CMDID, cmd->vdev_id, 0);
+	if (wmi_unified_cmd_send(wmi, buf, len,
+				 WMI_VDEV_TSF_TSTAMP_ACTION_CMDID)) {
+		wmi_err("Failed to send WMI_VDEV_TSF_TSTAMP_ACTION_CMDID");
+		wmi_buf_free(buf);
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	return QDF_STATUS_SUCCESS;
+}
+
 /**
  * extract_vdev_tsf_report_event_tlv() - extract vdev tsf report from event
  * @wmi_handle: wmi handle
@@ -14577,6 +14621,7 @@ extract_vdev_tsf_report_event_tlv(wmi_unified_t wmi_handle, void *evt_buf,
 
 	evt = param_buf->fixed_param;
 	param->tsf = ((uint64_t)(evt->tsf_high) << 32) | evt->tsf_low;
+	param->qtimer = ((uint64_t)(evt->qtimer_high) << 32) | evt->qtimer_low;
 	param->vdev_id = evt->vdev_id;
 
 	return QDF_STATUS_SUCCESS;
@@ -15039,6 +15084,38 @@ send_hpa_smck_tlv(wmi_unified_t wmi_handle,
 	return ret;
 }
 
+static QDF_STATUS
+extract_vendor_pdev_event_tlv(wmi_unified_t wmi_handle,
+			      void *evt_buf,
+			      struct wmi_host_vendor_pdev_event *param)
+{
+	WMI_VENDOR_PDEV_EVENTID_param_tlvs *param_buf;
+	wmi_pdev_vendor_event_fixed_param *pdev_vendor;
+
+	param_buf = (WMI_VENDOR_PDEV_EVENTID_param_tlvs *)evt_buf;
+	if (!param_buf) {
+		wmi_err("Invalid vendor Event");
+		return QDF_STATUS_E_INVAL;
+	}
+
+	pdev_vendor = param_buf->fixed_param;
+	wmi_debug("pdev_id=%u, sub_type=%u",
+		  pdev_vendor->pdev_id, pdev_vendor->sub_type);
+
+	param->pdev_id = pdev_vendor->pdev_id;
+	param->sub_type = pdev_vendor->sub_type;
+	if (param->sub_type == WMI_PDEV_VENDOR_EVT_PRIV_CSA) {
+		wmi_pdev_vendor_csa_param *csa_param =
+			(wmi_pdev_vendor_csa_param *)&pdev_vendor->evt;
+		wmi_debug("channel width = %u, channel number = %u",
+			  csa_param->channel_bw, csa_param->channel_num);
+		param->evt.csa_param.chwidth = csa_param->channel_bw;
+		param->evt.csa_param.chan_num = csa_param->channel_num;
+	}
+
+	return QDF_STATUS_SUCCESS;
+}
+
 struct wmi_ops tlv_ops =  {
 	.send_vdev_create_cmd = send_vdev_create_cmd_tlv,
 	.send_vdev_delete_cmd = send_vdev_delete_cmd_tlv,
@@ -15403,6 +15480,7 @@ struct wmi_ops tlv_ops =  {
 	.extract_cp_stats_more_pending =
 				extract_cp_stats_more_pending_tlv,
 	.send_vdev_tsf_tstamp_action_cmd = send_vdev_tsf_tstamp_action_cmd_tlv,
+	.send_vdev_tsf_qtimer_action_cmd = send_vdev_tsf_qtimer_action_cmd_tlv,
 	.extract_vdev_tsf_report_event = extract_vdev_tsf_report_event_tlv,
 	.extract_pdev_csa_switch_count_status =
 		extract_pdev_csa_switch_count_status_tlv,
@@ -15418,6 +15496,7 @@ struct wmi_ops tlv_ops =  {
 	.extract_get_ulrtd_time_ev_param = extract_get_ulrtd_time_ev_param_tlv,
 	.send_start_measure_ul_rtd = send_start_measure_ul_rtd_tlv,
 	.send_hpa_smck_tlv = send_hpa_smck_tlv,
+	.extract_vendor_pdev_event = extract_vendor_pdev_event_tlv,
 };
 
 /**
@@ -15831,6 +15910,7 @@ event_ids[wmi_roam_scan_chan_list_id] =
 	event_ids[wmi_pdev_get_measured_ul_rtd_event_id] =
 			WMI_PDEV_GET_MEASURED_UL_RTD_EVENTID;
 	event_ids[wmi_pdev_hpa_event_id] = WMI_HPA_EVENTID;
+	event_ids[wmi_vendor_pdev_event_id] = WMI_VENDOR_PDEV_EVENTID;
 }
 
 #ifdef WLAN_FEATURE_LINK_LAYER_STATS
@@ -16237,6 +16317,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 			WMI_SERVICE_VDEV_PURE11AX_SUPPORT;
 	wmi_service[wmi_service_dcm_ulofdma_support] =
 			WMI_SERVICE_DCM_ULOFDMA_SUPPORT;
+	wmi_service[wmi_service_private_acs_support] =
+			WMI_SERVICE_PRIVATE_CSA_SUPPORT;
 }
 
 /**

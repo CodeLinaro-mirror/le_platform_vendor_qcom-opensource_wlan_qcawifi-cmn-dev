@@ -3357,6 +3357,19 @@ QDF_STATUS wmi_unified_send_vdev_tsf_tstamp_action_cmd(wmi_unified_t wmi_hdl,
 	return QDF_STATUS_E_FAILURE;
 }
 
+QDF_STATUS wmi_unified_send_vdev_tsf_qtimer_action_cmd(
+		wmi_unified_t wmi_hdl,
+		uint8_t vdev_id, uint32_t value)
+{
+	wmi_unified_t wmi_handle = wmi_hdl;
+
+	if (wmi_handle->ops->send_vdev_tsf_qtimer_action_cmd)
+		return wmi_handle->ops->send_vdev_tsf_qtimer_action_cmd(
+						wmi_handle, vdev_id, value);
+
+	return QDF_STATUS_E_FAILURE;
+}
+
 /**
  * wmi_extract_vdev_tsf_report_event() - extract vdev tsf report from event
  * @wmi_handle: wmi handle
@@ -3511,3 +3524,13 @@ wmi_unified_send_hpa_smck_tlv(wmi_unified_t wmi_handle, struct wmi_host_send_hpa
 	return QDF_STATUS_E_FAILURE;
 }
 
+QDF_STATUS
+wmi_extract_vendor_pdev_event(wmi_unified_t wmi_handle,
+			      void *evt_buf,
+			      struct wmi_host_vendor_pdev_event *param) {
+	if (wmi_handle->ops->extract_vendor_pdev_event)
+		return wmi_handle->ops->extract_vendor_pdev_event(
+			wmi_handle, evt_buf, param);
+
+	return QDF_STATUS_E_FAILURE;
+}

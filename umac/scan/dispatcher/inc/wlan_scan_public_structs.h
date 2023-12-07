@@ -829,7 +829,7 @@ struct chan_info {
  * @chan: channel parameters used for this scan
  */
 struct chan_list {
-	uint8_t num_chan;
+	uint16_t num_chan;
 	struct chan_info chan[NUM_CHANNELS];
 };
 

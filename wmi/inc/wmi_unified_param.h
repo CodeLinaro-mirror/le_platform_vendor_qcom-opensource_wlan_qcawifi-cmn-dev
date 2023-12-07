@@ -4585,10 +4585,12 @@ struct ftm_time_sync_offset {
  * struct wmi_host_tsf_event_- Get tsf event info
  * @vdev_id: vdev id
  * @tsf: tsf
+ * @qtimer: qtimer
  */
 struct wmi_host_tsf_event {
 	uint32_t vdev_id;
 	uint64_t tsf;
+	uint64_t qtimer;
 };
 
 #define WMI_EVENT_ID_INVALID 0
@@ -4854,6 +4856,7 @@ typedef enum {
 	wmi_pdev_get_ani_err_event_id,
 	wmi_pdev_get_measured_ul_rtd_event_id,
 	wmi_pdev_hpa_event_id,
+	wmi_vendor_pdev_event_id,
 	wmi_events_max,
 } wmi_conv_event_id;
 
@@ -5445,6 +5448,7 @@ typedef enum {
 	wmi_service_hpa_support,
 	wmi_service_vdev_pure11ax_support,
 	wmi_service_dcm_ulofdma_support,
+	wmi_service_private_acs_support,
 	wmi_services_max,
 } wmi_conv_service_ids;
 #define WMI_SERVICE_UNAVAILABLE 0xFFFF
@@ -8369,4 +8373,17 @@ struct wmi_host_send_hpa {
 	uint32_t base_paddr_high;
 	uint32_t len;
 };
+
+struct wmi_host_vendor_pdev_event {
+	uint32_t pdev_id;
+	uint32_t sub_type;
+
+	union {
+		struct {
+			uint16_t chwidth;
+			uint16_t chan_num;
+		} csa_param;
+	} evt;
+};
+
 #endif /* _WMI_UNIFIED_PARAM_H_ */
