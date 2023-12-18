@@ -40,7 +40,7 @@
 #include "hif_debug.h"
 #include "mp_dev.h"
 #if defined(QCA_WIFI_QCA8074) || defined(QCA_WIFI_QCA6018) || \
-	defined(QCA_WIFI_QCA5018)
+	defined(QCA_WIFI_QCA5018) || defined(QCA_WIFI_QCN9000)
 #include "hal_api.h"
 #endif
 #include "hif_napi.h"

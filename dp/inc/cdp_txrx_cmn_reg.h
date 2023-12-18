@@ -66,7 +66,7 @@ ol_txrx_soc_attach(void *scn_handle, struct ol_if_ops *dp_ol_if_ops);
  * Return: DP SOC handle on success, NULL on failure
  */
 #if defined(QCA_WIFI_QCA8074) || defined(QCA_WIFI_QCA6018) || \
-	defined(QCA_WIFI_QCA5018)
+	defined(QCA_WIFI_QCA5018) || defined(QCA_WIFI_QCN9000)
 struct cdp_soc_t *
 dp_soc_attach_wifi3(struct cdp_ctrl_objmgr_psoc *ctrl_psoc,
 		    struct hif_opaque_softc *hif_handle,
