@@ -97,6 +97,9 @@
 					      */
 #define QCA_OUI_LEN                     6     /* OUI len of SBW IE */
 
+#define QCA_OUI_STA_SCAN_PARAM_SUBTYPE     0x03 /* This represents STA
+						 * scan param IE sub type field
+						 */
 #define ADAPTIVE_11R_OUI      0x964000
 #define ADAPTIVE_11R_OUI_TYPE 0x2C
 
@@ -1974,6 +1977,22 @@ static inline bool is_sbw_oui(uint8_t *frm)
 	return false;
 }
 #endif
+
+/**
+ * is_sta_scan_param_oui() - If vendor IE is STA scan param OUI
+ * @frm: vendor IE pointer
+ *
+ * API to check if vendor IE is STA scan param OUI
+ *
+ * Return: true if its STA scan param OUI
+ */
+static inline bool
+is_sta_scan_param_oui(uint8_t *frm)
+{
+	return (frm[1] > QCA_OUI_LEN) && (LE_READ_4(frm + 2) ==
+		((QCA_OUI_GENERIC_TYPE_1 << 24) | QCA_OUI)) &&
+		(frm[6] == QCA_OUI_STA_SCAN_PARAM_SUBTYPE);
+}
 
 /**
  * is_adaptive_11r_oui() - Function to check if vendor IE is ADAPTIVE 11R OUI

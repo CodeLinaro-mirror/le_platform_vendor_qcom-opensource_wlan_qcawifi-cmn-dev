@@ -183,6 +183,7 @@ struct channel_info {
  * @single_pmk: Pointer to sae single pmk IE
  * @rsnxe: Pointer to rsnxe IE
  * @sbw: Pointer to sub-bw (5/10MHZ)info IE
+ * @sta_scan_param: Pointer to AP specified STA scan param IE
  */
 struct ie_list {
 	uint8_t *tim;
@@ -238,6 +239,7 @@ struct ie_list {
 	uint8_t *single_pmk;
 	uint8_t *rsnxe;
 	uint8_t *sbw;
+	uint8_t *sta_scan_param;
 };
 
 enum scan_entry_connection_state {

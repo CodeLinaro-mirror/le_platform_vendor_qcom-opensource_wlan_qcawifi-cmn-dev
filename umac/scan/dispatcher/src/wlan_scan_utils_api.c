@@ -932,6 +932,8 @@ util_scan_parse_vendor_ie(struct scan_cache_entry *scan_params,
 	} else if (is_sbw_oui((uint8_t *)ie)) {
 		scan_params->ie_list.sbw = (((uint8_t *)(ie)) +
 					      WLAN_VENDOR_SBW_IE_OFFSET);
+	} else if (is_sta_scan_param_oui((uint8_t *)ie)) {
+		scan_params->ie_list.sta_scan_param= (uint8_t *)(ie);
 	}
 	return QDF_STATUS_SUCCESS;
 }
