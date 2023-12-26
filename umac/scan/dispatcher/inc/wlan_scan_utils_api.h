@@ -730,6 +730,7 @@ util_scan_copy_beacon_data(struct scan_cache_entry *new_entry,
 	ie_lst->single_pmk = conv_ptr(ie_lst->single_pmk, old_ptr, new_ptr);
 	ie_lst->rsnxe = conv_ptr(ie_lst->rsnxe, old_ptr, new_ptr);
 	ie_lst->sbw = conv_ptr(ie_lst->sbw, old_ptr, new_ptr);
+	ie_lst->sta_scan_param = conv_ptr(ie_lst->sta_scan_param, old_ptr, new_ptr);
 
 	return QDF_STATUS_SUCCESS;
 }
@@ -1711,6 +1712,20 @@ util_scan_entry_sbwie(struct scan_cache_entry *scan_entry)
 	return NULL;
 }
 #endif
+
+/**
+ * util_scan_entry_ssp_ie() - function to read STA scan param IE
+ * @scan_entry: scan entry
+ *
+ * API, function to read STA scan param IE
+ *
+ * Return: STA scan param ie or NULL if ie is not present
+ */
+static inline uint8_t*
+util_scan_entry_ssp_ie(struct scan_cache_entry *scan_entry)
+{
+	return scan_entry->ie_list.sta_scan_param;
+}
 
 /**
  * util_scan_entry_mdie() - function to read Mobility Domain IE
