@@ -1380,7 +1380,6 @@ int wlan_cfg80211_scan(struct wlan_objmgr_vdev *vdev,
 	uint32_t extra_ie_len = 0;
 	uint32_t chan_cnt = 0;
 	wlan_if_t vap;
-	bool use_ap_specified_scan_param = false;
 
 	psoc = wlan_pdev_get_psoc(pdev);
 	if (!psoc) {
@@ -1536,15 +1535,21 @@ int wlan_cfg80211_scan(struct wlan_objmgr_vdev *vdev,
 		osif_debug("vap object NULL");
 
 	if (vap != NULL && vap->iv_opmode == IEEE80211_M_STA &&
-		vap->iv_specified_scan_param_enable &&
-		vap->iv_scan_numchan_sap_set_sta) {
-		chan_cnt = vap->iv_scan_numchan_sap_set_sta;
-		use_ap_specified_scan_param = true;
-		osif_debug("STA use ap specified scan param, chan cnt %d",
-			   vap->iv_scan_numchan_sap_set_sta);
-	} else {
-		chan_cnt = request->n_channels;
+	    vap->iv_specified_scan_param_enable) {
+		osif_debug("STA use AP specified scan param, scan cnt %d",
+			   vap->iv_specified_scan_cnt);
+		if (vap->iv_specified_scan_cnt == 0)
+			vap->iv_specified_scan_param_enable = false;
+		if (!ieee80211_vap_is_connected(vap) &&
+		    vap->iv_specified_scan_cnt)
+			vap->iv_specified_scan_cnt--;
 	}
+
+	if (vap != NULL && vap->iv_specified_scan_param_enable)
+		chan_cnt = vap->iv_scan_numchan_sap_set_sta;
+	else
+		chan_cnt = request->n_channels;
+
 	if (chan_cnt) {
 #ifdef WLAN_POLICY_MGR_ENABLE
 		bool ap_or_go_present =
@@ -1554,9 +1559,10 @@ int wlan_cfg80211_scan(struct wlan_objmgr_vdev *vdev,
 			     psoc, PM_P2P_GO_MODE, NULL);
 #endif
 		for (i = 0; i < chan_cnt; i++) {
-			c_freq = use_ap_specified_scan_param ?
-				 (uint32_t)vap->iv_scan_chlist_sap_set_sta[i]:
-				 request->channels[i]->center_freq;
+			if (vap != NULL && vap->iv_specified_scan_param_enable)
+				c_freq = (uint32_t)vap->iv_scan_chlist_sap_set_sta[i];
+			else
+				c_freq = request->channels[i]->center_freq;
 
 			if (freq_already_in_scan_start_req(c_freq, req))
 				continue;
