@@ -1379,7 +1379,7 @@ int wlan_cfg80211_scan(struct wlan_objmgr_vdev *vdev,
 	enum QDF_OPMODE opmode;
 	uint32_t extra_ie_len = 0;
 	uint32_t chan_cnt = 0;
-	wlan_if_t vap;
+	struct ieee80211vap *vap = NULL;
 
 	psoc = wlan_pdev_get_psoc(pdev);
 	if (!psoc) {
@@ -1545,11 +1545,13 @@ int wlan_cfg80211_scan(struct wlan_objmgr_vdev *vdev,
 			vap->iv_specified_scan_cnt--;
 	}
 
-	if (vap != NULL && vap->iv_specified_scan_param_enable)
+	if (vap != NULL && vap->iv_specified_scan_param_enable) {
 		chan_cnt = vap->iv_scan_numchan_sap_set_sta;
-	else
+		if (vap->iv_sap_specified_idle_time)
+			req->scan_req.idle_time = vap->iv_sap_specified_idle_time;
+	} else {
 		chan_cnt = request->n_channels;
-
+	}
 	if (chan_cnt) {
 #ifdef WLAN_POLICY_MGR_ENABLE
 		bool ap_or_go_present =
