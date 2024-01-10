@@ -148,6 +148,14 @@
 #define CHAN_ENUM_SIXG_2      INVALID_CHANNEL
 #endif
 
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+#define MIN_CHANBW 5
+#define MAX_CHANBW 10
+#else
+#define MIN_CHANBW 20
+#define MAX_CHANBW 160
+#endif
+
 /* The eirp power values are in 0.01dBm units */
 #define EIRP_PWR_SCALE 100
 
