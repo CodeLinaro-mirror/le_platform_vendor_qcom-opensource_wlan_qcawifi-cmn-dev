@@ -2975,14 +2975,19 @@ done:
 				DP_STATS_INC(soc, rx.err.invalid_sa_da_idx, 1);
 				continue;
 			}
-			/* WDS Source Port Learning */
-			if (qdf_likely(vdev->wds_enabled))
-				dp_rx_wds_srcport_learn(soc,
+#ifdef IOT_DRONE_MESH
+			if (!rx_pdev->iot_mesh_en) {
+#endif
+			    /* WDS Source Port Learning */
+			    if (qdf_likely(vdev->wds_enabled))
+			        dp_rx_wds_srcport_learn(soc,
 							rx_tlv_hdr,
 							peer,
 							nbuf,
 							msdu_metadata);
-
+#ifdef IOT_DRONE_MESH
+			}
+#endif
 			/* Intrabss-fwd */
 			if (dp_rx_check_ap_bridge(vdev))
 				if (DP_RX_INTRABSS_FWD(soc, peer, rx_tlv_hdr,
