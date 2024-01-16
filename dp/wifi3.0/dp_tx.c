@@ -2036,6 +2036,8 @@ dp_tx_send_msdu_single(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 	enum cdp_tx_sw_drop drop_code = TX_MAX_DROP;
 	uint8_t tid = msdu_info->tid;
 	struct cdp_tid_tx_stats *tid_stats = NULL;
+	uint8_t bm_id = dp_tx_get_rbm_id(soc, tx_q->ring_id & DP_TX_QUEUE_MASK);
+	uint8_t comp_ring_id = dp_tx_get_comp_ring_id(soc, bm_id);
 
 	/* Setup Tx descriptor for an MSDU, and MSDU extension descriptor */
 	tx_desc = dp_tx_prepare_desc_single(vdev, nbuf, tx_q->desc_pool_id,
@@ -2108,7 +2110,7 @@ release_desc:
 fail_return:
 	dp_tx_get_tid(vdev, nbuf, msdu_info);
 	tid_stats = &pdev->stats.tid_stats.
-		    tid_tx_stats[tx_q->ring_id][tid];
+		    tid_tx_stats[comp_ring_id][msdu_info->tid];
 	tid_stats->swdrop_cnt[drop_code]++;
 	return nbuf;
 }
@@ -2185,6 +2187,8 @@ qdf_nbuf_t dp_tx_send_msdu_multiple(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 	struct dp_tx_queue *tx_q = &msdu_info->tx_queue;
 	struct cdp_tid_tx_stats *tid_stats = NULL;
 	uint8_t prep_desc_fail = 0, hw_enq_fail = 0;
+	uint8_t bm_id = dp_tx_get_rbm_id(soc, tx_q->ring_id & DP_TX_QUEUE_MASK);
+	uint8_t comp_ring_id = dp_tx_get_comp_ring_id(soc, bm_id);
 
 	if (qdf_unlikely(soc->cce_disable)) {
 		is_cce_classified = dp_cce_classify(vdev, nbuf);
@@ -2314,7 +2318,7 @@ qdf_nbuf_t dp_tx_send_msdu_multiple(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 
 			dp_tx_get_tid(vdev, nbuf, msdu_info);
 			tid_stats = &pdev->stats.tid_stats.
-				    tid_tx_stats[tx_q->ring_id][msdu_info->tid];
+				    tid_tx_stats[comp_ring_id][msdu_info->tid];
 			tid_stats->swdrop_cnt[TX_HW_ENQUEUE]++;
 
 			if (msdu_info->frm_type == dp_tx_frm_me) {

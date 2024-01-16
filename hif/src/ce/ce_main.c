@@ -52,7 +52,7 @@
 #include "qdf_hang_event_notifier.h"
 #endif
 
-#if (defined(QCA_WIFI_QCA8074) || defined(QCA_WIFI_QCA6290) || \
+#if (defined(QCA_WIFI_QCA8074) || defined(QCA_WIFI_QCN9000) || defined(QCA_WIFI_QCA6290) || \
 	defined(QCA_WIFI_QCA6018) || defined(QCA_WIFI_QCA5018) || \
 	defined(QCA_WIFI_WCN7850)) && !defined(QCA_WIFI_SUPPORT_SRNG)
 #define QCA_WIFI_SUPPORT_SRNG
