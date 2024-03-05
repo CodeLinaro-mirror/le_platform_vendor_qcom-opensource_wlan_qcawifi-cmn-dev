@@ -2398,6 +2398,11 @@ struct dp_pdev {
 #endif
 	/* Flag to inidicate monitor rings are initialized */
 	uint8_t pdev_mon_init;
+
+#ifdef IOT_DRONE_MESH
+	/* Flag to indicate iot_drone_mesh enabled or not */
+	uint8_t iot_mesh_en;
+#endif
 };
 
 struct dp_peer;

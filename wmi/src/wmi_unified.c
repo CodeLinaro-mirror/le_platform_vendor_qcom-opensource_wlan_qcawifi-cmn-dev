@@ -3123,6 +3123,7 @@ void *wmi_unified_attach(void *scn_handle,
 	qdf_atomic_init(&wmi_handle->is_target_suspended);
 	qdf_atomic_init(&wmi_handle->is_target_suspend_acked);
 	qdf_atomic_init(&wmi_handle->num_stats_over_qmi);
+	qdf_atomic_init(&wmi_handle->bcn_tx_evt_refcnt);
 	wmi_runtime_pm_init(wmi_handle);
 	wmi_interface_logging_init(wmi_handle, WMI_HOST_PDEV_ID_0);
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -96,6 +97,14 @@
 					      * width.
 					      */
 #define QCA_OUI_LEN                     6     /* OUI len of SBW IE */
+
+#define QCA_OUI_STA_SCAN_PARAM_SUBTYPE     0x03 /* This represents STA
+						 * scan param IE sub type field
+						 */
+#define QCA_OUI_IOT_DRONE_MESH_TYPE     0x05
+
+#define QCA_OUI_IOT_DRONE_MESH_NODE_INFO_SUBTYPE      0x01
+#define QCA_OUI_IOT_DRONE_MESH_EDGE_NODE_INFO_SUBTYPE 0x02
 
 #define ADAPTIVE_11R_OUI      0x964000
 #define ADAPTIVE_11R_OUI_TYPE 0x2C
@@ -1976,6 +1985,22 @@ static inline bool is_sbw_oui(uint8_t *frm)
 #endif
 
 /**
+ * is_sta_scan_param_oui() - If vendor IE is STA scan param OUI
+ * @frm: vendor IE pointer
+ *
+ * API to check if vendor IE is STA scan param OUI
+ *
+ * Return: true if its STA scan param OUI
+ */
+static inline bool
+is_sta_scan_param_oui(uint8_t *frm)
+{
+	return (frm[1] > QCA_OUI_LEN) && (LE_READ_4(frm + 2) ==
+		((QCA_OUI_GENERIC_TYPE_1 << 24) | QCA_OUI)) &&
+		(frm[6] == QCA_OUI_STA_SCAN_PARAM_SUBTYPE);
+}
+
+/**
  * is_adaptive_11r_oui() - Function to check if vendor IE is ADAPTIVE 11R OUI
  * @frm: vendor IE pointer
  *
@@ -2005,6 +2030,44 @@ is_sae_single_pmk_oui(uint8_t *frm)
 		((SAE_SINGLE_PMK_TYPE << OUI_TYPE_BITS) | SAE_SINGLE_PMK_OUI));
 }
 
+#ifdef IOT_DRONE_MESH
+/**
+ * is_iot_drone_mesh_node_info_oui() - If vendor IE is Drone Mesh Node
+ * Subtype OUI
+ * @frm: vendor IE pointer
+ *
+ * API to check if vendor IE is Drone Mesh OUI
+ *
+ * Return: true if its Drone Mesh OUI
+ */
+static inline bool
+is_iot_drone_mesh_node_info_oui(uint8_t *frm)
+{
+	bool status;
+
+	status = (frm[1] > OUI_LENGTH) && (LE_READ_4(frm + 2) ==
+		((QCA_OUI_IOT_DRONE_MESH_TYPE << OUI_TYPE_BITS) | QCA_OUI)) &&
+		(frm[6] == QCA_OUI_IOT_DRONE_MESH_NODE_INFO_SUBTYPE);
+	return status;
+}
+
+/**
+ * is_iot_drone_mesh_edge_node_info_oui() - If vendor IE is Drone Mesh Edge
+ * Node Subtype OUI
+ * @frm: vendor IE pointer
+ *
+ * API to check if vendor IE is Drone Mesh OUI
+ *
+ * Return: true if its Drone Mesh OUI
+ */
+static inline bool
+is_iot_drone_mesh_edge_node_info_oui(uint8_t *frm)
+{
+	return (frm[1] > OUI_LENGTH) && (LE_READ_4(frm + 2) ==
+		((QCA_OUI_IOT_DRONE_MESH_TYPE << OUI_TYPE_BITS) | QCA_OUI)) &&
+		(frm[6] == QCA_OUI_IOT_DRONE_MESH_EDGE_NODE_INFO_SUBTYPE);
+}
+#endif
 /**
  * wlan_parse_oce_reduced_wan_metrics_ie() - parse oce wan metrics
  * @mbo_oce_ie: MBO/OCE ie ptr

@@ -9266,6 +9266,11 @@ static QDF_STATUS dp_set_pdev_param(struct cdp_soc_t *cdp_soc, uint8_t pdev_id,
 	case CDP_CONFIG_SPECIAL_VAP:
 		dp_vdev_set_monitor_mode_buf_rings(pdev);
 		break;
+#ifdef IOT_DRONE_MESH
+	case CDP_CONFIG_IOT_MESH_EN:
+		pdev->iot_mesh_en = val.cdp_pdev_param_iot_mesh_en;
+		break;
+#endif
 	case CDP_MONITOR_CHAN_FLAG:
 		pdev->mon_chan_flags = val.cdp_mon_chan_rate_flag;
 
@@ -12427,7 +12432,7 @@ void dp_soc_set_txrx_ring_map(struct dp_soc *soc)
 }
 
 #if defined(QCA_WIFI_QCA8074) || defined(QCA_WIFI_QCA6018) || \
-	defined(QCA_WIFI_QCA5018)
+	defined(QCA_WIFI_QCA5018) || defined(QCA_WIFI_QCN9000)
 /**
  * dp_soc_attach_wifi3() - Attach txrx SOC
  * @ctrl_psoc: Opaque SOC handle from control plane

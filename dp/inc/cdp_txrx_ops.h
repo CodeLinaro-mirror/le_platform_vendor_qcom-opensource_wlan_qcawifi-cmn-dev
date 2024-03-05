@@ -1166,6 +1166,12 @@ struct ol_if_ops {
 				   uint32_t service_interval, uint32_t burst_size,
 				   uint8_t add_or_sub, uint8_t ac);
 #endif
+#ifdef IOT_DRONE_MESH
+	void (*peer_ast_free_cb)(struct cdp_ctrl_objmgr_psoc *ctrl_soc,
+                               struct cdp_soc *cdp_soc,
+                               void *cookie,
+                               enum cdp_ast_free_status status);
+#endif
 };
 
 #ifdef DP_PEER_EXTENDED_API

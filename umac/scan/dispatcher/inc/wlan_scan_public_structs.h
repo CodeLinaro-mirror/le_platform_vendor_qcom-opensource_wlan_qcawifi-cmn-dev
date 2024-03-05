@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -183,6 +184,7 @@ struct channel_info {
  * @single_pmk: Pointer to sae single pmk IE
  * @rsnxe: Pointer to rsnxe IE
  * @sbw: Pointer to sub-bw (5/10MHZ)info IE
+ * @sta_scan_param: Pointer to AP specified STA scan param IE
  */
 struct ie_list {
 	uint8_t *tim;
@@ -238,6 +240,11 @@ struct ie_list {
 	uint8_t *single_pmk;
 	uint8_t *rsnxe;
 	uint8_t *sbw;
+	uint8_t *sta_scan_param;
+#ifdef IOT_DRONE_MESH
+	uint8_t *iot_drone_mesh_node_ie;
+	uint8_t *iot_drone_mesh_edge_node_ie;
+#endif
 };
 
 enum scan_entry_connection_state {

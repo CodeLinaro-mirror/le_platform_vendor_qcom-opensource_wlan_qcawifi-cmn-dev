@@ -1030,6 +1030,9 @@ struct cdp_tx_stats {
 	uint32_t num_ppdu_cookie_valid;
 	uint32_t no_ack_count[QDF_PROTO_SUBTYPE_MAX];
 	struct cdp_pkt_info tx_success_twt;
+#ifdef IOT_DRONE_MESH
+	uint8_t msdu_failed_status;
+#endif
 };
 
 /* struct cdp_rx_stats - rx Level Stats
