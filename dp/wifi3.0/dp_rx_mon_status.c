@@ -1859,7 +1859,8 @@ dp_rx_nbuf_prepare(struct dp_soc *soc, struct dp_pdev *pdev)
 		QDF_NBUF_ALLOC_MAP_RETRY_THRESHOLD;
 			nbuf_retry_count++) {
 		/* Allocate a new skb using alloc_skb */
-		nbuf = qdf_nbuf_alloc_no_recycler(RX_MON_STATUS_BUF_SIZE,
+		nbuf = qdf_nbuf_alloc_no_recycler(RX_MON_STATUS_BUF_SIZE +
+						  RX_MON_STATUS_BUF_RESERVATION,
 						  RX_MON_STATUS_BUF_RESERVATION,
 						  RX_DATA_BUFFER_ALIGNMENT);
 
