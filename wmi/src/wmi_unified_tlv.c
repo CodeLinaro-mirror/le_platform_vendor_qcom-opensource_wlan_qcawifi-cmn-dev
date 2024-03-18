@@ -20751,6 +20751,41 @@ static QDF_STATUS extract_tgtr2p_table_event_tlv(wmi_unified_t wmi_handle,
 	return QDF_STATUS_SUCCESS;
 }
 
+static QDF_STATUS
+send_set_ack_cts_resp_rate_tlv(wmi_unified_t wmi_handle,
+                               struct wmi_host_send_set_ack_cts_resp_rate_info *param)
+{
+        wmi_buf_t buf;
+        wmi_pdev_set_ack_cts_resp_rate_cmd_fixed_param *cmd;
+        QDF_STATUS ret;
+        uint32_t len;
+
+        len = sizeof(*cmd);
+
+        buf = wmi_buf_alloc(wmi_handle, len);
+        if (!buf)
+                return QDF_STATUS_E_FAILURE;
+
+        cmd = (void *)wmi_buf_data(buf);
+
+        WMITLV_SET_HDR(&cmd->tlv_header,
+                       WMITLV_TAG_STRUC_wmi_pdev_set_ack_cts_resp_rate_cmd_fixed_param,
+                       WMITLV_GET_STRUCT_TLVLEN(wmi_pdev_set_ack_cts_resp_rate_cmd_fixed_param));
+
+        cmd->pdev_id = wmi_handle->ops->convert_pdev_id_host_to_target(wmi_handle,
+                                                                       param->pdev_id);
+        cmd->ack_cts_resp_rate = param->ack_cts_resp_rate;
+
+        ret = wmi_unified_cmd_send(wmi_handle, buf, len,
+                                   WMI_PDEV_SET_ACK_CTS_RESP_RATE_CMDID);
+        if (QDF_IS_STATUS_ERROR(ret)) {
+                wmi_err("WMI_PDEV_SET_ACK_CTS_RESP_RATE_CMDID send returned Error %d", ret);
+                wmi_buf_free(buf);
+        }
+
+        return ret;
+}
+
 struct wmi_ops tlv_ops =  {
 	.send_vdev_create_cmd = send_vdev_create_cmd_tlv,
 	.send_vdev_delete_cmd = send_vdev_delete_cmd_tlv,
@@ -21243,6 +21278,7 @@ struct wmi_ops tlv_ops =  {
 			extract_aoa_caps_tlv,
 #endif /* WLAN_RCC_ENHANCED_AOA_SUPPORT */
 	.extract_rf_path_resp = extract_rf_path_resp_tlv,
+	.send_set_ack_cts_resp_rate = send_set_ack_cts_resp_rate_tlv,
 };
 
 #ifdef WLAN_FEATURE_11BE_MLO

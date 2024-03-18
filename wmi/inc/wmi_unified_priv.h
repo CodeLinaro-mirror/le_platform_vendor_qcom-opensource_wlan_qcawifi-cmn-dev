@@ -3333,6 +3333,9 @@ QDF_STATUS (*extract_aoa_caps_service_ready_ext2)
 		(struct wmi_unified *wmi_handle, uint8_t *buf,
 		 struct wlan_psoc_host_rcc_enh_aoa_caps_ext2 *aoa_cap);
 #endif /* WLAN_RCC_ENHANCED_AOA_SUPPORT */
+QDF_STATUS
+(*send_set_ack_cts_resp_rate)(wmi_unified_t wmi_handle,
+                              struct wmi_host_send_set_ack_cts_resp_rate_info *param);
 };
 
 /* Forward declaration for psoc*/

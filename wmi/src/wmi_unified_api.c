@@ -4059,3 +4059,13 @@ QDF_STATUS wmi_extract_sap_coex_cap_service_ready_ext2(
 
 	return QDF_STATUS_E_FAILURE;
 }
+
+QDF_STATUS
+wmi_unified_send_set_ack_cts_resp_rate(wmi_unified_t wmi_handle,
+                                       struct wmi_host_send_set_ack_cts_resp_rate_info *param)
+{
+        if (wmi_handle->ops->send_set_ack_cts_resp_rate)
+                return wmi_handle->ops->send_set_ack_cts_resp_rate(wmi_handle, param);
+
+        return QDF_STATUS_E_FAILURE;
+}
