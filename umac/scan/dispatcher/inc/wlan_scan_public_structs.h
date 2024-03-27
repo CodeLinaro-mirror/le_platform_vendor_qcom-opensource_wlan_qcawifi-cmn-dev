@@ -220,6 +220,7 @@ struct channel_info {
  * @muedca: pointer to muedca IE
  * @extender: pointer to extended IE
  * @qcn: pointer to QCN IE
+ * @sbw: pointer to sub-bw (5/10MHZ)info IE
  */
 struct ie_list {
 	uint8_t *tim;
@@ -285,6 +286,7 @@ struct ie_list {
 	uint8_t *t2lm[WLAN_MAX_T2LM_IE];
 #endif
 	uint8_t *qcn;
+	uint8_t *sbw;
 
 /*
  * For any new IEs in this structure, add handling in
