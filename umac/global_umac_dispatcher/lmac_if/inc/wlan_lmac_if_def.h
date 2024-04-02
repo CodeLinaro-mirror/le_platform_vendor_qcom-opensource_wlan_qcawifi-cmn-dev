@@ -413,6 +413,7 @@ struct wlan_lmac_if_mgmt_txrx_tx_ops {
  * @scan_unreg_ev_handler: function to unregister for scan events
  * @set_chan_list:
  * @is_platform_eht_capable:
+ * @get_ic_chanbwflag: function to fetch the chanbw flag for 5/10 MHZ
  *
  * scan module uses these functions to avail ol/da lmac services
  */
@@ -434,6 +435,7 @@ struct wlan_lmac_if_scan_tx_ops {
 	QDF_STATUS (*set_chan_list)(struct wlan_objmgr_pdev *pdev, void *arg);
 	bool (*is_platform_eht_capable)(struct wlan_objmgr_psoc *psoc,
 					uint8_t pdev_id);
+	int (*extract_chanbw)(struct wlan_objmgr_pdev *pdev);
 };
 
 /**
@@ -1128,6 +1130,11 @@ struct wlan_lmac_if_ftm_rx_ops {
  *			rate2power table update event handler.
  * @end_r2p_table_update_wait: Call-back function to end the wait on r2p update
  *			response from fw.
+ * @reg_is_chanbw_20mhz: Checks if the user configured chanbw is 20MHZ. If
+ *                      user configured chanbw is half/quarter, the channel is
+ *                      considered non-DFS irrespective of the regulatory
+ *                      channel flag. If chanbw is full rate, the channel is
+ *                      marked DFS based on regulatory channel flag.
  */
 struct wlan_lmac_if_reg_tx_ops {
 	QDF_STATUS (*register_master_handler)(struct wlan_objmgr_psoc *psoc,
@@ -1198,6 +1205,7 @@ struct wlan_lmac_if_reg_tx_ops {
 	QDF_STATUS (*end_r2p_table_update_wait)(
 			struct wlan_objmgr_psoc *psoc,
 			uint32_t pdev_id);
+	bool (*reg_is_chanbw_20mhz) (struct wlan_objmgr_pdev *pdev);
 };
 
 /**

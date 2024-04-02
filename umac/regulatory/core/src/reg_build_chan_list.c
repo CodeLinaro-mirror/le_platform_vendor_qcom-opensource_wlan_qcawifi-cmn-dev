@@ -398,7 +398,8 @@ static uint16_t reg_find_enhanced_bw(struct cur_reg_rule *reg_rule_ptr,
 
 /**
  * reg_do_auto_bw_correction() - Calculate and update the maximum bandwidth
- * value.
+ * value.The two adjacent bands are converted to a bigger band.
+ * The two adjacent bands may overlap or just touch each other.
  * @num_reg_rules: Number of regulatory rules.
  * @reg_rule_ptr: Pointer to regulatory rules.
  * @max_bw: Maximum bandwidth
@@ -411,7 +412,7 @@ static void reg_do_auto_bw_correction(uint32_t num_reg_rules,
 	uint16_t enhanced_bw;
 
 	for (count = 0; count < num_reg_rules - 1; count++) {
-		if (reg_rule_ptr[count].end_freq ==
+		if (reg_rule_ptr[count].end_freq >=
 		    reg_rule_ptr[count + 1].start_freq) {
 			enhanced_bw = reg_find_enhanced_bw(reg_rule_ptr,
 							   count,
@@ -883,7 +884,7 @@ static void reg_find_low_limit_chan_enum(
 		max_bw = chan_list[chan_enum].max_bw;
 		center_freq = chan_list[chan_enum].center_freq;
 
-		if ((center_freq - min_bw / 2) >= low_freq) {
+		if ((center_freq && (center_freq - min_bw / 2) >= low_freq)) {
 			if ((center_freq - max_bw / 2) < low_freq) {
 				if (max_bw <= 20)
 					max_bw = ((center_freq - low_freq) * 2);
@@ -920,7 +921,7 @@ static void reg_find_high_limit_chan_enum(
 		max_bw = chan_list[chan_enum].max_bw;
 		center_freq = chan_list[chan_enum].center_freq;
 
-		if (center_freq + min_bw / 2 <= high_freq) {
+		if (center_freq && (center_freq + min_bw / 2 <= high_freq)) {
 			if ((center_freq + max_bw / 2) > high_freq) {
 				if (max_bw <= 20)
 					max_bw = ((high_freq -
@@ -2912,6 +2913,46 @@ reg_disable_enable_opclass_channels(struct wlan_regulatory_pdev_priv_obj *pdev_p
 }
 #endif
 
+/**
+ * reg_disable_dfs_for_half_qtr_chans() - If the maximum BW of reg
+ * chan is less than 20MHZ and the channel is DFS, mark the channel as
+ * non-DFS. To mark the channel as non-DFS, modify the state of the
+ * channel from 'CHANNEL_STATE_DFS' to CHANNEL_STATE_ENABLE'. Also clear
+ * the REGULATORY_CHAN_RADAR channel flag.Also, disable dfs for the channels
+ * that are enabled by the regualtory. Do not enable the channels that
+ * are already marked disabled.
+ * @pdev: Pointer to wlan_objmgr_pdev
+ * @chan_list: Pointer to regulatory_channel
+ *
+ * Return - None.
+ */
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+static void
+reg_disable_dfs_for_half_qtr_chans(struct wlan_objmgr_pdev *pdev,
+				   struct regulatory_channel *chan_list)
+{
+	enum channel_enum chan_enum;
+
+	for (chan_enum = 0; chan_enum < NUM_CHANNELS; chan_enum++) {
+		if (chan_list[chan_enum].chan_flags &
+			REGULATORY_CHAN_DISABLED)
+			continue;
+		if ((chan_list[chan_enum].chan_flags & REGULATORY_CHAN_RADAR) &&
+		    (chan_list[chan_enum].max_bw < BW_20_MHZ)) {
+			chan_list[chan_enum].state = CHANNEL_STATE_ENABLE;
+			chan_list[chan_enum].chan_flags &=
+				~REGULATORY_CHAN_RADAR;
+		}
+	}
+}
+#else
+static void
+reg_disable_dfs_for_half_qtr_chans(struct wlan_objmgr_pdev *pdev,
+				   struct regulatory_channel *chan_list)
+{
+}
+#endif
+
 void reg_compute_pdev_current_chan_list(struct wlan_regulatory_pdev_priv_obj
 					*pdev_priv_obj)
 {
@@ -2973,6 +3014,9 @@ void reg_compute_pdev_current_chan_list(struct wlan_regulatory_pdev_priv_obj
 	reg_modify_chan_list_for_avoid_chan_ext(pdev_priv_obj);
 
 	reg_modify_sec_chan_list_for_6g_edge_chan(pdev_priv_obj);
+
+	reg_disable_dfs_for_half_qtr_chans(pdev_priv_obj->pdev_ptr,
+					   pdev_priv_obj->cur_chan_list);
 
 	reg_disable_enable_opclass_channels(pdev_priv_obj);
 }
