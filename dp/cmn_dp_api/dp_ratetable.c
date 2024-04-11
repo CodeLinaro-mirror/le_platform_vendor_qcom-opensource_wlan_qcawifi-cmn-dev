@@ -70,6 +70,16 @@ enum DP_CMN_RATECODE_PREAM_TYPE {
 	DP_CMN_RATECODE_PREAM_COUNT,
 };
 
+enum HTT_PPDU_STATS_BW {
+	HTT_PPDU_STATS_BANDWIDTH_5MHZ   = 0,
+	HTT_PPDU_STATS_BANDWIDTH_10MHZ  = 1,
+	HTT_PPDU_STATS_BANDWIDTH_20MHZ  = 2,
+	HTT_PPDU_STATS_BANDWIDTH_40MHZ  = 3,
+	HTT_PPDU_STATS_BANDWIDTH_80MHZ  = 4,
+	HTT_PPDU_STATS_BANDWIDTH_160MHZ = 5,
+	HTT_PPDU_STATS_BANDWIDTH_DYN    = 6,
+};
+
 /*
  * @validmodemask : bit mask where 1 indicates the rate is valid for that mode
  * @DP_CMN_MODULATION : modulation CCK/OFDM/MCS
@@ -3399,6 +3409,9 @@ enum DP_CMN_MODULATION_TYPE dp_getmodulation(
 	enum DP_CMN_MODULATION_TYPE modulation;
 
 	CMN_DP_ASSERT(width < CMN_BW_CNT);
+
+	width = (width < HTT_PPDU_STATS_BANDWIDTH_20MHZ) ? 0 :
+		(width - HTT_PPDU_STATS_BANDWIDTH_20MHZ);
 
 	switch (pream_type) {
 	case DP_CMN_RATECODE_PREAM_HT:
