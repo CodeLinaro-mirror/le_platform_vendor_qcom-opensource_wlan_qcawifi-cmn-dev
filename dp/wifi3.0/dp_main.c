@@ -7652,7 +7652,7 @@ static void dp_mlo_link_peer_flush(struct dp_soc *soc, struct dp_peer *peer)
 {
 	int cnt = 0;
 	struct dp_peer *link_peer = NULL;
-	struct dp_mld_link_peers link_peers_info = {NULL};
+	struct dp_mld_link_peers link_peers_info = {{NULL}};
 
 	if (!IS_MLO_DP_MLD_PEER(peer))
 		return;
@@ -16141,7 +16141,8 @@ qdf_export_symbol(dp_soc_set_txrx_ring_map);
 
 #if defined(QCA_WIFI_QCA8074) || defined(QCA_WIFI_QCA6018) || \
 	defined(QCA_WIFI_QCA5018) || defined(QCA_WIFI_QCA9574) || \
-	defined(QCA_WIFI_QCA5332)
+	defined(QCA_WIFI_QCA5332) || defined(QCA_WIFI_QCN9224) || \
+        defined(QCA_WIFI_QCN9000)
 /**
  * dp_soc_attach_wifi3() - Attach txrx SOC
  * @ctrl_psoc: Opaque SOC handle from control plane

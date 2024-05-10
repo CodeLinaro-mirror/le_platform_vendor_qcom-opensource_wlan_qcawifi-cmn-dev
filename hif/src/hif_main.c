@@ -42,7 +42,8 @@
 #include "mp_dev.h"
 #if defined(QCA_WIFI_QCA8074) || defined(QCA_WIFI_QCA6018) || \
 	defined(QCA_WIFI_QCA5018) || defined(QCA_WIFI_QCA9574) || \
-	defined(QCA_WIFI_QCA5332)
+	defined(QCA_WIFI_QCA5332) || defined(QCA_WIFI_QCN9224) || \
+	defined(QCA_WIFI_QCN9000)
 #include "hal_api.h"
 #endif
 #include "hif_napi.h"
