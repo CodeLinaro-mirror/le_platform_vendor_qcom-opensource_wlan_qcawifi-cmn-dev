@@ -69,7 +69,7 @@ int wlan_cfg80211_ftm_testmode_cmd(struct wlan_objmgr_pdev *pdev,
  *
  * Return: QDF_STATUS_SUCCESS on success or QDF_STATUS_E errno otherwise
  */
-#ifdef QCA_WIFI_FTM_NL80211
+#if QCA_WIFI_FTM_NL80211
 QDF_STATUS wlan_cfg80211_ftm_rx_event(struct wlan_objmgr_pdev *pdev,
 					uint8_t *data, uint32_t len);
 #else
