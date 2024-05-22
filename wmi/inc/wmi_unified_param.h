@@ -5677,6 +5677,8 @@ typedef enum {
 		   PDEV_PARAM_ATF_VO_DEDICATED_TIME),
 	PDEV_PARAM(pdev_param_atf_vi_dedicated_time,
 		   PDEV_PARAM_ATF_VI_DEDICATED_TIME),
+	PDEV_PARAM(pdev_param_pre_11ax_packet_removal,
+		   PDEV_PARAM_PRE_11AX_PACKET_REMOVAL),
 	pdev_param_max,
 } wmi_conv_pdev_params_id;
 
@@ -6001,6 +6003,8 @@ typedef enum {
 		   VDEV_PARAM_RTT_11AZ_NTB_MAX_TIME_BW_MEAS),
 	VDEV_PARAM(vdev_param_rtt_11az_ntb_min_time_bw_meas,
 		   VDEV_PARAM_RTT_11AZ_NTB_MIN_TIME_BW_MEAS),
+	VDEV_PARAM(vdev_param_pure_11ax_mode,
+		   VDEV_PARAM_PURE_11AX_MODE),
 	vdev_param_max,
 } wmi_conv_vdev_param_id;
 
@@ -6367,6 +6371,7 @@ typedef enum {
 #ifdef WLAN_ATF_INCREASED_STA
 	wmi_service_atf_max_client_512_support,
 #endif
+	wmi_service_vdev_pure11ax_support,
 	wmi_services_max,
 } wmi_conv_service_ids;
 #define WMI_SERVICE_UNAVAILABLE 0xFFFF

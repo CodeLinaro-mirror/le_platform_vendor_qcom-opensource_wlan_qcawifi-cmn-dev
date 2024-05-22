@@ -452,6 +452,9 @@ static const uint32_t pdev_param_tlv[] = {
 		  PDEV_PARAM_ATF_VO_DEDICATED_TIME),
 	PARAM_MAP(pdev_param_atf_vi_dedicated_time,
 		  PDEV_PARAM_ATF_VI_DEDICATED_TIME),
+	PARAM_MAP(pdev_param_pre_11ax_packet_removal,
+		  PDEV_PARAM_PRE_11AX_PACKET_REMOVAL),
+
 };
 
 /* Populate vdev_param array whose index is host param, value is target param */
@@ -735,6 +738,8 @@ static const uint32_t vdev_param_tlv[] = {
 		  VDEV_PARAM_RTT_11AZ_NTB_MIN_TIME_BW_MEAS),
 	PARAM_MAP(vdev_param_11az_security_config,
 		  VDEV_PARAM_11AZ_SECURITY_CONFIG),
+	PARAM_MAP(vdev_param_pure_11ax_mode,
+		  VDEV_PARAM_PURE_11AX_MODE),
 };
 #endif
 
@@ -22371,6 +22376,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 	wmi_service[wmi_service_atf_max_client_512_support] =
 					WMI_SERVICE_ATF_MAX_CLIENT_512_SUPPORT;
 #endif
+	wmi_service[wmi_service_vdev_pure11ax_support] =
+			WMI_SERVICE_VDEV_PURE11AX_SUPPORT;
 }
 
 /**
