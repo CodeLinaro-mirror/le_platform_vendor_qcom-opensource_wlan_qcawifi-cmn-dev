@@ -2064,6 +2064,8 @@ bool __qdf_nbuf_data_is_ipv4_mcast_pkt(uint8_t *data)
 		return false;
 }
 
+qdf_export_symbol(__qdf_nbuf_data_is_ipv4_mcast_pkt);
+
 /**
  * __qdf_nbuf_data_is_ipv6_mcast_pkt() - check if it is IPV6 multicast packet.
  * @data: Pointer to IPV6 packet data buffer
@@ -2093,6 +2095,8 @@ bool __qdf_nbuf_data_is_ipv6_mcast_pkt(uint8_t *data)
 	} else
 		return false;
 }
+
+qdf_export_symbol(__qdf_nbuf_data_is_ipv6_mcast_pkt);
 
 /**
  * __qdf_nbuf_data_is_icmp_pkt() - check if it is IPV4 ICMP packet.
