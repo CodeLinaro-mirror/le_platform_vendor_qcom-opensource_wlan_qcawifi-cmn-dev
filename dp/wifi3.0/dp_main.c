@@ -758,6 +758,10 @@ static int dp_peer_add_ast_wifi3(struct cdp_soc_t *soc_hdl,
 				 uint32_t flags)
 {
 	int ret = -1;
+#ifdef IOT_DRONE_MESH
+	struct dp_vdev *vdev;
+	struct dp_pdev *pdev;
+#endif
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
 	struct dp_peer *peer = dp_peer_find_hash_find((struct dp_soc *)soc_hdl,
 						       peer_mac, 0, vdev_id,
@@ -768,6 +772,27 @@ static int dp_peer_add_ast_wifi3(struct cdp_soc_t *soc_hdl,
 		return ret;
 	}
 
+#ifdef IOT_DRONE_MESH
+	vdev = peer->vdev;
+	pdev = vdev->pdev;
+
+	status = dp_peer_add_ast((struct dp_soc *)soc_hdl,
+				 peer,
+				 mac_addr,
+				 type,
+				 flags);
+	if ((status == QDF_STATUS_SUCCESS) ||
+	    (status == QDF_STATUS_E_AGAIN))
+		ret = 0;
+
+	if (pdev->iot_mesh_en) {
+		if (status == QDF_STATUS_E_ALREADY)
+			ret = -1;
+	} else {
+		if (status == QDF_STATUS_E_ALREADY)
+			ret = 0;
+	}
+#else
 	status = dp_peer_add_ast((struct dp_soc *)soc_hdl,
 				 peer,
 				 mac_addr,
@@ -777,6 +802,7 @@ static int dp_peer_add_ast_wifi3(struct cdp_soc_t *soc_hdl,
 	    (status == QDF_STATUS_E_ALREADY) ||
 	    (status == QDF_STATUS_E_AGAIN))
 		ret = 0;
+#endif
 
 	dp_hmwds_ast_add_notify(peer, mac_addr,
 				type, status, false);
