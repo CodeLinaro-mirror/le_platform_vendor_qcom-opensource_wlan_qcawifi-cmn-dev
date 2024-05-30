@@ -3784,6 +3784,10 @@ struct dp_pdev {
 
 	/* For Checking Pending Firmware Response */
 	bool pending_fw_stats_response;
+#ifdef IOT_DRONE_MESH
+	/* Flag to indicate iot_drone_mesh enabled or not */
+	uint8_t iot_mesh_en;
+#endif
 };
 
 struct dp_peer;
