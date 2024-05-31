@@ -2672,6 +2672,27 @@ void dp_peer_update_tid_stats_from_reo(struct dp_soc *soc, void *cb_ctxt,
 qdf_export_symbol(dp_peer_update_tid_stats_from_reo);
 #endif
 
+static
+void dp_rx_hole_cnt_stats_cb(struct dp_soc *soc, void *cb_ctxt,
+                             union hal_reo_status *reo_status)
+{
+        struct dp_vdev *vdev = (struct dp_vdev *)(cb_ctxt);
+        struct hal_reo_queue_status *queue_status = &(reo_status->queue_status);
+        if (queue_status->header.status == HAL_REO_CMD_DRAIN) {
+                return;
+        }
+
+        if (queue_status->header.status != HAL_REO_CMD_SUCCESS) {
+                return;
+        }
+        if (queue_status->hole_cnt &&
+            soc->cdp_soc.ol_ops->rx_hole_cnt_notify) {
+            soc->cdp_soc.ol_ops->rx_hole_cnt_notify(soc->ctrl_psoc,
+                                                    vdev->vdev_id,
+                                                    queue_status->hole_cnt);
+        }
+}
+
 void dp_rx_tid_stats_cb(struct dp_soc *soc, void *cb_ctxt,
 	union hal_reo_status *reo_status)
 {
@@ -4287,6 +4308,7 @@ void dp_peer_rx_cleanup(struct dp_vdev *vdev, struct dp_peer *peer)
 
 	if (!peer->txrx_peer)
 		return;
+	dp_peer_rxtid_stats(peer, dp_rx_hole_cnt_stats_cb, vdev);
 
 	dp_info("Remove tids for peer: %pK", peer);
 
