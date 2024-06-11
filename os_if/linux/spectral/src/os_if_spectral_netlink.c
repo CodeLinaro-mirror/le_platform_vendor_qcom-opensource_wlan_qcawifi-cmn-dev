@@ -566,8 +566,6 @@ os_if_spectral_free_skb(struct wlan_objmgr_pdev *pdev,
 	ps->skb[smsg_type] = NULL;
 }
 
-qdf_export_symbol(os_if_spectral_free_skb);
-
 void
 os_if_spectral_netlink_init(struct wlan_objmgr_pdev *pdev)
 {
