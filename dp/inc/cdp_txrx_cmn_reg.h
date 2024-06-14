@@ -59,7 +59,8 @@ ol_txrx_soc_attach(void *scn_handle, struct ol_if_ops *dp_ol_if_ops);
 
 #if defined(QCA_WIFI_QCA8074) || defined(QCA_WIFI_QCA6018) || \
 	defined(QCA_WIFI_QCA5018) || defined(QCA_WIFI_QCA9574) || \
-	defined(QCA_WIFI_QCA5332)
+	defined(QCA_WIFI_QCA5332) || defined(QCA_WIFI_QCN9224) || \
+	defined(QCA_WIFI_QCN9000)
 
 /**
  * dp_soc_attach_wifi3() - Attach txrx SOC

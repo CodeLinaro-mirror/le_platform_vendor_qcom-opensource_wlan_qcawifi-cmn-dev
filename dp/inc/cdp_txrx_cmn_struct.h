@@ -984,7 +984,7 @@ typedef bool (*ol_txrx_tx_flow_control_is_pause_fp)(void *osif_dev);
  * @osif_dev: handle to the OSIF virtual device object
  * @msdu_list: list of network buffers
  */
-typedef QDF_STATUS(*ol_txrx_rx_fp)(void *osif_dev, qdf_nbuf_t msdu_list);
+typedef void (*ol_txrx_rx_fp)(void *osif_dev, qdf_nbuf_t msdu_list);
 
 typedef QDF_STATUS(*ol_txrx_fisa_rx_fp)(void *soc,
 					void *dp_vdev,
@@ -1060,7 +1060,7 @@ typedef void (*ol_txrx_tx_free_ext_fp)(qdf_nbuf_t netbuf);
  * @mpdu_head:
  * @mpdu_tail:
  */
-typedef bool (*ol_txrx_rx_check_wai_fp)(ol_osif_vdev_handle vdev,
+typedef bool (*ol_txrx_rx_check_wai_fp)(void *osif_vdev,
 					qdf_nbuf_t mpdu_head,
 					qdf_nbuf_t mpdu_tail);
 /**
@@ -1070,7 +1070,7 @@ typedef bool (*ol_txrx_rx_check_wai_fp)(ol_osif_vdev_handle vdev,
  * @mpdu:
  * @rx_status:
  */
-typedef void (*ol_txrx_rx_mon_fp)(ol_osif_vdev_handle vdev,
+typedef void (*ol_txrx_rx_mon_fp)(void *osif_vdev,
 				  qdf_nbuf_t mpdu,
 				  void *rx_status);
 
@@ -1079,7 +1079,7 @@ typedef void (*ol_txrx_rx_mon_fp)(ol_osif_vdev_handle vdev,
  * @vdev:
  * @netbuf:
  */
-typedef int (*ol_txrx_proxy_arp_fp)(ol_osif_vdev_handle vdev,
+typedef int (*ol_txrx_proxy_arp_fp)(void *osif_vdev,
 				    qdf_nbuf_t netbuf);
 
 /**

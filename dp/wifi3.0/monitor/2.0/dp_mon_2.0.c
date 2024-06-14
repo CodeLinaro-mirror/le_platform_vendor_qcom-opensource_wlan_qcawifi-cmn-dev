@@ -1101,6 +1101,7 @@ void dp_pdev_mon_rings_deinit_2_0(struct dp_pdev *pdev)
 		dp_srng_deinit(soc, &mon_soc_be->tx_mon_dst_ring[lmac_id],
 			       TX_MONITOR_DST, pdev->pdev_id);
 	}
+	qdf_spinlock_destroy(&pdev->monitor_pdev->mon_lock);
 }
 
 static
@@ -1111,6 +1112,7 @@ QDF_STATUS dp_pdev_mon_rings_init_2_0(struct dp_pdev *pdev)
 	struct dp_mon_soc *mon_soc = soc->monitor_soc;
 	struct dp_mon_soc_be *mon_soc_be = dp_get_be_mon_soc_from_dp_mon_soc(mon_soc);
 
+	qdf_spinlock_create(&pdev->monitor_pdev->mon_lock);
 	for (mac_id = 0; mac_id < DP_NUM_MACS_PER_PDEV; mac_id++) {
 		int lmac_id = dp_get_lmac_id_for_pdev_id(soc, mac_id,
 							 pdev->pdev_id);

@@ -600,9 +600,10 @@ static inline void wlan_cfg80211_unregister_netdevice(struct net_device *dev)
 static inline
 void wlan_cfg80211_ch_switch_notify(struct net_device *dev,
 				    struct cfg80211_chan_def *chandef,
-				    unsigned int link_id)
+				    unsigned int link_id,
+				    uint16_t puncture_bitmap)
 {
-	cfg80211_ch_switch_notify(dev, chandef, link_id);
+	cfg80211_ch_switch_notify(dev, chandef, link_id, puncture_bitmap);
 }
 #else
 static inline
