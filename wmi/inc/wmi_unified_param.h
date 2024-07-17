@@ -6024,6 +6024,8 @@ typedef enum {
 		   VDEV_PARAM_RTT_11AZ_NTB_MIN_TIME_BW_MEAS),
 	VDEV_PARAM(vdev_param_pure_11ax_mode,
 		   VDEV_PARAM_PURE_11AX_MODE),
+	VDEV_PARAM(vdev_param_he_ulofdma_dcm,
+		   VDEV_PARAM_HE_ULOFDMA_DCM),
 	vdev_param_max,
 } wmi_conv_vdev_param_id;
 
@@ -6394,6 +6396,7 @@ typedef enum {
 	wmi_service_halphy_get_ani_err_support,
 	wmi_service_hpa_support,
 	wmi_service_peer_ul_rtd_estimate,
+	wmi_service_dcm_ulofdma_support,
 	wmi_services_max,
 } wmi_conv_service_ids;
 #define WMI_SERVICE_UNAVAILABLE 0xFFFF
