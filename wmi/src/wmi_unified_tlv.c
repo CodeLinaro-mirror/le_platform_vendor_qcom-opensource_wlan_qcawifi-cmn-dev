@@ -469,6 +469,8 @@ static const uint32_t pdev_param_tlv[] = {
 		  PDEV_PARAM_HESIGA_POWER_SCALING),
 	PARAM_MAP(pdev_param_preamble_power_removal,
 		  PDEV_PARAM_PREAMBLE_POWER_REMOVAL),
+        PARAM_MAP(pdev_param_ul_ofdma_rtd,
+                  PDEV_PARAM_UL_OFDMA_RTD),
 
 };
 

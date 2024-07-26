@@ -5696,6 +5696,8 @@ typedef enum {
 		   PDEV_PARAM_HESIGA_POWER_SCALING),
 	PDEV_PARAM(pdev_param_preamble_power_removal,
 		   PDEV_PARAM_PREAMBLE_POWER_REMOVAL),
+	PDEV_PARAM(pdev_param_ul_ofdma_rtd,
+                   PDEV_PARAM_UL_OFDMA_RTD),
 	pdev_param_max,
 } wmi_conv_pdev_params_id;
 
