@@ -160,6 +160,11 @@ dp_peer_age_ast_entries(struct dp_soc *soc, struct dp_peer *peer, void *arg)
 	struct dp_ast_entry *ase, *temp_ase;
 	struct ast_del_ctxt *del_ctxt = (struct ast_del_ctxt *)arg;
 
+#ifdef IOT_DRONE_MESH
+	/* Don't Age out the AST entries if IoT Mesh is enabled */
+	if (peer->vdev->pdev->iot_mesh_en)
+		return;
+#endif
 	if ((del_ctxt->del_count >= soc->max_ast_ageout_count) &&
 	    !del_ctxt->age) {
 		return;

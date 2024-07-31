@@ -1713,6 +1713,12 @@ void (*peer_send_wds_disconnect)(struct cdp_ctrl_objmgr_psoc *psoc,
 #ifdef CONFIG_SAWF_DEF_QUEUES
 	int (*disable_sawf_svc)(uint8_t svc_id);
 #endif
+#ifdef IOT_DRONE_MESH
+	void (*peer_ast_free_cb)(struct cdp_ctrl_objmgr_psoc *ctrl_soc,
+				 struct cdp_soc *cdp_soc,
+				 void *cookie,
+				 enum cdp_ast_free_status status);
+#endif
 };
 
 #ifdef DP_PEER_EXTENDED_API
