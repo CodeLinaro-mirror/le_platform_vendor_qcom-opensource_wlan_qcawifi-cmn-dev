@@ -3336,6 +3336,12 @@ QDF_STATUS (*extract_aoa_caps_service_ready_ext2)
 QDF_STATUS
 (*send_set_ack_cts_resp_rate)(wmi_unified_t wmi_handle,
                               struct wmi_host_send_set_ack_cts_resp_rate_info *param);
+QDF_STATUS (*send_get_ani_err)(wmi_unified_t wmi_handle,
+                               struct wmi_host_send_get_ani_err *param);
+QDF_STATUS
+(*extract_halphy_get_ani_err_ev_param)(wmi_unified_t wmi_handle,
+                                         void *evt_buf,
+                                         struct wmi_host_halphy_get_ani_err_event *param);
 };
 
 /* Forward declaration for psoc*/
