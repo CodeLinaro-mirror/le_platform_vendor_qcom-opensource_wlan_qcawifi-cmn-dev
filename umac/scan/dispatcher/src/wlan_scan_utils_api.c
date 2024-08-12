@@ -1435,7 +1435,13 @@ util_scan_parse_vendor_ie(struct scan_cache_entry *scan_params,
 	} else if (is_qcn_oui((uint8_t *)ie)) {
 		scan_params->ie_list.qcn = (uint8_t *)ie;
 	}
-
+#ifdef IOT_DRONE_MESH
+	else if (is_iot_drone_mesh_node_info_oui((uint8_t *)ie)) {
+		scan_params->ie_list.iot_drone_mesh_node_ie = (uint8_t *)ie;
+	} else if (is_iot_drone_mesh_edge_node_info_oui((uint8_t *)ie)) {
+		scan_params->ie_list.iot_drone_mesh_edge_node_ie = (uint8_t *)ie;
+	}
+#endif
 	return QDF_STATUS_SUCCESS;
 }
 
@@ -3917,7 +3923,8 @@ util_scan_parse_beacon_frame(struct wlan_objmgr_pdev *pdev,
 		mbssid_ie = util_scan_find_ie(WLAN_ELEMID_MULTIPLE_BSSID,
 					      (uint8_t *)&bcn->ie, ie_len);
 		if (mbssid_ie) {
-			if (mbssid_ie[TAG_LEN_POS] < VALID_ELEM_LEAST_LEN) {
+			/* some APs announce the MBSSID ie_len as 1 */
+			if (mbssid_ie[TAG_LEN_POS] < 1) {
 				scm_debug("MBSSID IE length is wrong %d",
 					  mbssid_ie[TAG_LEN_POS]);
 				return status;

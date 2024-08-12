@@ -2406,6 +2406,8 @@ bool __qdf_nbuf_data_is_ipv4_mcast_pkt(uint8_t *data)
 		return false;
 }
 
+qdf_export_symbol(__qdf_nbuf_data_is_ipv4_mcast_pkt);
+
 bool __qdf_nbuf_data_is_ipv6_mcast_pkt(uint8_t *data)
 {
 	if (__qdf_nbuf_data_is_ipv6_pkt(data)) {
@@ -2426,6 +2428,8 @@ bool __qdf_nbuf_data_is_ipv6_mcast_pkt(uint8_t *data)
 	} else
 		return false;
 }
+
+qdf_export_symbol(__qdf_nbuf_data_is_ipv6_mcast_pkt);
 
 bool __qdf_nbuf_data_is_icmp_pkt(uint8_t *data)
 {

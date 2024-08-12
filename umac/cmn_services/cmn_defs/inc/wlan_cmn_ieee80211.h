@@ -241,6 +241,10 @@ enum qcn_attribute_id {
                                               */
 #define QCA_OUI_LEN                     6     /* OUI len of SBW IE */
 
+#define QCA_OUI_IOT_DRONE_MESH_TYPE     0x05                 /* OUI type - 5 for the IoT Drones Mesh */
+#define QCA_OUI_IOT_DRONE_MESH_NODE_INFO_SUBTYPE      0x01   /* Subtype  - 1 for Mesh node */
+#define QCA_OUI_IOT_DRONE_MESH_EDGE_NODE_INFO_SUBTYPE 0x02   /* Subtype  - 2 for Mesh Edge node */
+
 #define ADAPTIVE_11R_OUI      0x964000
 #define ADAPTIVE_11R_OUI_TYPE 0x2C
 
@@ -682,6 +686,7 @@ enum element_ie {
  * @WLAN_EXTN_ELEMID_SRP:    spatial reuse parameter IE
  * @WLAN_EXTN_ELEMID_BSS_COLOR_CHANGE_ANNOUNCE: BSS Color Change Announcement IE
  * @WLAN_EXTN_ELEMID_MAX_CHAN_SWITCH_TIME: Maximum Channel Switch Time IE
+ * @WLAN_EXTN_ELEMID_OCI:    OCI IE
  * @WLAN_EXTN_ELEMID_NONINHERITANCE: Non inheritance IE
  * @WLAN_EXTN_ELEMID_EHTOP: EHT Operation IE
  * @WLAN_EXTN_ELEMID_ESP: Estimated Service Parameters Inbound element
@@ -700,6 +705,7 @@ enum extn_element_ie {
 	WLAN_EXTN_ELEMID_SRP         = 39,
 	WLAN_EXTN_ELEMID_BSS_COLOR_CHANGE_ANNOUNCE = 42,
 	WLAN_EXTN_ELEMID_MAX_CHAN_SWITCH_TIME = 52,
+	WLAN_EXTN_ELEMID_OCI         = 54,
 	WLAN_EXTN_ELEMID_NONINHERITANCE = 56,
 	WLAN_EXTN_ELEMID_HE_6G_CAP   = 59,
 #ifdef WLAN_FEATURE_11BE
@@ -4160,6 +4166,45 @@ is_sae_single_pmk_oui(uint8_t *frm)
 	return (frm[1] > OUI_LENGTH) && (LE_READ_4(frm + 2) ==
 		((SAE_SINGLE_PMK_TYPE << OUI_TYPE_BITS) | SAE_SINGLE_PMK_OUI));
 }
+
+#ifdef IOT_DRONE_MESH
+/**
+ * is_iot_drone_mesh_node_info_oui() - If vendor IE is Drone Mesh Node
+ * Subtype OUI
+ * @frm: vendor IE pointer
+ *
+ * API to check if vendor IE is Drone Mesh OUI
+ *
+ * Return: true if its Drone Mesh OUI
+ **/
+static inline bool
+is_iot_drone_mesh_node_info_oui(uint8_t *frm)
+{
+	bool status;
+
+	status = (frm[1] > OUI_LENGTH) && (LE_READ_4(frm + 2) ==
+		((QCA_OUI_IOT_DRONE_MESH_TYPE << OUI_TYPE_BITS) | QCA_OUI)) &&
+		(frm[6] == QCA_OUI_IOT_DRONE_MESH_NODE_INFO_SUBTYPE);
+	return status;
+}
+
+/**
+ * is_iot_drone_mesh_edge_node_info_oui() - If vendor IE is Drone Mesh Edge
+ * Node Subtype OUI
+ * @frm: vendor IE pointer
+ *
+ * API to check if vendor IE is Drone Mesh OUI
+ *
+ * Return: true if its Drone Mesh OUI
+ **/
+static inline bool
+is_iot_drone_mesh_edge_node_info_oui(uint8_t *frm)
+{
+	return (frm[1] > OUI_LENGTH) && (LE_READ_4(frm + 2) ==
+		((QCA_OUI_IOT_DRONE_MESH_TYPE << OUI_TYPE_BITS) | QCA_OUI)) &&
+		(frm[6] == QCA_OUI_IOT_DRONE_MESH_EDGE_NODE_INFO_SUBTYPE);
+}
+#endif
 
 /**
  * wlan_parse_oce_reduced_wan_metrics_ie() - parse oce wan metrics

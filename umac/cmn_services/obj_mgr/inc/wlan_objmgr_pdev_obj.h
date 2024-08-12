@@ -111,6 +111,10 @@
 #define WLAN_PDEV_FEXT_AGILE_SPECTRAL_SCAN_80P80_DIS     0x00000080
 /* agile Spectral scan support disable for 320 MHz */
 #define WLAN_PDEV_FEXT_AGILE_SPECTRAL_SCAN_320_DIS     0x00000100
+#ifdef IOT_DRONE_MESH
+/* DRONE MESH enable flag */
+#define WLAN_PDEV_FEXT_IOT_DRONE_MESH_EN                 0x00000100
+#endif
 /* WiFi Radar support enabled */
 #define WLAN_PDEV_FEXT_WIFI_RADAR_ENABLE               0x00000200
 /* Scan blanking support enabled.valid only for scan radio supported pdevs */

@@ -1687,6 +1687,9 @@ struct cdp_tx_stats {
 	uint64_t wme_ac_type_bytes[WME_AC_MAX];
 	struct cdp_pkt_info tx_ucast_total;
 	struct cdp_pkt_info tx_ucast_success;
+#ifdef IOT_DRONE_MESH
+	uint8_t msdu_failed_status;
+#endif
 };
 
 /**
