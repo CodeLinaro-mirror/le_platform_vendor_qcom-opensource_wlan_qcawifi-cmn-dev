@@ -1954,6 +1954,28 @@
 	CFG_INI_BOOL("host_ast_db_enable", false, \
 	"Host AST entries database Enable/Disable")
 
+#ifdef IOT_DRONE_MESH
+/*
+ * <ini>
+ * Host DP IoT Drone Mesh - Enable/Disable
+ *
+ * @Default: 0
+ *
+ * This ini enables/disables IoT Mesh feature, disables AST wds learning
+ * offload, enables peer map/unmap
+ *
+ * Usage: Internal
+ *
+ * </ini>
+ */
+#define CFG_DP_IOT_MESH_ENABLE \
+	CFG_INI_BOOL("iot_mesh_enable", false, \
+	"IoT Mesh Disable/Enable")
+#define CFG_DP_IOT_MESH_ENABLE_CFG CFG(CFG_DP_IOT_MESH_ENABLE)
+#else
+#define CFG_DP_IOT_MESH_ENABLE_CFG
+#endif
+
 #ifdef DP_TX_PACKET_INSPECT_FOR_ILP
 /*
  * <ini>
@@ -2118,6 +2140,7 @@
 		CFG(CFG_DP_TX_CAPT_MAX_MEM_MB) \
 		CFG(CFG_DP_NAPI_SCALE_FACTOR) \
 		CFG(CFG_DP_HOST_AST_DB_ENABLE) \
+		CFG_DP_IOT_MESH_ENABLE_CFG \
 		CFG_DP_SAWF_STATS_CONFIG \
 		CFG(CFG_DP_HANDLE_INVALID_DECAP_TYPE_DISABLE) \
 		CFG(CFG_DP_TXMON_SW_PEER_FILTERING) \

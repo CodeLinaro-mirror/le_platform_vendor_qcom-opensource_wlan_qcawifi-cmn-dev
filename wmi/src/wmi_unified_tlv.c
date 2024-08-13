@@ -471,6 +471,8 @@ static const uint32_t pdev_param_tlv[] = {
 		  PDEV_PARAM_PREAMBLE_POWER_REMOVAL),
         PARAM_MAP(pdev_param_ul_ofdma_rtd,
                   PDEV_PARAM_UL_OFDMA_RTD),
+	PARAM_MAP(pdev_param_iot_mesh_status,
+		  PDEV_PARAM_IOT_MESH_STATUS),
 
 };
 
