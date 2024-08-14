@@ -491,6 +491,17 @@ void osif_populate_connect_response_for_link(struct wlan_objmgr_vdev *vdev,
 					 wlan_vdev_mlme_get_macaddr(vdev);
 }
 
+#ifdef IOT_DRONE_WIFI_MLO_KERNEL_5_15
+static QDF_STATUS
+osif_fill_peer_mld_mac_connect_resp(struct wlan_objmgr_vdev *vdev,
+				    struct wlan_cm_connect_resp *rsp,
+				    struct cfg80211_connect_resp_params *conn_rsp_params)
+{
+	conn_rsp_params->ap_mld_addr = rsp->bssid.bytes;
+
+	return QDF_STATUS_SUCCESS;
+}
+#else
 static QDF_STATUS
 osif_fill_peer_mld_mac_connect_resp(struct wlan_objmgr_vdev *vdev,
 				    struct wlan_cm_connect_resp *rsp,
@@ -514,24 +525,27 @@ osif_fill_peer_mld_mac_connect_resp(struct wlan_objmgr_vdev *vdev,
 
 	return QDF_STATUS_SUCCESS;
 }
+#endif
 
 static void
-osif_populate_partner_links_mlo_params(struct wlan_objmgr_pdev *pdev,
+osif_populate_partner_links_mlo_params(struct wlan_objmgr_vdev *vdev,
 				       struct wlan_cm_connect_resp *rsp,
 				       struct cfg80211_connect_resp_params *conn_rsp_params)
 {
-	struct wlan_objmgr_vdev *partner_vdev;
+	struct wlan_objmgr_vdev *partner_vdev = NULL;
 	struct mlo_link_info *rsp_partner_info;
 	struct mlo_partner_info assoc_partner_info = {0};
 	struct cfg80211_bss *bss = NULL;
 	QDF_STATUS qdf_status;
 	uint8_t link_id = 0, num_links;
+	struct wlan_mlo_dev_context *mlo_dev_ctx;
 	int i;
 
 	qdf_status = osif_get_partner_info_from_mlie(rsp, &assoc_partner_info);
 	if (QDF_IS_STATUS_ERROR(qdf_status))
 		return;
 
+	mlo_dev_ctx = vdev->mlo_dev_ctx;
 	num_links = rsp->ml_parnter_info.num_partner_links;
 	for (i = 0 ; i < num_links; i++) {
 		rsp_partner_info = &rsp->ml_parnter_info.partner_link_info[i];
@@ -542,24 +556,29 @@ osif_populate_partner_links_mlo_params(struct wlan_objmgr_pdev *pdev,
 		if (QDF_IS_STATUS_ERROR(qdf_status))
 			continue;
 
-		partner_vdev = wlan_objmgr_get_vdev_by_id_from_pdev(pdev,
-						      rsp_partner_info->vdev_id,
-						      WLAN_MLO_MGR_ID);
+		for (i =  0; i < WLAN_UMAC_MLO_MAX_VDEVS; i++) {
+			if (!mlo_dev_ctx->wlan_vdev_list[i])
+				continue;
+
+			if (wlan_vdev_get_id(mlo_dev_ctx->wlan_vdev_list[i]) ==
+			    rsp_partner_info->vdev_id) {
+				partner_vdev = mlo_dev_ctx->wlan_vdev_list[i];
+				break;
+			}
+		}
+
 		if (!partner_vdev)
 			continue;
 
 		bss = osif_get_chan_bss_from_kernel(partner_vdev,
 						    rsp_partner_info, rsp);
 		if (!bss) {
-			wlan_objmgr_vdev_release_ref(partner_vdev,
-						     WLAN_MLO_MGR_ID);
 			continue;
 		}
 
 		osif_populate_connect_response_for_link(partner_vdev,
 							conn_rsp_params,
 							link_id, bss);
-		wlan_objmgr_vdev_release_ref(partner_vdev, WLAN_MLO_MGR_ID);
 	}
 }
 
@@ -585,8 +604,7 @@ static void osif_fill_connect_resp_mlo_params(struct wlan_objmgr_vdev *vdev,
 	osif_populate_connect_response_for_link(vdev, conn_rsp_params,
 						assoc_link_id, bss);
 
-	osif_populate_partner_links_mlo_params(wlan_vdev_get_pdev(vdev), rsp,
-					       conn_rsp_params);
+	osif_populate_partner_links_mlo_params(vdev, rsp, conn_rsp_params);
 }
 
 static void
@@ -990,6 +1008,9 @@ static void osif_indcate_connect_results(struct wlan_objmgr_vdev *vdev,
 	qdf_freq_t freq;
 	struct qdf_mac_addr macaddr = {0};
 	struct wlan_cm_connect_resp resp = {0};
+#ifdef IOT_DRONE_WIFI_MLO_KERNEL_5_15
+	struct wireless_dev *link_wdev = osif_priv->wdev;
+#endif
 
 	if (!wlan_vdev_mlme_is_mlo_vdev(vdev)) {
 		if (QDF_IS_STATUS_SUCCESS(rsp->connect_status)) {
@@ -1011,6 +1032,13 @@ static void osif_indcate_connect_results(struct wlan_objmgr_vdev *vdev,
 	    ucfg_mlo_is_mld_connected(vdev)) ||
 	    (QDF_IS_STATUS_ERROR(rsp->connect_status) &&
 	    ucfg_mlo_is_mld_disconnected(vdev))) {
+#ifdef IOT_DRONE_WIFI_MLO_KERNEL_5_15
+		/* Set non-assoc wdev to connected, since only assoc link
+		 * report connect result to cfg80211, when set key from
+		 * supplicant, it will reject in nl80211_key_allowed
+		 */
+		link_wdev->connected = true;
+#endif
 		assoc_vdev = ucfg_mlo_get_assoc_link_vdev(vdev);
 		if (!assoc_vdev)
 			return;
