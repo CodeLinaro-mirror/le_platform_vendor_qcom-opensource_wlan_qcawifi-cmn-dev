@@ -383,7 +383,7 @@ int init_deinit_populate_hw_mode_capability(
 
 	preferred_mode = target_psoc_get_preferred_hw_mode(tgt_hdl);
 	if (preferred_mode == WMI_HOST_HW_MODE_DETECT) {
-		target_if_info("Preferred mode is not set, use mode id %d\n",
+		target_if_info("Preferred mode is not set, use mode id %d",
 			       selected_mode);
 		target_psoc_set_preferred_hw_mode(tgt_hdl, selected_mode);
 
