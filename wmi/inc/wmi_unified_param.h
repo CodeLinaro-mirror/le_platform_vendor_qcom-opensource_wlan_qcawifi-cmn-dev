@@ -6898,6 +6898,7 @@ typedef struct {
 	uint8_t dp_peer_meta_data_ver;
 	bool rf_path;
 	bool fw_ast_indication_disable;
+	bool iot_mesh_enable;
 } target_resource_config;
 
 /**

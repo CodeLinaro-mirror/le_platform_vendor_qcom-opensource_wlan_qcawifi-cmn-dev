@@ -3430,6 +3430,7 @@ struct category_name_info g_qdf_category_name[MAX_SUPPORTED_CATEGORY] = {
 	[QDF_MODULE_ID_EPCS] = {"EPCS"},
 	[QDF_MODULE_ID_SOUNDING] = {"SOUNDING"},
 	[QDF_MODULE_ID_RF_PATH_SWITCH] = {"Dynamic RF Path Switch"},
+	[QDF_MODULE_ID_IOT_DRONE_MESH] = {"IoT_Mesh"},
 	[QDF_MODULE_ID_ANY] = {"ANY"},
 };
 qdf_export_symbol(g_qdf_category_name);
@@ -4004,6 +4005,7 @@ static void set_default_trace_levels(struct category_info *cinfo)
 		[QDF_MODULE_ID_EPCS] = QDF_TRACE_LEVEL_INFO,
 		[QDF_MODULE_ID_SOUNDING] = QDF_TRACE_LEVEL_ERROR,
 		[QDF_MODULE_ID_RF_PATH_SWITCH] = QDF_TRACE_LEVEL_INFO,
+		[QDF_MODULE_ID_IOT_DRONE_MESH] = QDF_TRACE_LEVEL_INFO,
 		[QDF_MODULE_ID_ANY] = QDF_TRACE_LEVEL_INFO,
 	};
 
