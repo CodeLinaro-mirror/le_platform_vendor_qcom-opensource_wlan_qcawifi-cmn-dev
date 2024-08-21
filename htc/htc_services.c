@@ -267,7 +267,7 @@ QDF_STATUS htc_connect_service(HTC_HANDLE HTCHandle,
 			/* check response status */
 			if (rsp_msg_status != HTC_SERVICE_SUCCESS) {
 				AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
-						(" Target failed service 0x%X connect request (status:%d)\n",
+						(" Target failed service 0x%X connect request (status:%d)",
 						 rsp_msg_serv_id,
 						 rsp_msg_status));
 				status = QDF_STATUS_E_PROTO;

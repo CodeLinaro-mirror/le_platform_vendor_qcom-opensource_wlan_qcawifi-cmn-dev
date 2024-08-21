@@ -2261,7 +2261,7 @@ static void util_get_ml_bv_partner_link_info(struct scan_cache_entry *scan_entry
 	scan_entry->ml_info.num_links = link_idx;
 	if (!offset ||
 	    (offset + sizeof(struct wlan_ml_bv_linfo_perstaprof) >= ml_ie_len)) {
-		scm_err_rl("incorrect offset value %d", offset);
+		scm_debug("incorrect offset value %d", offset);
 		return;
 	}
 
