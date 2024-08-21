@@ -1393,6 +1393,61 @@ failure:
 	return NULL;
 }
 
+#ifdef STRIP_IP_TCP_HEADER_IN_RAW_MODE
+/**
+ * dp_raw_strip_overhead() - Strips the MAC header from the nbuf buffer and
+ *                              queues it in HW queue to send
+ * @nbuf - skbuff structure
+ */
+static void
+dp_raw_strip_overhead(struct sk_buff *nbuf)
+{
+	unsigned char *transport_hdr, *ip_hdr, *llc_hdr;
+	unsigned int clen=0, transport_hdr_len = 0;
+	struct iphdr *ipHeader;
+	uint8_t ip_protocol;
+
+	if(nbuf->data!= NULL) {
+		/*get the pointers for the start of LLC HDR and the IP HDR */
+		llc_hdr = nbuf->data + sizeof(struct ieee80211_frame);
+		ip_hdr =  llc_hdr + sizeof(qdf_llc_t);
+		transport_hdr = ip_hdr + sizeof(struct iphdr);
+
+		/**
+		 * Check if the packet is TCP or UDP and get the transport
+		 * layer header length
+		 */
+		ipHeader = (struct iphdr *)(ip_hdr);
+		ip_protocol = ipHeader->protocol;
+		transport_hdr_len = (ip_protocol == IPPROTO_TCP)?
+					sizeof(struct tcphdr):
+					sizeof(struct udphdr);
+
+		/* check for TCP or UDP */
+		if  ((ip_protocol == IPPROTO_TCP) ||
+		     (ip_protocol == IPPROTO_UDP)) {
+			/* Modify the LLC SNAP header with 55
+			 * to bypass parsing of pkt by MAC */
+			memset(llc_hdr, 0x55,1);
+			/* Length of data to be copied after
+			 * the IP and Transport layer header */
+			clen = nbuf->len - sizeof(struct ieee80211_frame)
+					 - sizeof(qdf_llc_t)
+					 - sizeof(struct iphdr)
+					 - transport_hdr_len;
+			/* copy the data after the the IP and
+			 * Transport layer header */
+			if(clen > 0)
+				memcpy(llc_hdr+1,
+				       transport_hdr+transport_hdr_len,
+				       clen);
+			/* Update the nbuf->len after the stripped headers */
+			nbuf->len = sizeof(struct ieee80211_frame) + 1 + clen;
+		}
+	}
+}
+#endif
+
 /**
  * dp_tx_prepare_raw() - Prepare RAW packet TX
  * @vdev: DP vdev handle
@@ -1431,6 +1486,10 @@ static qdf_nbuf_t dp_tx_prepare_raw(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 	    (qos_wh->i_fc[0] & QDF_IEEE80211_FC0_SUBTYPE_QOS) &&
 	    (qos_wh->i_qos[0] & IEEE80211_QOS_AMSDU))
 		qos_wh->i_fc[1] |= IEEE80211_FC1_WEP;
+
+#ifdef STRIP_IP_TCP_HEADER_IN_RAW_MODE
+	dp_raw_strip_overhead(nbuf);
+#endif
 
 	for (curr_nbuf = nbuf, i = 0; curr_nbuf;
 			curr_nbuf = qdf_nbuf_next(curr_nbuf), i++) {
