@@ -5299,6 +5299,7 @@ typedef enum {
 #endif
 	wmi_pdev_set_rf_path_resp_eventid,
 	wmi_pdev_get_ani_err_event_id,
+	wmi_pdev_hpa_event_id,
 	wmi_events_max,
 } wmi_conv_event_id;
 
@@ -6388,6 +6389,7 @@ typedef enum {
 #endif
 	wmi_service_vdev_pure11ax_support,
 	wmi_service_halphy_get_ani_err_support,
+	wmi_service_hpa_support,
 	wmi_services_max,
 } wmi_conv_service_ids;
 #define WMI_SERVICE_UNAVAILABLE 0xFFFF
@@ -10026,4 +10028,9 @@ struct wmi_host_halphy_get_ani_err_event {
     uint32_t status;
 };
 
+struct wmi_host_send_hpa {
+	uint32_t base_paddr_low;
+	uint32_t base_paddr_high;
+	uint32_t len;
+};
 #endif /* _WMI_UNIFIED_PARAM_H_ */

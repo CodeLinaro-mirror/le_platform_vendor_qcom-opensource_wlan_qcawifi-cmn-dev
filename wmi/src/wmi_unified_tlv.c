@@ -20881,6 +20881,39 @@ extract_halphy_get_ani_err_ev_param_tlv(wmi_unified_t wmi_handle,
         return QDF_STATUS_SUCCESS;
 }
 
+static QDF_STATUS
+send_hpa_smck_tlv(wmi_unified_t wmi_handle,
+		  struct wmi_host_send_hpa *param)
+{
+	wmi_buf_t buf;
+	wmi_hpa_cmd_fixed_param *cmd;
+	QDF_STATUS ret;
+	uint32_t len;
+
+	len = sizeof(*cmd);
+
+	buf = wmi_buf_alloc(wmi_handle, len);
+	if (!buf)
+		return QDF_STATUS_E_FAILURE;
+
+	cmd = (void *)wmi_buf_data(buf);
+
+	WMITLV_SET_HDR(&cmd->tlv_header,
+			WMITLV_TAG_STRUC_wmi_hpa_cmd_fixed_param,
+			WMITLV_GET_STRUCT_TLVLEN(wmi_hpa_cmd_fixed_param));
+
+	cmd->base_paddr_low = param->base_paddr_low;
+	cmd->base_paddr_high = param->base_paddr_high;
+	cmd->len = param->len;
+
+	ret = wmi_unified_cmd_send(wmi_handle, buf, len, WMI_HPA_CMDID);
+	if (QDF_IS_STATUS_ERROR(ret)) {
+		wmi_err("WMI_HPA_CMDID send returned Error %d", ret);
+		wmi_buf_free(buf);
+	}
+
+	return ret;
+}
 
 struct wmi_ops tlv_ops =  {
 	.send_vdev_create_cmd = send_vdev_create_cmd_tlv,
@@ -21378,6 +21411,7 @@ struct wmi_ops tlv_ops =  {
 	.send_get_ani_err = send_get_ani_err_tlv,
 	.extract_halphy_get_ani_err_ev_param =
 			extract_halphy_get_ani_err_ev_param_tlv,
+	.send_hpa_smck_tlv = send_hpa_smck_tlv,
 };
 
 #ifdef WLAN_FEATURE_11BE_MLO
@@ -21904,6 +21938,7 @@ static void populate_tlv_events_id(WMI_EVT_ID *event_ids)
 		WMI_PDEV_SET_RF_PATH_RESP_EVENTID;
 	event_ids[wmi_pdev_get_ani_err_event_id] =
 		WMI_PDEV_GET_ANI_ERR_EVENTID;
+	event_ids[wmi_pdev_hpa_event_id] = WMI_HPA_EVENTID;
 }
 
 #ifdef WLAN_FEATURE_LINK_LAYER_STATS
@@ -22473,6 +22508,7 @@ static void populate_tlv_service(uint32_t *wmi_service)
 			WMI_SERVICE_VDEV_PURE11AX_SUPPORT;
 	wmi_service[wmi_service_halphy_get_ani_err_support] =
 			WMI_SERVICE_HALPHY_ANI_ERROR_SUPPORT;
+	wmi_service[wmi_service_hpa_support] = WMI_SERVICE_HPA_SUPPORT;
 }
 
 /**

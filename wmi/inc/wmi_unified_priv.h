@@ -3342,6 +3342,8 @@ QDF_STATUS
 (*extract_halphy_get_ani_err_ev_param)(wmi_unified_t wmi_handle,
                                          void *evt_buf,
                                          struct wmi_host_halphy_get_ani_err_event *param);
+QDF_STATUS
+	(*send_hpa_smck_tlv)(wmi_unified_t wmi_handle, struct wmi_host_send_hpa *param);
 };
 
 /* Forward declaration for psoc*/
