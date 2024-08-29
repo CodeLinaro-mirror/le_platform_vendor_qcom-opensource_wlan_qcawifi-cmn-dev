@@ -3202,6 +3202,31 @@ cdp_get_tqm_offset(ol_txrx_soc_handle soc, uint64_t *value)
 	soc->ops->cmn_drv_ops->txrx_get_tqm_offset(soc, value);
 }
 
+/**
+ * cdp_txrx_set_vdev_intrabss() - set vdev intrabss
+ * @soc: Datapath soc handle
+ * @vdev_id: vdev id
+ *
+ * Return: None.
+ */
+static inline QDF_STATUS
+cdp_txrx_set_vdev_intrabss(ol_txrx_soc_handle soc, uint8_t vdev_id)
+{
+	if (!soc || !soc->ops) {
+		dp_cdp_debug("Invalid Instance:");
+		QDF_BUG(0);
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	if (!soc->ops->ctrl_ops ||
+	    !soc->ops->ctrl_ops->txrx_set_vdev_intrabss) {
+		dp_cdp_nofl_debug("NULL vdev params callback");
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	return soc->ops->ctrl_ops->txrx_set_vdev_intrabss(soc, vdev_id);
+}
+
 #if defined(WLAN_FEATURE_11BE_MLO)
 /*
  * cdp_mlo_dev_ctxt_create - DP MLO Device context create

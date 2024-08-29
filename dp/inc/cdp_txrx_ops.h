@@ -783,6 +783,9 @@ struct cdp_ctrl_ops {
 			       enum cdp_vdev_param_type param,
 			       cdp_config_param_type val);
 
+	QDF_STATUS
+	(*txrx_set_vdev_intrabss)(struct cdp_soc_t *soc, uint8_t vdev_id);
+
 	/**
 	 * @brief Set the reo dest ring num of the radio
 	 * @details
