@@ -28,9 +28,6 @@
 #include "wlan_osif_priv.h"
 #include "osif_cm_util.h"
 #include "wlan_mlo_mgr_sta.h"
-#ifdef IOT_DRONE_MESH
-#include <ieee80211_api.h>
-#endif
 /**
  * osif_validate_disconnect_and_reset_src_id() - Validate disconnection
  * and resets source and id
@@ -309,9 +306,6 @@ QDF_STATUS osif_disconnect_handler(struct wlan_objmgr_vdev *vdev,
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
 	enum qca_disconnect_reason_codes qca_reason;
 	int link_id = -1;
-#ifdef IOT_DRONE_MESH
-	struct wlan_objmgr_pdev *pdev = wlan_vdev_get_pdev(vdev);
-#endif
 	
 	qca_reason = osif_cm_mac_to_qca_reason(rsp->req.req.reason_code);
 	ieee80211_reason =
@@ -356,10 +350,5 @@ QDF_STATUS osif_disconnect_handler(struct wlan_objmgr_vdev *vdev,
 				    qdf_mem_malloc_flags());
 
 	osif_cm_disconnect_comp_ind(vdev, rsp, OSIF_POST_USERSPACE_UPDATE);
-#ifdef IOT_DRONE_MESH
-	if (wlan_pdev_nif_feat_ext_cap_get(pdev, WLAN_PDEV_FEXT_IOT_DRONE_MESH_EN)) {
-		ieee80211_delete_iot_drone_mesh_node_entry_sta(vdev);
-	}
-#endif
 	return status;
 }
