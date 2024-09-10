@@ -118,11 +118,6 @@
 /* Overlapping frequency support */
 #define WLAN_PDEV_FEXT_OVERLAPPING_FREQ                0x00000800
 
-#ifdef IOT_DRONE_MESH
-/* DRONE MESH enable flag */
-#define WLAN_PDEV_FEXT_IOT_DRONE_MESH_EN                 0x00001000
-#endif
-
 /* PDEV op flags */
    /* Enable htrate for wep and tkip */
 #define WLAN_PDEV_OP_WEP_TKIP_HTRATE    0x00000001

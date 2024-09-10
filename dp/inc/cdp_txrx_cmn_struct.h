@@ -1376,9 +1376,6 @@ enum cdp_pdev_param_type {
 	CDP_ISOLATION,
 	CDP_CONFIG_UNDECODED_METADATA_CAPTURE_ENABLE,
 	CDP_CONFIG_DELAY_STATS,
-#ifdef IOT_DRONE_MESH
-	CDP_CONFIG_IOT_MESH_EN,
-#endif
 };
 
 /**
@@ -1532,9 +1529,6 @@ typedef union cdp_config_param_t {
 	bool cdp_pdev_param_reset_scan_spcl_vap_stats_enable;
 	bool cdp_pdev_param_enhanced_stats_enable;
 	bool cdp_pdev_param_isolation;
-#ifdef IOT_DRONE_MESH
-	uint8_t cdp_pdev_param_iot_mesh_en;
-#endif
 
 	/* psoc params */
 	bool cdp_psoc_param_en_rate_stats;
