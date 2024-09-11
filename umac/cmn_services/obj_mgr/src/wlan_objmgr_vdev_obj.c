@@ -286,6 +286,8 @@ struct wlan_objmgr_vdev *wlan_objmgr_vdev_obj_create(
 		wlan_objmgr_vdev_obj_delete(vdev);
 		return NULL;
 	}
+	cdp_txrx_set_vdev_intrabss(wlan_psoc_get_dp_handle(psoc),
+				   vdev->vdev_objmgr.vdev_id);
 
 	wlan_minidump_log(vdev, sizeof(*vdev), psoc,
 			  WLAN_MD_OBJMGR_VDEV, "wlan_objmgr_vdev");

@@ -1347,9 +1347,20 @@ dp_rx_intrabss_ucast_check_be(qdf_nbuf_t nbuf,
 	if (!qdf_nbuf_is_intra_bss(nbuf))
 		return false;
 
+	da_peer_id = HAL_RX_PEER_ID_GET(msdu_metadata);
 	if (!be_vdev->mlo_dev_ctxt) {
+		da_peer = dp_peer_get_ref_by_id(&be_soc->soc,
+						da_peer_id,
+						DP_MOD_ID_RX);
+		if (!da_peer)
+			return false;
+
 		params->tx_vdev_id = ta_peer->vdev->vdev_id;
-		return true;
+		dp_peer_unref_delete(da_peer, DP_MOD_ID_RX);
+		if (da_peer->bss_peer)
+			return false;
+		else
+			return true;
 	}
 
 	hal_rx_tlv_get_dest_chip_pmac_id(rx_tlv_hdr,
@@ -1366,8 +1377,6 @@ dp_rx_intrabss_ucast_check_be(qdf_nbuf_t nbuf,
 					      dest_chip_id);
 	if (!params->dest_soc)
 		return false;
-
-	da_peer_id = HAL_RX_PEER_ID_GET(msdu_metadata);
 
 	da_peer = dp_peer_get_tgt_peer_by_id(params->dest_soc, da_peer_id,
 					     DP_MOD_ID_RX);

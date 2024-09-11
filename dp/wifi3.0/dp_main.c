@@ -11568,6 +11568,46 @@ dp_set_vdev_param(struct cdp_soc_t *cdp_soc, uint8_t vdev_id,
 	return QDF_STATUS_SUCCESS;
 }
 
+#ifdef INTRA_BSS_FWD_OFFLOAD
+static
+void dp_vdev_set_intra_bss(struct dp_soc *soc, uint16_t vdev_id, bool enable)
+{
+	soc->cdp_soc.ol_ops->vdev_set_intra_bss(soc->ctrl_psoc, vdev_id,
+						enable);
+}
+#else
+static
+void dp_vdev_set_intra_bss(struct dp_soc *soc, uint16_t vdev_id, bool enable)
+{
+}
+#endif
+
+#ifdef CONFIG_BERYLLIUM
+static QDF_STATUS
+dp_set_vdev_intrabss(struct cdp_soc_t *cdp_soc, uint8_t vdev_id)
+{
+	struct dp_soc *dsoc = (struct dp_soc *)cdp_soc;
+	struct dp_vdev *vdev =
+		dp_vdev_get_ref_by_id(dsoc, vdev_id, DP_MOD_ID_CDP);
+
+	if (!vdev)
+		return QDF_STATUS_E_FAILURE;
+
+	if (vdev->ap_bridge_enabled) {
+		dp_vdev_set_intra_bss(dsoc, vdev->vdev_id, true);
+	}
+	dp_vdev_unref_delete(dsoc, vdev, DP_MOD_ID_CDP);
+
+	return QDF_STATUS_SUCCESS;
+}
+#else
+static inline QDF_STATUS
+dp_set_vdev_intrabss(struct cdp_soc_t *cdp_soc, uint8_t vdev_id)
+{
+	return QDF_STATUS_SUCCESS;
+}
+#endif
+
 /**
  * dp_set_psoc_param: function to set parameters in psoc
  * @cdp_soc: DP soc handle
@@ -14923,6 +14963,7 @@ static struct cdp_ctrl_ops dp_ops_ctrl = {
 	.txrx_get_peer_protocol_drop_mask = dp_get_vdev_peer_protocol_drop_mask,
 #endif
 	.txrx_set_vdev_param = dp_set_vdev_param,
+	.txrx_set_vdev_intrabss = dp_set_vdev_intrabss,
 	.txrx_set_psoc_param = dp_set_psoc_param,
 	.txrx_get_psoc_param = dp_get_psoc_param,
 	.txrx_set_pdev_reo_dest = dp_set_pdev_reo_dest,

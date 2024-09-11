@@ -172,7 +172,7 @@ QDF_STATUS qdf_ini_parse(const char *ini_path, void *context,
 		qdf_info("INI file parse successful");
 		status = QDF_STATUS_SUCCESS;
 	} else {
-		qdf_info("INI file parse fail: invalid file format");
+		qdf_info("INI file parse fail: %s invalid file format", ini_path);
 		status = QDF_STATUS_E_INVAL;
 	}
 
