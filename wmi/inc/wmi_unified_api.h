@@ -5180,4 +5180,7 @@ QDF_STATUS wmi_extract_sap_coex_cap_service_ready_ext2(
 QDF_STATUS
 wmi_unified_send_set_ack_cts_resp_rate(wmi_unified_t wmi_handle,
                                        struct wmi_host_send_set_ack_cts_resp_rate_info *param);
+
+QDF_STATUS
+wmi_unified_send_hpa_smck_tlv(wmi_unified_t wmi_handle, struct wmi_host_send_hpa *param);
 #endif /* _WMI_UNIFIED_API_H_ */
