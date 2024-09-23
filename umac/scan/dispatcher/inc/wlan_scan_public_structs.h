@@ -288,10 +288,6 @@ struct ie_list {
 	uint8_t *qcn;
 	uint8_t *sbw;
 
-#ifdef IOT_DRONE_MESH
-	uint8_t *iot_drone_mesh_node_ie;
-	uint8_t *iot_drone_mesh_edge_node_ie;
-#endif
 /*
  * For any new IEs in this structure, add handling in
  * util_scan_copy_beacon_data API.
