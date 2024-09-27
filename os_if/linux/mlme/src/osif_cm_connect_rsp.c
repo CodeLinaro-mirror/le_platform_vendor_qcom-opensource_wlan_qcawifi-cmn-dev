@@ -1037,7 +1037,8 @@ static void osif_indcate_connect_results(struct wlan_objmgr_vdev *vdev,
 		 * report connect result to cfg80211, when set key from
 		 * supplicant, it will reject in nl80211_key_allowed
 		 */
-		link_wdev->connected = true;
+		if (QDF_IS_STATUS_SUCCESS(rsp->connect_status))
+			link_wdev->connected = true;
 #endif
 		assoc_vdev = ucfg_mlo_get_assoc_link_vdev(vdev);
 		if (!assoc_vdev)
