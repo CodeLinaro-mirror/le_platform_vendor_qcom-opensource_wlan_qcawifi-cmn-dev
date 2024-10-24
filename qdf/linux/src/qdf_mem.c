@@ -1751,6 +1751,7 @@ void qdf_mem_check_for_leaks(void)
 		QDF_MEMDEBUG_PANIC("%u fatal memory leaks detected!",
 				   leaks_count);
 }
+qdf_export_symbol(qdf_mem_check_for_leaks);
 
 void qdf_mem_multi_pages_alloc_debug(qdf_device_t osdev,
 				     struct qdf_mem_multi_page_t *pages,
