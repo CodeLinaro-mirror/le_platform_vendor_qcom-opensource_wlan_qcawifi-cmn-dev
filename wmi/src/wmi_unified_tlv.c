@@ -128,6 +128,7 @@ static const uint32_t peer_param_tlv[] = {
 	[WMI_HOST_PEER_FT_ROAMING_PEER_UPDATE] =
 					WMI_PEER_FT_ROAMING_PEER_UPDATE,
 	[WMI_HOST_PEER_PARAM_DMS_SUPPORT] = WMI_PEER_PARAM_DMS_SUPPORT,
+	[WMI_HOST_PEER_PARAM_UL_OFDMA_RTD] = WMI_PEER_PARAM_UL_OFDMA_RTD,
 };
 
 #define PARAM_MAP(name, NAME) [wmi_ ## name] = WMI_ ##NAME
@@ -20936,7 +20937,10 @@ send_get_ulrtd_time_tlv(wmi_unified_t wmi_handle,
 			WMITLV_TAG_STRUC_wmi_pdev_get_measured_ul_rtd_cmd_fixed_param,
 			WMITLV_GET_STRUCT_TLVLEN(wmi_pdev_get_measured_ul_rtd_cmd_fixed_param));
 
-	cmd->pdev_id = param->pdev_id;
+	cmd->pdev_id = wmi_handle->ops->convert_pdev_id_host_to_target
+		(wmi_handle, param->pdev_id);
+
+	wmi_info("get ulrtd time pdev id %d(%d)", cmd->pdev_id, param->pdev_id);
 	ret = wmi_unified_cmd_send(wmi_handle, buf, len,
 				   WMI_PDEV_GET_MEASURED_UL_RTD_CMDID);
 	if (QDF_IS_STATUS_ERROR(ret)) {
@@ -20987,7 +20991,6 @@ send_start_measure_ul_rtd_tlv(wmi_unified_t wmi_handle,
 	QDF_STATUS ret;
 	uint32_t len;
 
-
 	len = sizeof(*cmd);
 
 	buf = wmi_buf_alloc(wmi_handle, len);
@@ -21000,11 +21003,13 @@ send_start_measure_ul_rtd_tlv(wmi_unified_t wmi_handle,
 			WMITLV_TAG_STRUC_wmi_pdev_start_measure_ul_rtd_cmd_fixed_param,
 			WMITLV_GET_STRUCT_TLVLEN(wmi_pdev_start_measure_ul_rtd_cmd_fixed_param));
 
-	cmd->pdev_id = param->pdev_id;
+	cmd->pdev_id = wmi_handle->ops->convert_pdev_id_host_to_target
+		(wmi_handle, param->pdev_id);
 
 	WMI_CHAR_ARRAY_TO_MAC_ADDR(param->macaddr, &cmd->peer_macaddr);
 	cmd->start_win = param->start_win;
-	wmi_info("MAC adrress " QDF_MAC_ADDR_FMT "Start_win %d",
+	wmi_info("%d(%d)MAC adrress " QDF_MAC_ADDR_FMT "Start_win %d",
+		 cmd->pdev_id, param->pdev_id,
 		 QDF_MAC_ADDR_REF(param->macaddr), param->start_win);
 	ret = wmi_unified_cmd_send(wmi_handle, buf, len,
 				   WMI_PDEV_START_MEASURE_UL_RTD_CMDID);
