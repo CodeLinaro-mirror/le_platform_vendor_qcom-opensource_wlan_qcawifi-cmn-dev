@@ -965,6 +965,7 @@ void qdf_nbuf_map_check_for_leaks(void)
 {
 	qdf_tracker_check_for_leaks(&qdf_nbuf_map_tracker);
 }
+qdf_export_symbol(qdf_nbuf_map_check_for_leaks);
 
 QDF_STATUS qdf_nbuf_map_debug(qdf_device_t osdev,
 			      qdf_nbuf_t buf,
