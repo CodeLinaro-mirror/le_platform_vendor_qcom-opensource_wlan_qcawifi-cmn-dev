@@ -1884,6 +1884,20 @@ dp_rx_mon_process_status_tlv(struct dp_pdev *pdev)
 		dp_mon_add_to_free_desc_list(&desc_list, &tail, mon_desc);
 		work_done++;
 
+		/* set status buffer pointer to NULL */
+		mon_pdev_be->status[idx] = NULL;
+		mon_pdev_be->desc_count--;
+		DP_STATS_INC(mon_soc, frag_free, 1);
+		mon_pdev->rx_mon_stats.status_buf_count++;
+
+		/* mon_desc->buf_addr may has been freed in dp_rx_process_pktlog_be()
+		 * while pktlog is enabled, avoid use-after-free and double
+		 * free in following work
+		 */
+		if (!buf) {
+			continue;
+		}
+
 		rx_tlv = buf;
 		rx_tlv_start = buf;
 
@@ -1910,20 +1924,14 @@ dp_rx_mon_process_status_tlv(struct dp_pdev *pdev)
 			if ((rx_tlv - rx_tlv_start) >= (end_offset + 1))
 				break;
 
-	} while ((tlv_status == HAL_TLV_STATUS_PPDU_NOT_DONE) ||
+		} while ((tlv_status == HAL_TLV_STATUS_PPDU_NOT_DONE) ||
 			(tlv_status == HAL_TLV_STATUS_HEADER) ||
 			(tlv_status == HAL_TLV_STATUS_MPDU_END) ||
 			(tlv_status == HAL_TLV_STATUS_MSDU_END) ||
 			(tlv_status == HAL_TLV_STATUS_MON_BUF_ADDR) ||
 			(tlv_status == HAL_TLV_STATUS_MPDU_START));
 
-		/* set status buffer pointer to NULL */
-		mon_pdev_be->status[idx] = NULL;
-		mon_pdev_be->desc_count--;
-
 		qdf_frag_free(buf);
-		DP_STATS_INC(mon_soc, frag_free, 1);
-		mon_pdev->rx_mon_stats.status_buf_count++;
 		dp_mon_record_index_update(mon_pdev_be);
 	}
 
@@ -2245,9 +2253,12 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 
 		rx_mon_dst_ring_desc = hal_srng_dst_get_next(hal_soc, mon_dst_srng);
 
-		dp_rx_process_pktlog_be(soc, pdev, ppdu_info,
+		status = dp_rx_process_pktlog_be(soc, pdev, ppdu_info,
 					mon_desc->buf_addr,
 					hal_mon_rx_desc.end_offset);
+		if (status == QDF_STATUS_SUCCESS) {
+			mon_desc->buf_addr = NULL;
+		}
 
 		if (hal_mon_rx_desc.end_reason == HAL_MON_STATUS_BUFFER_FULL)
 			continue;
