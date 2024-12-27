@@ -328,6 +328,8 @@ dp_rx_refill_ring_record_entry(struct dp_soc *soc, uint8_t ring_num,
  * @nbuf_frag_info_t: nbuf frag info
  * @dp_pdev: struct dp_pdev *
  * @rx_desc_pool: Rx desc pool
+ * @func_name: invoker function name
+ * @line_num: invoker function line number
  *
  * Return: QDF_STATUS
  */
@@ -337,7 +339,9 @@ dp_pdev_nbuf_alloc_and_map_replenish(struct dp_soc *dp_soc,
 				     uint32_t num_entries_avail,
 				     struct dp_rx_nbuf_frag_info *nbuf_frag_info_t,
 				     struct dp_pdev *dp_pdev,
-				     struct rx_desc_pool *rx_desc_pool)
+				     struct rx_desc_pool *rx_desc_pool,
+				     const char *func_name,
+				     const int line_num)
 {
 	QDF_STATUS ret = QDF_STATUS_E_FAILURE;
 
@@ -345,7 +349,8 @@ dp_pdev_nbuf_alloc_and_map_replenish(struct dp_soc *dp_soc,
 		dp_rx_buffer_pool_nbuf_alloc(dp_soc,
 					     mac_id,
 					     rx_desc_pool,
-					     num_entries_avail);
+					     num_entries_avail,
+					     func_name, line_num);
 	if (!((nbuf_frag_info_t->virt_addr).nbuf)) {
 		dp_err("nbuf alloc failed");
 		DP_STATS_INC(dp_pdev, replenish.nbuf_alloc_fail, 1);
@@ -353,7 +358,7 @@ dp_pdev_nbuf_alloc_and_map_replenish(struct dp_soc *dp_soc,
 	}
 
 	ret = dp_rx_buffer_pool_nbuf_map(dp_soc, rx_desc_pool,
-					 nbuf_frag_info_t);
+					 nbuf_frag_info_t, func_name, line_num);
 	if (qdf_unlikely(QDF_IS_STATUS_ERROR(ret))) {
 		dp_rx_buffer_pool_nbuf_free(dp_soc,
 			(nbuf_frag_info_t->virt_addr).nbuf, mac_id);
@@ -914,7 +919,8 @@ QDF_STATUS __dp_rx_buffers_replenish(struct dp_soc *dp_soc, uint32_t mac_id,
 				uint32_t num_req_buffers,
 				union dp_rx_desc_list_elem_t **desc_list,
 				union dp_rx_desc_list_elem_t **tail,
-				bool req_only, const char *func_name)
+				bool req_only, const char *func_name,
+				const int line_num)
 {
 	uint32_t num_alloc_desc;
 	uint16_t num_desc_to_free = 0;
@@ -1041,7 +1047,7 @@ QDF_STATUS __dp_rx_buffers_replenish(struct dp_soc *dp_soc, uint32_t mac_id,
 			ret = dp_pdev_nbuf_alloc_and_map_replenish(dp_soc,
 								   mac_id,
 					num_entries_avail, &nbuf_frag_info,
-					dp_pdev, rx_desc_pool);
+					dp_pdev, rx_desc_pool, func_name, line_num);
 
 		if (qdf_unlikely(QDF_IS_STATUS_ERROR(ret))) {
 			if (qdf_unlikely(ret  == QDF_STATUS_E_FAULT))
