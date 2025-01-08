@@ -209,7 +209,9 @@ static inline qdf_nbuf_t dp_rx_refill_buff_pool_dequeue_nbuf(struct dp_soc *soc)
 qdf_nbuf_t
 dp_rx_buffer_pool_nbuf_alloc(struct dp_soc *soc, uint32_t mac_id,
 			     struct rx_desc_pool *rx_desc_pool,
-			     uint32_t num_available_buffers)
+			     uint32_t num_available_buffers,
+			     const char *func_name,
+			     const int line_num)
 {
 	struct dp_pdev *dp_pdev = dp_get_pdev_for_lmac_id(soc, mac_id);
 	struct rx_buff_pool *buff_pool;
@@ -259,7 +261,9 @@ dp_rx_buffer_pool_nbuf_alloc(struct dp_soc *soc, uint32_t mac_id,
 QDF_STATUS
 dp_rx_buffer_pool_nbuf_map(struct dp_soc *soc,
 			   struct rx_desc_pool *rx_desc_pool,
-			   struct dp_rx_nbuf_frag_info *nbuf_frag_info_t)
+			   struct dp_rx_nbuf_frag_info *nbuf_frag_info_t,
+			   const char *func_name,
+			   const int line_num)
 {
 	QDF_STATUS ret = QDF_STATUS_SUCCESS;
 

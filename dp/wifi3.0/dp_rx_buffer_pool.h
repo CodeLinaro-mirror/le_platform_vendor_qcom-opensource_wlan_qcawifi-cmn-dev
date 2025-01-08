@@ -82,7 +82,8 @@ void dp_rx_buffer_pool_nbuf_free(struct dp_soc *soc, qdf_nbuf_t nbuf,
  */
 qdf_nbuf_t dp_rx_buffer_pool_nbuf_alloc(struct dp_soc *soc, uint32_t mac_id,
 					struct rx_desc_pool *rx_desc_pool,
-					uint32_t num_available_buffers);
+					uint32_t num_available_buffers
+					const char *func_name, const int line_num);
 
 /**
  * dp_rx_buffer_pool_nbuf_map() - Map nbuff for buffer replenish
@@ -95,7 +96,9 @@ qdf_nbuf_t dp_rx_buffer_pool_nbuf_alloc(struct dp_soc *soc, uint32_t mac_id,
 QDF_STATUS
 dp_rx_buffer_pool_nbuf_map(struct dp_soc *soc,
 			   struct rx_desc_pool *rx_desc_pool,
-			   struct dp_rx_nbuf_frag_info *nbuf_frag_info_t);
+			   struct dp_rx_nbuf_frag_info *nbuf_frag_info_t,
+			   const char *func_name,
+			   const int line_num);
 
 /**
  * dp_rx_schedule_refill_thread() - Schedule RX refill thread to enqueue
@@ -190,15 +193,31 @@ void dp_rx_buffer_pool_nbuf_free(struct dp_soc *soc, qdf_nbuf_t nbuf,
  *
  * Return: nbuf
  */
+#ifdef NBUF_MEMORY_DEBUG
 static inline qdf_nbuf_t
 dp_rx_buffer_pool_nbuf_alloc(struct dp_soc *soc, uint32_t mac_id,
 			     struct rx_desc_pool *rx_desc_pool,
-			     uint32_t num_available_buffers)
+			     uint32_t num_available_buffers,
+			     const char *func_name,
+			     const int line_num)
+{
+	return qdf_nbuf_alloc_debug(soc->osdev, rx_desc_pool->buf_size,
+			      RX_BUFFER_RESERVATION,
+			      rx_desc_pool->buf_alignment, FALSE, func_name, line_num);
+}
+#else
+static inline qdf_nbuf_t
+dp_rx_buffer_pool_nbuf_alloc(struct dp_soc *soc, uint32_t mac_id,
+			     struct rx_desc_pool *rx_desc_pool,
+			     uint32_t num_available_buffers,
+			     const char *func_name,
+			     const int line_num)
 {
 	return qdf_nbuf_alloc(soc->osdev, rx_desc_pool->buf_size,
 			      RX_BUFFER_RESERVATION,
 			      rx_desc_pool->buf_alignment, FALSE);
 }
+#endif
 
 /**
  * dp_rx_buffer_pool_nbuf_map() - Map nbuff for buffer replenish
@@ -208,10 +227,38 @@ dp_rx_buffer_pool_nbuf_alloc(struct dp_soc *soc, uint32_t mac_id,
  *
  * Return: nbuf
  */
+#ifdef NBUF_MAP_UNMAP_DEBUG
 static inline QDF_STATUS
 dp_rx_buffer_pool_nbuf_map(struct dp_soc *soc,
 			   struct rx_desc_pool *rx_desc_pool,
-			   struct dp_rx_nbuf_frag_info *nbuf_frag_info_t)
+			   struct dp_rx_nbuf_frag_info *nbuf_frag_info_t,
+			   const char *func_name,
+			   const int line_num)
+{
+	QDF_STATUS status;
+
+	status = qdf_nbuf_map_nbytes_single_debug(soc->osdev,
+					    (nbuf_frag_info_t->virt_addr).nbuf,
+					    QDF_DMA_FROM_DEVICE,
+					    rx_desc_pool->buf_size, func_name, line_num);
+	if (QDF_IS_STATUS_ERROR(status))
+		return status;
+
+	dp_audio_smmu_map(soc->osdev,
+			  qdf_mem_paddr_from_dmaaddr(soc->osdev,
+						     QDF_NBUF_CB_PADDR((nbuf_frag_info_t->virt_addr).nbuf)),
+			  QDF_NBUF_CB_PADDR((nbuf_frag_info_t->virt_addr).nbuf),
+			  rx_desc_pool->buf_size);
+
+	return status;
+}
+#else
+static inline QDF_STATUS
+dp_rx_buffer_pool_nbuf_map(struct dp_soc *soc,
+			   struct rx_desc_pool *rx_desc_pool,
+			   struct dp_rx_nbuf_frag_info *nbuf_frag_info_t,
+			   const char *func_name,
+			   const int line_num)
 {
 	QDF_STATUS status;
 
@@ -230,6 +277,7 @@ dp_rx_buffer_pool_nbuf_map(struct dp_soc *soc,
 
 	return status;
 }
+#endif
 
 static inline void dp_rx_schedule_refill_thread(struct dp_soc *soc) { }
 

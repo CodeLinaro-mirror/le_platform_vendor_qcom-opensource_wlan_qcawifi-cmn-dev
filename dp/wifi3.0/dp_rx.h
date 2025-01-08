@@ -223,7 +223,7 @@ struct dp_rx_desc {
 				num_buffers, desc_list, tail, req_only) \
 	__dp_rx_buffers_replenish(soc, mac_id, rxdma_srng, rx_desc_pool, \
 				  num_buffers, desc_list, tail, req_only, \
-				  __func__)
+				  __func__, __LINE__)
 
 #ifdef WLAN_SUPPORT_RX_FISA
 /**
@@ -1680,6 +1680,7 @@ dp_rx_update_flow_tag(struct dp_soc *soc, struct dp_vdev *vdev,
  * @tail: tail of descs list
  * @req_only: If true don't replenish more than req buffers
  * @func_name: name of the caller function
+ * @line_num: line number of the caller function
  *
  * Return: return success or failure
  */
@@ -1690,7 +1691,8 @@ QDF_STATUS __dp_rx_buffers_replenish(struct dp_soc *dp_soc, uint32_t mac_id,
 				 union dp_rx_desc_list_elem_t **desc_list,
 				 union dp_rx_desc_list_elem_t **tail,
 				 bool req_only,
-				 const char *func_name);
+				 const char *func_name,
+				 const int line_num);
 
 /**
  * __dp_rx_buffers_no_map_replenish() - replenish rxdma ring with rx nbufs
@@ -2708,28 +2710,16 @@ QDF_STATUS dp_pdev_rx_buffers_attach_simple(struct dp_soc *soc, uint32_t mac_id,
 					 num_req_buffers);
 }
 
-static inline
-void dp_rx_buffers_replenish_simple(struct dp_soc *soc, uint32_t mac_id,
-				    struct dp_srng *rxdma_srng,
-				    struct rx_desc_pool *rx_desc_pool,
-				    uint32_t num_req_buffers,
-				    union dp_rx_desc_list_elem_t **desc_list,
-				    union dp_rx_desc_list_elem_t **tail)
-{
-	dp_rx_buffers_replenish(soc, mac_id, rxdma_srng, rx_desc_pool,
-				num_req_buffers, desc_list, tail, false);
+#define dp_rx_buffers_replenish_simple(soc, mac_id, rxdma_srng, rx_desc_pool, num_req_buffers, desc_list, tail) \
+{ \
+	dp_rx_buffers_replenish(soc, mac_id, rxdma_srng, rx_desc_pool, \
+				num_req_buffers, desc_list, tail, false); \
 }
 
-static inline
-void dp_rx_buffers_lt_replenish_simple(struct dp_soc *soc, uint32_t mac_id,
-				       struct dp_srng *rxdma_srng,
-				       struct rx_desc_pool *rx_desc_pool,
-				       uint32_t num_req_buffers,
-				       union dp_rx_desc_list_elem_t **desc_list,
-				       union dp_rx_desc_list_elem_t **tail)
-{
-	dp_rx_buffers_replenish(soc, mac_id, rxdma_srng, rx_desc_pool,
-				num_req_buffers, desc_list, tail, false);
+#define dp_rx_buffers_lt_replenish_simple(soc, mac_id, rxdma_srng, rx_desc_pool, num_req_buffers, desc_list, tail) \
+{ \
+	dp_rx_buffers_replenish(soc, mac_id, rxdma_srng, rx_desc_pool, \
+				num_req_buffers, desc_list, tail, false); \
 }
 
 static inline
@@ -2748,6 +2738,34 @@ qdf_dma_addr_t dp_rx_nbuf_sync(struct dp_soc *dp_soc,
 	return (qdf_dma_addr_t)NULL;
 }
 
+#ifdef NBUF_MAP_UNMAP_DEBUG
+#define dp_rx_nbuf_unmap(soc, rx_desc, reo_ring_num) \
+{ \
+	struct rx_desc_pool *rx_desc_pool; \
+	rx_desc_pool = &soc->rx_desc_buf[rx_desc->pool_id]; \
+	dp_ipa_reo_ctx_buf_mapping_lock(soc, reo_ring_num); \
+	dp_audio_smmu_unmap(soc->osdev, \
+			    QDF_NBUF_CB_PADDR(rx_desc->nbuf), \
+			    rx_desc_pool->buf_size); \
+	dp_ipa_handle_rx_buf_smmu_mapping(soc, rx_desc->nbuf, \
+					  rx_desc_pool->buf_size, \
+					  false, __func__, __LINE__); \
+	qdf_nbuf_unmap_nbytes_single(soc->osdev, rx_desc->nbuf, \
+				     QDF_DMA_FROM_DEVICE, \
+				     rx_desc_pool->buf_size); \
+	dp_ipa_reo_ctx_buf_mapping_unlock(soc, reo_ring_num); \
+}
+
+#define dp_rx_nbuf_unmap_pool(soc, rx_desc_pool, nbuf) \
+{ \
+	dp_audio_smmu_unmap(soc->osdev, QDF_NBUF_CB_PADDR(nbuf), \
+			    rx_desc_pool->buf_size); \
+	dp_ipa_handle_rx_buf_smmu_mapping(soc, nbuf, rx_desc_pool->buf_size, \
+					  false, __func__, __LINE__); \
+	qdf_nbuf_unmap_nbytes_single(soc->osdev, nbuf, QDF_DMA_FROM_DEVICE, \
+				     rx_desc_pool->buf_size); \
+}
+#else
 static inline
 void dp_rx_nbuf_unmap(struct dp_soc *soc,
 		      struct dp_rx_desc *rx_desc,
@@ -2785,6 +2803,7 @@ void dp_rx_nbuf_unmap_pool(struct dp_soc *soc,
 	qdf_nbuf_unmap_nbytes_single(soc->osdev, nbuf, QDF_DMA_FROM_DEVICE,
 				     rx_desc_pool->buf_size);
 }
+#endif
 
 static inline
 void dp_rx_per_core_stats_update(struct dp_soc *soc, uint8_t ring_id,
@@ -2804,11 +2823,15 @@ qdf_nbuf_t dp_rx_nbuf_alloc(struct dp_soc *soc,
 			      rx_desc_pool->buf_alignment, FALSE);
 }
 
+#ifdef NBUF_MEMORY_DEBUG
+#define dp_rx_nbuf_free(nbuf) qdf_nbuf_free(nbuf)
+#else
 static inline
 void dp_rx_nbuf_free(qdf_nbuf_t nbuf)
 {
 	qdf_nbuf_free(nbuf);
 }
+#endif
 #endif
 
 #ifdef DP_UMAC_HW_RESET_SUPPORT
