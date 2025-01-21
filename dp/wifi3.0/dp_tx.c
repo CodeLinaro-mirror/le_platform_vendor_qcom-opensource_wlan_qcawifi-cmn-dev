@@ -2040,7 +2040,9 @@ error:
  */
 static inline QDF_STATUS dp_tx_msdu_single_map(struct dp_vdev *vdev,
 					       struct dp_tx_desc_s *tx_desc,
-					       qdf_nbuf_t nbuf)
+					       qdf_nbuf_t nbuf,
+					       const char *function,
+					       const int line_num)
 {
 	if (qdf_likely(!(tx_desc->flags & DP_TX_DESC_FLAG_TDLS_FRAME)))
 		return qdf_nbuf_map_nbytes_single(vdev->osdev,
@@ -2063,40 +2065,38 @@ static inline void dp_non_std_htt_tx_comp_free_buff(struct dp_soc *soc,
 {
 }
 
-static inline QDF_STATUS dp_tx_msdu_single_map(struct dp_vdev *vdev,
-					       struct dp_tx_desc_s *tx_desc,
-					       qdf_nbuf_t nbuf)
-{
-	return qdf_nbuf_map_nbytes_single(vdev->osdev,
-					  nbuf,
-					  QDF_DMA_TO_DEVICE,
-					  nbuf->len);
-}
+#ifdef NBUF_MAP_UNMAP_DEBUG
+#define dp_tx_msdu_single_map(vdev, tx_desc, nbuf, function, line_num) \
+	qdf_nbuf_map_nbytes_single_debug((vdev)->osdev, nbuf, QDF_DMA_TO_DEVICE, \
+					 (nbuf)->len, function, line_num)
+#else
+#define dp_tx_msdu_single_map(vdev, tx_desc, nbuf, function, line_num) \
+	qdf_nbuf_map_nbytes_single((vdev)->osdev, nbuf, QDF_DMA_TO_DEVICE, (nbuf)->len)
+#endif
 #endif
 
 static inline
 qdf_dma_addr_t dp_tx_nbuf_map_regular(struct dp_vdev *vdev,
 				      struct dp_tx_desc_s *tx_desc,
-				      qdf_nbuf_t nbuf)
+				      qdf_nbuf_t nbuf,
+				      const char *function,
+				      const int line_num)
 {
 	QDF_STATUS ret = QDF_STATUS_E_FAILURE;
 
-	ret = dp_tx_msdu_single_map(vdev, tx_desc, nbuf);
+	ret = dp_tx_msdu_single_map(vdev, tx_desc, nbuf, function, line_num);
 	if (qdf_unlikely(QDF_IS_STATUS_ERROR(ret)))
 		return 0;
 
 	return qdf_nbuf_mapped_paddr_get(nbuf);
 }
 
-static inline
-void dp_tx_nbuf_unmap_regular(struct dp_soc *soc, struct dp_tx_desc_s *desc)
-{
-	qdf_nbuf_unmap_nbytes_single_paddr(soc->osdev,
-					   desc->nbuf,
-					   desc->dma_addr,
-					   QDF_DMA_TO_DEVICE,
-					   desc->length);
-}
+#define dp_tx_nbuf_unmap_regular(soc, desc) \
+	qdf_nbuf_unmap_nbytes_single_paddr((soc)->osdev, \
+					   (desc)->nbuf, \
+					   (desc)->dma_addr, \
+					   QDF_DMA_TO_DEVICE, \
+					   (desc)->length)
 
 #ifdef QCA_DP_TX_RMNET_OPTIMIZATION
 static inline bool
@@ -2172,14 +2172,17 @@ qdf_dma_addr_t dp_tx_rmnet_nbuf_map(struct dp_tx_msdu_info_s *msdu_info,
 static inline
 qdf_dma_addr_t dp_tx_nbuf_map(struct dp_vdev *vdev,
 			      struct dp_tx_desc_s *tx_desc,
-			      qdf_nbuf_t nbuf)
+			      qdf_nbuf_t nbuf,
+			      const char *function,
+			      const int line_num)
 {
 	if (qdf_likely(tx_desc->flags & DP_TX_DESC_FLAG_SIMPLE)) {
 		qdf_nbuf_dma_clean_range((void *)nbuf->data,
 					 (void *)(nbuf->data + nbuf->len));
 		return (qdf_dma_addr_t)qdf_mem_virt_to_phys(nbuf->data);
 	} else {
-		return dp_tx_nbuf_map_regular(vdev, tx_desc, nbuf);
+		return dp_tx_nbuf_map_regular(vdev, tx_desc, nbuf, function,
+					      line_num);
 	}
 }
 
@@ -2195,17 +2198,23 @@ void dp_tx_nbuf_unmap(struct dp_soc *soc,
 static inline
 qdf_dma_addr_t dp_tx_nbuf_map(struct dp_vdev *vdev,
 			      struct dp_tx_desc_s *tx_desc,
-			      qdf_nbuf_t nbuf)
+			      qdf_nbuf_t nbuf,
+			      const char *function,
+			      const int line_num)
 {
-	return dp_tx_nbuf_map_regular(vdev, tx_desc, nbuf);
+	return dp_tx_nbuf_map_regular(vdev, tx_desc, nbuf, function, line_num);
 }
 
+#ifdef NBUF_MAP_UNMAP_DEBUG
+#define dp_tx_nbuf_unmap(soc, desc) dp_tx_nbuf_unmap_regular(soc, desc)
+#else
 static inline
 void dp_tx_nbuf_unmap(struct dp_soc *soc,
 		      struct dp_tx_desc_s *desc)
 {
 	return dp_tx_nbuf_unmap_regular(soc, desc);
 }
+#endif
 #endif
 
 #if defined(WLAN_TX_PKT_CAPTURE_ENH) || defined(FEATURE_PERPKT_INFO)
@@ -2447,9 +2456,11 @@ static void tx_sw_drop_stats_inc(struct dp_pdev *pdev,
 #endif
 
 qdf_nbuf_t
-dp_tx_send_msdu_single(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
-		       struct dp_tx_msdu_info_s *msdu_info, uint16_t peer_id,
-		       struct cdp_tx_exception_metadata *tx_exc_metadata)
+dp_tx_send_msdu_single_debug(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
+			     struct dp_tx_msdu_info_s *msdu_info,
+			     uint16_t peer_id,
+			     struct cdp_tx_exception_metadata *tx_exc_metadata,
+			     const char *function, const int line_num)
 {
 	struct dp_pdev *pdev = vdev->pdev;
 	struct dp_soc *soc = pdev->soc;
@@ -2497,7 +2508,8 @@ dp_tx_send_msdu_single(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 	if (qdf_unlikely(msdu_info->frm_type == dp_tx_frm_rmnet))
 		paddr = dp_tx_rmnet_nbuf_map(msdu_info, tx_desc);
 	else
-		paddr =  dp_tx_nbuf_map(vdev, tx_desc, nbuf);
+		paddr =  dp_tx_nbuf_map(vdev, tx_desc, nbuf, function,
+					line_num);
 
 	if (!paddr) {
 		/* Handle failure */

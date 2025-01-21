@@ -557,20 +557,28 @@ qdf_nbuf_t dp_tx_send_mesh(struct cdp_soc_t *soc_hdl, uint8_t vdev_id,
 			   qdf_nbuf_t nbuf);
 
 /**
- * dp_tx_send_msdu_single() - Setup descriptor and enqueue single MSDU to TCL
+ * dp_tx_send_msdu_single_debug() - Setup descriptor and enqueue single MSDU to TCL
  * @vdev: DP vdev handle
  * @nbuf: skb
  * @msdu_info: MSDU information
  * @peer_id: peer_id of the peer in case of NAWDS frames
  * @tx_exc_metadata: Handle that holds exception path metadata
+ * @function: the caller function for buffer map/unmap debug
+ * @line_num: the caller line number
  *
  * Return: NULL on success,
  *         nbuf when it fails to send
  */
 qdf_nbuf_t
-dp_tx_send_msdu_single(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
-		       struct dp_tx_msdu_info_s *msdu_info, uint16_t peer_id,
-		       struct cdp_tx_exception_metadata *tx_exc_metadata);
+dp_tx_send_msdu_single_debug(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
+			     struct dp_tx_msdu_info_s *msdu_info,
+			     uint16_t peer_id,
+			     struct cdp_tx_exception_metadata *tx_exc_metadata,
+			     const char *function, const int line_num);
+
+#define dp_tx_send_msdu_single(vdev, nbuf, msdu_info, peer_id, tx_exc_metadata) \
+	dp_tx_send_msdu_single_debug(vdev, nbuf, msdu_info, peer_id, tx_exc_metadata, \
+				     __func__, __LINE__)
 
 /**
  * dp_tx_mcast_enhance() - Multicast enhancement on TX
