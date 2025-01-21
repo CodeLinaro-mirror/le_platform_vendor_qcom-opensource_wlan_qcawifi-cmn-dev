@@ -124,7 +124,69 @@ uint8_t sec_type_map[MAX_CDP_SEC_TYPE] = {HAL_TX_ENCRYPT_TYPE_NO_CIPHER,
 					  HAL_TX_ENCRYPT_TYPE_WAPI_GCM_SM4};
 qdf_export_symbol(sec_type_map);
 
-#ifdef WLAN_FEATURE_DP_TX_DESC_HISTORY
+#ifdef DP_TX_COMP_HIST
+#define DP_TX_COMP_HIST_SIZE 32768
+struct dp_tx_comp_event {
+	uint64_t timestamp;
+	qdf_dma_addr_t iova;
+	uint32_t flags;
+	uint32_t ring_id;
+	uint32_t budget;
+	uint32_t num_to_reap;
+	uint32_t num_reaped;
+	enum dp_tx_event_type type;
+	uint32_t id;
+	struct dp_tx_desc_s *tx_desc;
+	uint32_t hp;
+	uint32_t tp;
+	uint32_t cpu;
+	void *hal_tx_desc;
+};
+
+qdf_atomic_t dp_tx_comp_history_index;
+struct dp_tx_comp_event dp_tx_comp_history_list[DP_TX_COMP_HIST_SIZE];
+
+static int32_t dp_tx_comp_circular_index_next(qdf_atomic_t *index, int size)
+{
+	int32_t next = qdf_atomic_inc_return(index);
+
+	if (next == size)
+		qdf_atomic_sub(size, index);
+
+	return next % size;
+}
+
+void dp_tx_comp_history_add(struct dp_tx_desc_s *tx_desc, uint32_t hp,
+			    uint32_t tp, uint32_t ring_id,
+			    uint32_t budget, uint32_t num_to_reap,
+			    uint32_t num_reaped, void *hal_tx_desc,
+			    enum dp_tx_event_type type)
+{
+	int32_t idx;
+	int cpu = get_cpu();
+	struct dp_tx_comp_event *event;
+
+	put_cpu();
+	idx = dp_tx_comp_circular_index_next(&dp_tx_comp_history_index,
+					     DP_TX_COMP_HIST_SIZE);
+	event = &dp_tx_comp_history_list[idx];
+	event->timestamp = qdf_get_log_timestamp();
+	event->iova = tx_desc->dma_addr;
+	event->flags = tx_desc->flags;
+	event->ring_id = ring_id;
+	event->budget = budget;
+	event->num_to_reap = num_to_reap;
+	event->num_reaped = num_reaped;
+	event->type = type;
+	event->id = tx_desc->id;
+	event->tx_desc = tx_desc;
+	event->hp = hp;
+	event->tp = tp;
+	event->cpu = cpu;
+	event->hal_tx_desc = hal_tx_desc;
+}
+#endif
+
 static inline enum dp_tx_event_type dp_tx_get_event_type(uint32_t flags)
 {
 	enum dp_tx_event_type type;
@@ -140,6 +202,8 @@ static inline enum dp_tx_event_type dp_tx_get_event_type(uint32_t flags)
 
 	return type;
 }
+
+#ifdef WLAN_FEATURE_DP_TX_DESC_HISTORY
 
 static inline void
 dp_tx_desc_history_add(struct dp_soc *soc, dma_addr_t paddr,
@@ -226,11 +290,6 @@ dp_tx_tso_history_add(struct dp_soc *soc, struct qdf_tso_info_t tso_info,
 }
 
 #else
-static inline enum dp_tx_event_type dp_tx_get_event_type(uint32_t flags)
-{
-	return DP_TX_DESC_INVAL_EVT;
-}
-
 static inline void
 dp_tx_desc_history_add(struct dp_soc *soc, dma_addr_t paddr,
 		       qdf_nbuf_t skb, uint32_t sw_cookie,
@@ -2523,6 +2582,8 @@ dp_tx_send_msdu_single_debug(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 	tx_desc->dma_addr = paddr;
 	dp_tx_desc_history_add(soc, tx_desc->dma_addr, nbuf,
 			       tx_desc->id, DP_TX_DESC_MAP);
+	dp_tx_comp_history_add(tx_desc, 0, 0, 0, 0, 0, 0, NULL,
+			       DP_TX_DESC_MAP);
 	dp_tx_update_mcast_param(peer_id, &htt_tcl_metadata, vdev, msdu_info);
 	/* Enqueue the Tx MSDU descriptor to HW for transmit */
 	status = soc->arch_ops.tx_hw_enqueue(soc, vdev, tx_desc,
@@ -2534,6 +2595,8 @@ dp_tx_send_msdu_single_debug(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 			     tx_desc, tx_q->ring_id);
 		dp_tx_desc_history_add(soc, tx_desc->dma_addr, nbuf,
 				       tx_desc->id, DP_TX_DESC_UNMAP);
+		dp_tx_comp_history_add(tx_desc, 0, 0, 0, 0, 0, 0, NULL,
+				       DP_TX_DESC_UNMAP);
 		dp_tx_nbuf_unmap(soc, tx_desc);
 		drop_code = TX_HW_ENQUEUE;
 		goto release_desc;
@@ -2602,6 +2665,8 @@ qdf_nbuf_t dp_tx_comp_free_buf(struct dp_soc *soc, struct dp_tx_desc_s *desc,
 					desc->msdu_ext_desc->vaddr)) {
 			dp_tx_desc_history_add(soc, desc->dma_addr, desc->nbuf,
 					       desc->id, DP_TX_COMP_MSDU_EXT);
+			dp_tx_comp_history_add(desc, 0, 0, 0, 0, 0, 0,
+					       NULL, DP_TX_COMP_MSDU_EXT);
 			dp_tx_tso_seg_history_add(soc,
 						  desc->msdu_ext_desc->tso_desc,
 						  desc->nbuf, desc->id, type);
@@ -2642,6 +2707,7 @@ qdf_nbuf_t dp_tx_comp_free_buf(struct dp_soc *soc, struct dp_tx_desc_s *desc,
 		goto nbuf_free;
 
 	dp_tx_desc_history_add(soc, desc->dma_addr, desc->nbuf, desc->id, type);
+	dp_tx_comp_history_add(desc, 0, 0, 0, 0, 0, 0, NULL, type);
 	dp_tx_unmap(soc, desc);
 
 	if (desc->flags & DP_TX_DESC_FLAG_MESH_MODE)
@@ -5861,6 +5927,8 @@ dp_tx_comp_process_desc_list(struct dp_soc *soc,
 			 */
 			dp_tx_desc_history_add(soc, desc->dma_addr, desc->nbuf,
 					       desc->id, DP_TX_COMP_UNMAP);
+			dp_tx_comp_history_add(desc, 0, 0, 0, 0, 0, 0,
+					       NULL, DP_TX_COMP_UNMAP);
 			dp_tx_nbuf_unmap(soc, desc);
 			dp_tx_nbuf_dev_queue_free(&h, desc);
 			dp_tx_desc_free(soc, desc, desc->pool_id);
@@ -5980,7 +6048,7 @@ uint32_t dp_tx_comp_handler(struct dp_intr *int_ctx, struct dp_soc *soc,
 	int max_reap_limit, ring_near_full;
 	uint32_t num_entries;
 	qdf_nbuf_queue_head_t h;
-
+	uint32_t hp, tp, orig_num_to_reap, actual_reapped;
 	DP_HIST_INIT();
 
 	num_entries = hal_srng_get_num_entries(soc->hal_soc, hal_ring_hdl);
@@ -5992,6 +6060,7 @@ more_data:
 	head_desc = NULL;
 	tail_desc = NULL;
 	count = 0;
+	actual_reapped = 0;
 	max_reap_limit = dp_tx_comp_get_loop_pkt_limit(soc);
 
 	ring_near_full = dp_srng_test_and_update_nf_params(soc, tx_comp_ring,
@@ -6006,6 +6075,7 @@ more_data:
 		num_avail_for_reap = hal_srng_dst_num_valid(hal_soc,
 							    hal_ring_hdl, 0);
 
+	orig_num_to_reap = num_avail_for_reap;
 	if (num_avail_for_reap >= quota)
 		num_avail_for_reap = quota;
 
@@ -6019,6 +6089,7 @@ more_data:
 	/* Find head descriptor from completion ring */
 	while (qdf_likely(num_avail_for_reap--)) {
 
+		hal_get_sw_cached_hptp(hal_soc, hal_ring_hdl, &tp, &hp);
 		tx_comp_hal_desc =  dp_srng_dst_get_next(soc, hal_ring_hdl);
 		if (qdf_unlikely(!tx_comp_hal_desc))
 			break;
@@ -6138,6 +6209,11 @@ more_data:
 						   tx_desc->pool_id);
 				goto next_desc;
 			}
+			actual_reapped++;
+			dp_tx_comp_history_add(tx_desc, hp, tp, ring_id,
+					       quota, orig_num_to_reap,
+					       actual_reapped,
+					       tx_comp_hal_desc, DP_TX_COMP);
 
 			if (!(tx_desc->flags & DP_TX_DESC_FLAG_ALLOCATED) ||
 				!(tx_desc->flags & DP_TX_DESC_FLAG_QUEUED_TX)) {

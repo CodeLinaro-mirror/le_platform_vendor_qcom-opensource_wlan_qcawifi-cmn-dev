@@ -1262,6 +1262,7 @@ dp_tx_hw_enqueue_be(struct dp_soc *soc, struct dp_vdev *vdev,
 	uint8_t num_desc_bytes = HAL_TX_DESC_LEN_BYTES;
 	uint16_t ast_idx = vdev->bss_ast_idx;
 	uint16_t ast_hash = vdev->bss_ast_hash;
+	uint32_t hp, tp;
 
 	be_vdev = dp_get_be_vdev_from_dp_vdev(vdev);
 
@@ -1351,6 +1352,7 @@ dp_tx_hw_enqueue_be(struct dp_soc *soc, struct dp_vdev *vdev,
 		return status;
 	}
 
+	hal_get_sw_cached_hptp(soc->hal_soc, hal_ring_hdl, &tp, &hp);
 	hal_tx_desc = hal_srng_src_get_next(soc->hal_soc, hal_ring_hdl);
 	if (qdf_unlikely(!hal_tx_desc)) {
 		dp_verbose_debug("TCL ring full ring_id:%d", ring_id);
@@ -1363,6 +1365,8 @@ dp_tx_hw_enqueue_be(struct dp_soc *soc, struct dp_vdev *vdev,
 	}
 
 	tx_desc->flags |= DP_TX_DESC_FLAG_QUEUED_TX;
+	dp_tx_comp_history_add(tx_desc, hp, tp, ring_id, 0, 0, 0,
+			       hal_tx_desc, DP_TX_DESC_QUEUE);
 	dp_vdev_peer_stats_update_protocol_cnt_tx(vdev, tx_desc->nbuf);
 
 	/* Sync cached descriptor with HW */

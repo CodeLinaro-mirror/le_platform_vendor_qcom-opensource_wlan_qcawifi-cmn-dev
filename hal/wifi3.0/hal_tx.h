@@ -165,7 +165,7 @@ do {                                            \
 #define HAL_TX_ADDR_INDEX_SEARCH 0x1
 #define HAL_TX_FLOW_INDEX_SEARCH 0x2
 
-#define HAL_WBM2SW_RELEASE_SRC_GET(wbm_desc)(((*(((uint32_t *)wbm_desc) + \
+#define HAL_WBM2SW_RELEASE_SRC_GET(wbm_desc) (((*(((uint32_t *)wbm_desc) + \
 	(HAL_WBM2SW_RING_RELEASE_SOURCE_MODULE_OFFSET >> 2))) & \
 	 HAL_WBM2SW_RING_RELEASE_SOURCE_MODULE_MASK) >> \
 	 HAL_WBM2SW_RING_RELEASE_SOURCE_MODULE_LSB)

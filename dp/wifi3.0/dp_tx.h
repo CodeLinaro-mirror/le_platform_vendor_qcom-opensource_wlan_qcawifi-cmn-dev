@@ -49,6 +49,22 @@ void dp_tx_nawds_handler(struct dp_soc *soc, struct dp_vdev *vdev,
 			 struct dp_tx_msdu_info_s *msdu_info,
 			 qdf_nbuf_t nbuf, uint16_t sa_peer_id);
 int dp_tx_proxy_arp(struct dp_vdev *vdev, qdf_nbuf_t nbuf);
+#ifdef DP_TX_COMP_HIST
+void dp_tx_comp_history_add(struct dp_tx_desc_s *tx_desc, uint32_t hp,
+			    uint32_t tp, uint32_t ring_id,
+			    uint32_t budget, uint32_t num_to_reap,
+			    uint32_t num_reaped, void *hal_tx_desc,
+			    enum dp_tx_event_type type);
+#else
+static inline void
+dp_tx_comp_history_add(struct dp_tx_desc_s *tx_desc, uint32_t hp,
+			    uint32_t tp, uint32_t ring_id,
+			    uint32_t budget, uint32_t num_to_reap,
+			    uint32_t num_reaped, void *hal_tx_desc,
+			    enum dp_tx_event_type type)
+{
+}
+#endif
 /*
  * DP_TX_DESC_FLAG_FRAG flags should always be defined to 0x1
  * please do not change this flag's definition
