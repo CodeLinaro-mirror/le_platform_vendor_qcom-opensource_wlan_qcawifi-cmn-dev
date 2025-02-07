@@ -4938,6 +4938,11 @@ __reg_process_master_chan_list_ext(struct cur_regulatory_info *regulat_info)
 
 	reg_store_regulatory_ext_info_to_socpriv(soc_reg, regulat_info, phy_id);
 
+	if (this_mchan_params->client_type >= REG_MAX_CLIENT_TYPE) {
+		reg_err("6 GHz reg client type invalid");
+		return QDF_STATUS_E_FAILURE;
+	}
+
 	status = reg_fill_master_channels(regulat_info,
 					  &this_mchan_params->reg_rules,
 					  this_mchan_params->client_type,
