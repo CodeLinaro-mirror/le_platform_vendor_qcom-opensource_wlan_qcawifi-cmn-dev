@@ -2224,6 +2224,8 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 		mon_pdev_be->prev_rxmon_cookie = mon_desc->cookie;
 
 		if (!mon_desc->unmapped) {
+			qdf_nbuf_rec_unmap_iova_ring_id(mon_desc->paddr,
+							QDF_DP_RXDMA_MON_DEST_RING);
 			qdf_mem_unmap_page(soc->osdev, mon_desc->paddr,
 					   rx_mon_desc_pool->buf_size,
 					   QDF_DMA_FROM_DEVICE);

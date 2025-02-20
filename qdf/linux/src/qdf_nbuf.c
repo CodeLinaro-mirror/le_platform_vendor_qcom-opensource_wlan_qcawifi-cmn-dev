@@ -704,6 +704,16 @@ __qdf_nbuf_dev_kfree_list(__qdf_nbuf_queue_head_t *nbuf_queue_head)
 
 qdf_export_symbol(__qdf_nbuf_dev_kfree_list);
 
+static int32_t qdf_nbuf_circular_index_next(qdf_atomic_t *index, int size)
+{
+	int32_t next = qdf_atomic_inc_return(index);
+
+	if (next == size)
+		qdf_atomic_sub(size, index);
+
+	return next % size;
+}
+
 #ifdef NBUF_MEMORY_DEBUG
 struct qdf_nbuf_event {
 	qdf_nbuf_t nbuf;
@@ -720,16 +730,6 @@ struct qdf_nbuf_event {
 static qdf_atomic_t qdf_nbuf_history_index;
 static struct qdf_nbuf_event qdf_nbuf_history[QDF_NBUF_HISTORY_SIZE];
 
-static int32_t qdf_nbuf_circular_index_next(qdf_atomic_t *index, int size)
-{
-	int32_t next = qdf_atomic_inc_return(index);
-
-	if (next == size)
-		qdf_atomic_sub(size, index);
-
-	return next % size;
-}
-
 void
 qdf_nbuf_history_add(qdf_nbuf_t nbuf, const char *func, uint32_t line,
 		     enum qdf_nbuf_event_type type)
@@ -742,6 +742,8 @@ qdf_nbuf_history_add(qdf_nbuf_t nbuf, const char *func, uint32_t line,
 		g_histroy_add_drop++;
 		return;
 	}
+	if (qdf_is_smmu_fault_hit())
+		return;
 
 	event->nbuf = nbuf;
 	qdf_str_lcopy(event->func, func, QDF_MEM_FUNC_NAME_SIZE);
@@ -926,6 +928,103 @@ QDF_STATUS qdf_nbuf_smmu_unmap_debug(qdf_nbuf_t nbuf,
 qdf_export_symbol(qdf_nbuf_smmu_unmap_debug);
 #endif /* IPA_OFFLOAD */
 #endif /* NBUF_SMMU_MAP_UNMAP_DEBUG */
+
+#ifdef HANDLE_SMMU_FAULT
+/* ring id for MAP & UNMAP events */
+#define QDF_IOVA_RING_ID_MAP_SIZE 40000
+#define QDF_IOVA_MAX_MAP_SIZE 1792
+
+struct qdf_iova_ring_id_event {
+	uint64_t timestamp;
+	qdf_dma_addr_t iova;
+	enum dp_ring_id ring_id;
+};
+
+static qdf_atomic_t qdf_iova_ring_id_index;
+static struct qdf_iova_ring_id_event qdf_iova_ring_id_hist[QDF_IOVA_RING_ID_MAP_SIZE];
+
+/* This API is to record skb iova and ring_id mapping for handling SMMU fault
+ * issue that host unmapped a buffer but target read/write this IOVA again,
+ * base on the ring_id, host driver can determine panic on SMMU fault or not.
+ * Some SMMU fault can be ignored like TCL IOVA read fault.
+ * Some SMMU fault can lead to data path hang like rx_rel_ring
+ *
+ * Only track unmap events, if the IOVA is mapped, SMMU fault won't happen
+ * This API does not depend on NBUF_MAP_UNMAP_DEBUG
+ */
+void qdf_nbuf_rec_unmap_iova_ring_id(qdf_dma_addr_t iova, enum dp_ring_id ring_id)
+{
+	int32_t idx = qdf_nbuf_circular_index_next(&qdf_iova_ring_id_index,
+						   QDF_IOVA_RING_ID_MAP_SIZE);
+	struct qdf_iova_ring_id_event *event = &qdf_iova_ring_id_hist[idx];
+
+	if (qdf_is_smmu_fault_hit())
+		return;
+
+	event->timestamp = qdf_get_log_timestamp();
+	event->iova = iova;
+	event->ring_id = ring_id;
+}
+qdf_export_symbol(qdf_nbuf_rec_unmap_iova_ring_id);
+
+enum dp_ring_id qdf_get_ring_id_with_iova(qdf_dma_addr_t iova)
+{
+	int i, found = 0;
+	int index = 0;
+	qdf_dma_addr_t round_iova;
+	struct qdf_iova_ring_id_event *event;
+	struct qdf_iova_ring_id_event *latest_event;
+	int found_ring_ids[QDF_DP_MAX_RING];
+	uint64_t latest_ts = 0;
+	char found_ring_id_str[30];
+	enum dp_ring_id ret = QDF_DP_MAX_RING;
+
+	qdf_mem_set(found_ring_ids, 0, sizeof(found_ring_ids));
+	qdf_mem_set(found_ring_id_str, 0, sizeof(found_ring_id_str));
+	for (i = 0; i < QDF_IOVA_RING_ID_MAP_SIZE; i++) {
+		event = &qdf_iova_ring_id_hist[i];
+		if (event->iova != 0) {
+			/* 0xabd64832 -> 0xabd64830 */
+			round_iova = rounddown(event->iova, 0x10);
+			if ((iova >= round_iova) && (iova - round_iova) <
+			     QDF_IOVA_MAX_MAP_SIZE) {
+				found_ring_ids[found++] = event->ring_id;
+				if (event->timestamp > latest_ts) {
+					latest_ts = event->timestamp;
+					latest_event = event;
+				}
+			}
+		}
+	}
+	if (found > 0)
+		ret = latest_event->ring_id;
+
+	if (found > 1) {
+		for (i = 0; i < found; i++)
+			index += snprintf(&found_ring_id_str[index],
+					 sizeof(found_ring_id_str) - index,
+					 "%d ", found_ring_ids[i]);
+		qdf_info("SMMU fault iova 0x%lx found on multiple rings %s latest %d",
+			 iova, found_ring_id_str, latest_event->ring_id);
+	}
+
+	return ret;
+}
+qdf_export_symbol(qdf_get_ring_id_with_iova);
+#endif
+
+qdf_atomic_t qdf_smmu_fault_atomic;
+void qdf_set_smmu_fault_hit(int val)
+{
+	qdf_atomic_set(&qdf_smmu_fault_atomic, val);
+}
+qdf_export_symbol(qdf_set_smmu_fault_hit);
+
+bool qdf_is_smmu_fault_hit(void)
+{
+	return (qdf_atomic_read(&qdf_smmu_fault_atomic) == 1);
+}
+qdf_export_symbol(qdf_is_smmu_fault_hit);
 
 #ifdef NBUF_MAP_UNMAP_DEBUG
 #define qdf_nbuf_map_tracker_bits 11 /* 2048 buckets */

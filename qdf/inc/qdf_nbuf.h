@@ -2132,6 +2132,57 @@ enum qdf_nbuf_event_type {
 	QDF_NBUF_SMMU_UNMAP,
 };
 
+enum dp_ring_id {
+	QDF_DP_TX_TCL_RING,
+	QDF_DP_RX_REO_DEST_RING,
+	QDF_DP_RX_REL_RING,
+	QDF_DP_RX_REO_EXCEPTION_RING,
+	QDF_DP_RXDMA_MON_DEST_RING,
+	QDF_DP_TX_MON_DEST_RING,
+	QDF_DP_RXDMA_ERR_DEST_RING,
+	QDF_DP_MAX_RING,
+};
+
+#ifdef HANDLE_SMMU_FAULT
+/**
+ * qdf_get_ring_id_with_iova() - API to get dp ring id by IOVA
+ *
+ * Return: dp ring id
+ */
+enum dp_ring_id qdf_get_ring_id_with_iova(qdf_dma_addr_t iova);
+
+/**
+ * qdf_nbuf_rec_unmap_iova_ring_id() - record unmap buffer IOVA with ring_id
+ *
+ * Return: None
+ */
+void qdf_nbuf_rec_unmap_iova_ring_id(qdf_dma_addr_t iova, enum dp_ring_id ring_id);
+#else
+static inline enum dp_ring_id qdf_get_ring_id_with_iova(qdf_dma_addr_t iova)
+{
+	return QDF_DP_MAX_RING;
+}
+static inline void qdf_nbuf_rec_unmap_iova_ring_id(qdf_dma_addr_t iova, enum dp_ring_id ring_id)
+{
+}
+#endif
+/**
+ * qdf_set_smmu_fault_hit() - API to set SMMU fault by platform driver
+ * @val: set atomic value
+ *
+ * Return: None
+ */
+
+void qdf_set_smmu_fault_hit(int val);
+
+/**
+ * qdf_is_smmu_fault_hit() - API to check if SMMU fault hit happened
+ *
+ * Return: true: SMMU fault happened
+ *	   false: SMMU fault not happened
+ */
+bool qdf_is_smmu_fault_hit(void);
+
 /**
  * qdf_net_buf_debug_init() - initialize network buffer debug functionality
  *

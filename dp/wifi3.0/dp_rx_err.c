@@ -333,6 +333,8 @@ more_msdu_link_desc:
 
 		rx_desc_pool = &soc->rx_desc_buf[rx_desc->pool_id];
 		dp_ipa_rx_buf_smmu_mapping_lock(soc);
+		qdf_nbuf_rec_unmap_iova_ring_id(QDF_NBUF_CB_PADDR(rx_desc->nbuf),
+						QDF_DP_RX_REO_EXCEPTION_RING);
 		dp_rx_nbuf_unmap_pool(soc, rx_desc_pool, rx_desc->nbuf);
 		rx_desc->unmapped = 1;
 		dp_ipa_rx_buf_smmu_mapping_unlock(soc);
@@ -735,6 +737,8 @@ dp_rx_bar_frame_handle(struct dp_soc *soc,
 	nbuf = rx_desc->nbuf;
 	rx_desc_pool = &soc->rx_desc_buf[rx_desc->pool_id];
 	dp_ipa_rx_buf_smmu_mapping_lock(soc);
+	qdf_nbuf_rec_unmap_iova_ring_id(QDF_NBUF_CB_PADDR(nbuf),
+					QDF_DP_RX_REO_EXCEPTION_RING);
 	dp_rx_nbuf_unmap_pool(soc, rx_desc_pool, nbuf);
 	rx_desc->unmapped = 1;
 	dp_ipa_rx_buf_smmu_mapping_unlock(soc);
@@ -1106,6 +1110,8 @@ more_msdu_link_desc:
 
 		rx_desc_pool = &soc->rx_desc_buf[rx_desc_pool_id];
 		dp_ipa_rx_buf_smmu_mapping_lock(soc);
+		qdf_nbuf_rec_unmap_iova_ring_id(QDF_NBUF_CB_PADDR(nbuf),
+						QDF_DP_RX_REO_EXCEPTION_RING);
 		dp_rx_nbuf_unmap_pool(soc, rx_desc_pool, nbuf);
 		rx_desc->unmapped = 1;
 		dp_ipa_rx_buf_smmu_mapping_unlock(soc);
@@ -2864,6 +2870,8 @@ dp_rx_err_mpdu_pop(struct dp_soc *soc, uint32_t mac_id,
 						rx_desc_pool =
 							&soc->rx_desc_buf[rx_desc->pool_id];
 						dp_ipa_rx_buf_smmu_mapping_lock(soc);
+						qdf_nbuf_rec_unmap_iova_ring_id(QDF_NBUF_CB_PADDR(msdu),
+										QDF_DP_RXDMA_ERR_DEST_RING);
 						dp_rx_nbuf_unmap_pool(soc,
 								      rx_desc_pool,
 								      msdu);
