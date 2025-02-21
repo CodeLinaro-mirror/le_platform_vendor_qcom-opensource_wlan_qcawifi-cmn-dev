@@ -1637,6 +1637,7 @@ QDF_STATUS dp_tx_desc_pool_init_be(struct dp_soc *soc,
 	struct dp_hw_cookie_conversion_t *cc_ctx;
 	struct dp_spt_page_desc *page_desc;
 	struct dp_tx_desc_s *tx_desc;
+	struct dp_tx_desc_s *tail;
 	uint32_t ppt_idx = 0;
 	uint32_t avail_entry_index = 0;
 
@@ -1652,6 +1653,12 @@ QDF_STATUS dp_tx_desc_pool_init_be(struct dp_soc *soc,
 		tx_desc_pool = dp_get_tx_desc_pool(soc, pool_id);;
 		cc_ctx  = dp_get_tx_cookie_t(soc, pool_id);
 	}
+	tx_desc = tx_desc_pool->freelist;
+	while (tx_desc) {
+		tail = tx_desc;
+		tx_desc = tx_desc->next;
+	}
+	tx_desc_pool->freelist_tail = tail;
 	tx_desc = tx_desc_pool->freelist;
 	page_desc = &cc_ctx->page_desc_base[0];
 	while (tx_desc) {
