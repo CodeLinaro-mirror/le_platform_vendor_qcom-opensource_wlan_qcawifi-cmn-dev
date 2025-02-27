@@ -892,7 +892,8 @@ static inline struct dp_tx_desc_s *dp_tx_desc_alloc(struct dp_soc *soc,
 	dp_tx_prefetch_desc(pool->freelist);
 
 	tx_desc->flags = DP_TX_DESC_FLAG_ALLOCATED;
-
+	dp_tx_comp_history_add(tx_desc, 0, 0, 0, 0, 0, 0, NULL,
+			       DP_TX_DESC_ALLOC);
 	TX_DESC_LOCK_UNLOCK(&pool->lock);
 
 	return tx_desc;

@@ -1985,6 +1985,21 @@ void hal_get_sw_hptp(void *hal_soc, hal_ring_handle_t hal_ring_hdl,
 	}
 }
 
+static inline
+void hal_get_sw_cached_hptp(void *hal_soc, hal_ring_handle_t hal_ring_hdl,
+		     uint32_t *tailp, uint32_t *headp)
+{
+	struct hal_srng *srng = (struct hal_srng *)hal_ring_hdl;
+
+	if (srng->ring_dir == HAL_SRNG_SRC_RING) {
+		*headp = srng->u.src_ring.hp;
+		*tailp = srng->u.src_ring.cached_tp;
+	} else {
+		*tailp = srng->u.dst_ring.tp;
+		*headp = srng->u.dst_ring.cached_hp;
+	}
+}
+
 #if defined(CLEAR_SW2TCL_CONSUMED_DESC)
 /**
  * hal_srng_src_get_next_consumed() - Get the next desc if consumed by HW
