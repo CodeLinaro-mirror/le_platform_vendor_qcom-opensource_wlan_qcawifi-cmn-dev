@@ -200,6 +200,8 @@ dp_tx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 		qdf_assert_always(mon_desc);
 
 		if (!mon_desc->unmapped) {
+			qdf_nbuf_rec_unmap_iova_ring_id(mon_desc->paddr,
+							QDF_DP_TX_MON_DEST_RING);
 			qdf_mem_unmap_page(soc->osdev, mon_desc->paddr,
 					   DP_MON_DATA_BUFFER_SIZE,
 					   QDF_DMA_FROM_DEVICE);

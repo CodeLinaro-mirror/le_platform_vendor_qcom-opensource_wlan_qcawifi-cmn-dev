@@ -827,6 +827,7 @@ struct dp_tx_desc_pool_s {
 	uint16_t elem_size;
 	uint32_t num_allocated;
 	struct dp_tx_desc_s *freelist;
+	struct dp_tx_desc_s *freelist_tail;
 	struct qdf_mem_multi_page_t desc_pages;
 #ifdef QCA_LL_TX_FLOW_CONTROL_V2
 	uint16_t pool_size;

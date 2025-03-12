@@ -2169,6 +2169,8 @@ uint32_t dp_rx_frag_handle(struct dp_soc *soc, hal_ring_desc_t ring_desc,
 		return rx_bufs_used;
 
 	dp_ipa_rx_buf_smmu_mapping_lock(soc);
+	qdf_nbuf_rec_unmap_iova_ring_id(QDF_NBUF_CB_PADDR(rx_desc->nbuf),
+					QDF_DP_RX_REO_EXCEPTION_RING);
 	dp_rx_nbuf_unmap_pool(soc, rx_desc_pool, rx_desc->nbuf);
 	rx_desc->unmapped = 1;
 	dp_ipa_rx_buf_smmu_mapping_unlock(soc);

@@ -329,6 +329,9 @@ more_data:
 		if (QDF_IS_STATUS_ERROR(status)) {
 			if (qdf_unlikely(rx_desc && rx_desc->nbuf)) {
 				qdf_assert_always(!rx_desc->unmapped);
+				qdf_nbuf_rec_unmap_iova_ring_id(
+						QDF_NBUF_CB_PADDR(rx_desc->nbuf),
+						QDF_DP_RX_REO_DEST_RING);
 				dp_rx_nbuf_unmap(soc, rx_desc, reo_ring_num);
 				rx_desc->unmapped = 1;
 				dp_rx_buffer_pool_nbuf_free(soc, rx_desc->nbuf,
@@ -433,6 +436,8 @@ more_data:
 		 * move unmap after scattered msdu waiting break logic
 		 * in case double skb unmap happened.
 		 */
+		qdf_nbuf_rec_unmap_iova_ring_id(QDF_NBUF_CB_PADDR(rx_desc->nbuf),
+						QDF_DP_RX_REO_DEST_RING);
 		dp_rx_nbuf_unmap(soc, rx_desc, reo_ring_num);
 		rx_desc->unmapped = 1;
 		DP_RX_PROCESS_NBUF(soc, nbuf_head, nbuf_tail, ebuf_head,
@@ -1864,6 +1869,8 @@ dp_rx_wbm_err_reap_desc_be(struct dp_intr *int_ctx, struct dp_soc *soc,
 
 		rx_desc_pool = &soc->rx_desc_buf[rx_desc->pool_id];
 		dp_ipa_rx_buf_smmu_mapping_lock(soc);
+		qdf_nbuf_rec_unmap_iova_ring_id(QDF_NBUF_CB_PADDR(nbuf),
+						QDF_DP_RX_REL_RING);
 		dp_rx_nbuf_unmap_pool(soc, rx_desc_pool, nbuf);
 		rx_desc->unmapped = 1;
 		dp_ipa_rx_buf_smmu_mapping_unlock(soc);

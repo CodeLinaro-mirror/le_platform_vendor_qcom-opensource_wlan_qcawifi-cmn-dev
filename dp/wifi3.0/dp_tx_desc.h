@@ -996,8 +996,8 @@ dp_tx_desc_free(struct dp_soc *soc, struct dp_tx_desc_s *tx_desc,
 	dp_tx_desc_clear(tx_desc);
 	pool = dp_get_tx_desc_pool(soc, desc_pool_id);
 	TX_DESC_LOCK_LOCK(&pool->lock);
-	tx_desc->next = pool->freelist;
-	pool->freelist = tx_desc;
+	pool->freelist_tail->next = tx_desc;
+	pool->freelist_tail = tx_desc;
 	pool->num_allocated--;
 	pool->num_free++;
 	TX_DESC_LOCK_UNLOCK(&pool->lock);

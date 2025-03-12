@@ -125,7 +125,7 @@ uint8_t sec_type_map[MAX_CDP_SEC_TYPE] = {HAL_TX_ENCRYPT_TYPE_NO_CIPHER,
 qdf_export_symbol(sec_type_map);
 
 #ifdef DP_TX_COMP_HIST
-#define DP_TX_COMP_HIST_SIZE 32768
+#define DP_TX_COMP_HIST_SIZE 40000
 struct dp_tx_comp_event {
 	uint64_t timestamp;
 	qdf_dma_addr_t iova;
@@ -163,9 +163,13 @@ void dp_tx_comp_history_add(struct dp_tx_desc_s *tx_desc, uint32_t hp,
 			    enum dp_tx_event_type type)
 {
 	int32_t idx;
-	int cpu = get_cpu();
+	int cpu;
 	struct dp_tx_comp_event *event;
 
+	if (qdf_is_smmu_fault_hit())
+		return;
+
+	cpu = get_cpu();
 	put_cpu();
 	idx = dp_tx_comp_circular_index_next(&dp_tx_comp_history_index,
 					     DP_TX_COMP_HIST_SIZE);
@@ -2280,14 +2284,17 @@ void dp_tx_nbuf_unmap(struct dp_soc *soc,
 static inline
 void dp_tx_enh_unmap(struct dp_soc *soc, struct dp_tx_desc_s *desc)
 {
+	qdf_nbuf_rec_unmap_iova_ring_id(desc->dma_addr, QDF_DP_TX_TCL_RING);
 	dp_tx_nbuf_unmap(soc, desc);
 	desc->flags |= DP_TX_DESC_FLAG_UNMAP_DONE;
 }
 
 static inline void dp_tx_unmap(struct dp_soc *soc, struct dp_tx_desc_s *desc)
 {
-	if (qdf_likely(!(desc->flags & DP_TX_DESC_FLAG_UNMAP_DONE)))
+	if (qdf_likely(!(desc->flags & DP_TX_DESC_FLAG_UNMAP_DONE))) {
+		qdf_nbuf_rec_unmap_iova_ring_id(desc->dma_addr, QDF_DP_TX_TCL_RING);
 		dp_tx_nbuf_unmap(soc, desc);
+	}
 }
 #else
 static inline
@@ -2297,6 +2304,7 @@ void dp_tx_enh_unmap(struct dp_soc *soc, struct dp_tx_desc_s *desc)
 
 static inline void dp_tx_unmap(struct dp_soc *soc, struct dp_tx_desc_s *desc)
 {
+	qdf_nbuf_rec_unmap_iova_ring_id(desc->dma_addr, QDF_DP_TX_TCL_RING);
 	dp_tx_nbuf_unmap(soc, desc);
 }
 #endif
@@ -5929,6 +5937,7 @@ dp_tx_comp_process_desc_list(struct dp_soc *soc,
 					       desc->id, DP_TX_COMP_UNMAP);
 			dp_tx_comp_history_add(desc, 0, 0, 0, 0, 0, 0,
 					       NULL, DP_TX_COMP_UNMAP);
+			qdf_nbuf_rec_unmap_iova_ring_id(desc->dma_addr, QDF_DP_TX_TCL_RING);
 			dp_tx_nbuf_unmap(soc, desc);
 			dp_tx_nbuf_dev_queue_free(&h, desc);
 			dp_tx_desc_free(soc, desc, desc->pool_id);
