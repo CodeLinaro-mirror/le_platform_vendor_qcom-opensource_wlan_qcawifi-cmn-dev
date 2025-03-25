@@ -67,6 +67,8 @@
 #define DP_IPV6_PRIORITY_SHIFT 20
 #define MAX_MON_LINK_DESC_BANKS 2
 #define DP_VDEV_ALL CDP_VDEV_ALL
+#define DP_PENDING_TX_DESC_BITS 10
+#define DP_PENDING_TX_DESC_BUCKETS (1 << DP_PENDING_TX_DESC_BITS)
 
 #if defined(WLAN_MAX_PDEVS) && (WLAN_MAX_PDEVS == 1)
 #define WLAN_DP_RESET_MON_BUF_RING_FILTER
@@ -712,6 +714,7 @@ struct dp_tx_desc_s {
 	struct dp_tx_ext_desc_elem_s *msdu_ext_desc;
 	qdf_ktime_t timestamp;
 	struct hal_tx_desc_comp_s comp;
+	struct hlist_node hnode;
 };
 
 #ifdef QCA_AC_BASED_FLOW_CONTROL
@@ -3156,6 +3159,10 @@ struct dp_soc {
 	uint64_t alloc_addr_list_idx;
 	uint64_t shared_qaddr_del_idx;
 	uint64_t write_paddr_list_idx;
+#ifdef DP_TX_COMP_DESC_VALIDATION
+	struct hlist_head pending_tx_desc[DP_PENDING_TX_DESC_BUCKETS];
+	qdf_spinlock_t pending_tx_desc_lock;
+#endif
 };
 
 #ifdef IPA_OFFLOAD

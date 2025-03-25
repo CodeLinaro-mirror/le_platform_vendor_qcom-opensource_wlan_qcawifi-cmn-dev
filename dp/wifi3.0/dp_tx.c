@@ -6034,6 +6034,17 @@ void dp_tx_desc_check_corruption(struct dp_tx_desc_s *tx_desc)
 }
 #endif
 
+#ifdef DP_TX_COMP_DESC_VALIDATION
+static inline void dp_tx_panic_on_tx_desc_invalid(void)
+{
+}
+#else
+static inline void dp_tx_panic_on_tx_desc_invalid(void)
+{
+	QDF_BUG(0);
+}
+#endif
+
 uint32_t dp_tx_comp_handler(struct dp_intr *int_ctx, struct dp_soc *soc,
 			    hal_ring_handle_t hal_ring_hdl, uint8_t ring_id,
 			    uint32_t quota)
@@ -6154,10 +6165,10 @@ more_data:
 							       tx_comp_hal_desc,
 							       &tx_desc);
 		if (qdf_unlikely(!tx_desc)) {
-			dp_err("unable to retrieve tx_desc!");
+			dp_tx_comp_alert("unable to retrieve tx_desc!");
 			hal_dump_comp_desc(tx_comp_hal_desc);
 			DP_STATS_INC(soc, tx.invalid_tx_comp_desc, 1);
-			QDF_BUG(0);
+			dp_tx_panic_on_tx_desc_invalid();
 			continue;
 		}
 		tx_desc->buffer_src = buffer_src;
@@ -6752,6 +6763,7 @@ static QDF_STATUS dp_tx_init_static_pools(struct dp_soc *soc, int num_pool,
 			}
 		}
 	}
+	dp_tx_init_pending_desc_list(soc);
 	dp_global->tx_desc_pool_init_cnt[soc->arch_id]++;
 	return QDF_STATUS_SUCCESS;
 }
@@ -6785,6 +6797,8 @@ static void dp_tx_deinit_static_pools(struct dp_soc *soc, int num_pool)
 	struct dp_global_context *dp_global;
 
 	dp_global = wlan_objmgr_get_global_ctx();
+
+	dp_tx_deinit_pending_desc_list(soc);
 
 	dp_global->tx_desc_pool_init_cnt[soc->arch_id]--;
 	if (dp_global->tx_desc_pool_init_cnt[soc->arch_id] == 0) {

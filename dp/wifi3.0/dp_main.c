@@ -16254,6 +16254,39 @@ static void dp_soc_set_qref_debug_list(struct dp_soc *soc)
 					       max_list_size);
 }
 
+#ifdef DP_TX_COMP_DESC_VALIDATION
+void dp_tx_init_pending_desc_list(struct dp_soc *soc)
+{
+	int i;
+
+	qdf_spinlock_create(&soc->pending_tx_desc_lock);
+	for (i = 0; i < DP_PENDING_TX_DESC_BUCKETS; i++)
+		INIT_HLIST_HEAD(&soc->pending_tx_desc[i]);
+}
+
+void dp_tx_deinit_pending_desc_list(struct dp_soc *soc)
+{
+	int i;
+	struct dp_tx_desc_s *tx_desc;
+	struct hlist_node *tmp;
+
+	/* usually pending tx_desc->nbuf are freed by dp_tx_desc_pool_cleanup,
+	 * below hlist is empty
+	 */
+	for (i = 0; i < DP_PENDING_TX_DESC_BUCKETS; i++) {
+		hlist_for_each_entry_safe(tx_desc, tmp, &soc->pending_tx_desc[i], hnode) {
+			if (tx_desc->nbuf) {
+				qdf_alert("freeing pending tx_desc nbuf %pK",
+						 tx_desc->nbuf);
+				qdf_nbuf_free(tx_desc->nbuf);
+			}
+			hlist_del(&tx_desc->hnode);
+		}
+	}
+	qdf_spinlock_destroy(&soc->pending_tx_desc_lock);
+}
+#endif
+
 
 /**
  * dp_soc_attach() - Attach txrx SOC
