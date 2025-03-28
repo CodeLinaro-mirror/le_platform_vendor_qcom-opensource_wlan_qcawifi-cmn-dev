@@ -4783,6 +4783,78 @@ static inline QDF_STATUS dp_soc_swlm_detach(struct dp_soc *soc)
 }
 #endif /* !WLAN_DP_FEATURE_SW_LATENCY_MGR */
 
+#ifdef DP_TX_COMP_DESC_VALIDATION
+void dp_tx_init_pending_desc_list(struct dp_soc *soc);
+void dp_tx_deinit_pending_desc_list(struct dp_soc *soc);
+
+static inline int dp_tx_hash_tx_desc(struct dp_tx_desc_s *tx_desc)
+{
+	return hash_ptr(tx_desc, DP_PENDING_TX_DESC_BITS);
+}
+
+static inline void dp_tx_desc_track(struct dp_soc *soc,
+				    struct dp_tx_desc_s *tx_desc)
+{
+	int bucket = dp_tx_hash_tx_desc(tx_desc) &
+		    (DP_PENDING_TX_DESC_BUCKETS - 1);
+
+	qdf_spin_lock_bh(&soc->pending_tx_desc_lock);
+	hlist_add_head(&tx_desc->hnode, &soc->pending_tx_desc[bucket]);
+	qdf_spin_unlock_bh(&soc->pending_tx_desc_lock);
+}
+
+static inline bool dp_tx_is_tx_desc_under_track(struct dp_soc *soc,
+						struct dp_tx_desc_s *tx_desc)
+{
+	struct dp_tx_desc_s *entry;
+	struct hlist_node *tmp;
+	bool ret = false;
+	int bucket = dp_tx_hash_tx_desc(tx_desc) &
+		    (DP_PENDING_TX_DESC_BUCKETS - 1);
+
+	qdf_spin_lock_bh(&soc->pending_tx_desc_lock);
+	hlist_for_each_entry_safe(entry, tmp, &soc->pending_tx_desc[bucket], hnode) {
+		if (entry == tx_desc) {
+			ret = true;
+			break;
+		}
+	}
+	qdf_spin_unlock_bh(&soc->pending_tx_desc_lock);
+
+	return ret;
+}
+
+static inline void dp_tx_desc_untrack(struct dp_soc *soc, struct dp_tx_desc_s *tx_desc)
+{
+	qdf_spin_lock_bh(&soc->pending_tx_desc_lock);
+	hlist_del(&tx_desc->hnode);
+	qdf_spin_unlock_bh(&soc->pending_tx_desc_lock);
+}
+#else
+static inline void dp_tx_init_pending_desc_list(struct dp_soc *soc)
+{
+}
+
+static inline void dp_tx_deinit_pending_desc_list(struct dp_soc *soc)
+{
+}
+
+static inline void dp_tx_desc_track(struct dp_soc *soc,
+				    struct dp_tx_desc_s *tx_desc)
+{
+}
+
+static inline bool dp_tx_is_tx_desc_under_track(struct dp_soc *soc,
+						struct dp_tx_desc_s *tx_desc)
+{
+	return true;
+}
+
+static inline void dp_tx_desc_untrack(struct dp_soc *soc, struct dp_tx_desc_s *tx_desc)
+{
+}
+#endif
+
 /**
  * dp_get_peer_id(): function to get peer id by mac
  * @soc: Datapath soc handle
