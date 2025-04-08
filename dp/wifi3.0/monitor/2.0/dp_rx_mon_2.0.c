@@ -2211,6 +2211,10 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 		}
 		mon_desc = (struct dp_mon_desc *)(uintptr_t)(hal_mon_rx_desc.buf_addr);
 		qdf_assert_always(mon_desc);
+		if (!dp_dst_ring_is_sw_desc_valid(soc, DP_DST_RING_MON, mon_desc)) {
+			qdf_err("sw_desc va invalid %pK", mon_desc);
+			continue;
+		}
 
 		if ((mon_desc == mon_pdev_be->prev_rxmon_desc) &&
 		    (mon_desc->cookie == mon_pdev_be->prev_rxmon_cookie)) {
@@ -2342,7 +2346,8 @@ dp_rx_mon_buf_desc_pool_init(struct dp_soc *soc)
 
 	num_entries =
 		wlan_cfg_get_dp_soc_rx_mon_buf_ring_size(soc->wlan_cfg_ctx);
-	return dp_mon_desc_pool_init(&mon_soc_be->rx_desc_mon, num_entries);
+
+	return dp_mon_desc_pool_init(soc, &mon_soc_be->rx_desc_mon, num_entries);
 }
 
 void dp_rx_mon_buf_desc_pool_free(struct dp_soc *soc)

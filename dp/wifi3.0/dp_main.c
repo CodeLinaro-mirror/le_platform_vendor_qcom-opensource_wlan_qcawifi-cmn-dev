@@ -16254,7 +16254,7 @@ static void dp_soc_set_qref_debug_list(struct dp_soc *soc)
 					       max_list_size);
 }
 
-#ifdef DP_TX_COMP_DESC_VALIDATION
+#ifdef DP_SW_DESC_VALIDATION
 void dp_tx_init_pending_desc_list(struct dp_soc *soc)
 {
 	int i;

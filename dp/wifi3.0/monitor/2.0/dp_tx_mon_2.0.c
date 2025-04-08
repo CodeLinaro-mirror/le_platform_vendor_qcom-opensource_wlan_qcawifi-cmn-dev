@@ -345,7 +345,7 @@ dp_tx_mon_buf_desc_pool_init(struct dp_soc *soc)
 	num_entries =
 		wlan_cfg_get_dp_soc_tx_mon_buf_ring_size(soc->wlan_cfg_ctx);
 
-	return dp_mon_desc_pool_init(&mon_soc_be->tx_desc_mon, num_entries);
+	return dp_mon_desc_pool_init(soc, &mon_soc_be->tx_desc_mon, num_entries);
 }
 
 void dp_tx_mon_buf_desc_pool_free(struct dp_soc *soc)

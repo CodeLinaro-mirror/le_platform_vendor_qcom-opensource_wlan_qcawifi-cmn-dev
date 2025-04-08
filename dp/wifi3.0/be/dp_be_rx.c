@@ -324,6 +324,11 @@ more_data:
 				hal_rx_get_reo_desc_va(ring_desc);
 		dp_rx_desc_sw_cc_check(soc, rx_buf_cookie, &rx_desc);
 
+		if (!dp_dst_ring_is_sw_desc_valid(soc, DP_DST_RING_RX, rx_desc)) {
+			qdf_err("sw_desc va invalid %pK", rx_desc);
+			continue;
+		}
+
 		status = dp_rx_desc_sanity(soc, hal_soc, hal_ring_hdl,
 					   ring_desc, rx_desc);
 		if (QDF_IS_STATUS_ERROR(status)) {

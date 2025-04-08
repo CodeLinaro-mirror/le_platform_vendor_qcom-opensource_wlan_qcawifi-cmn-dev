@@ -6034,7 +6034,7 @@ void dp_tx_desc_check_corruption(struct dp_tx_desc_s *tx_desc)
 }
 #endif
 
-#ifdef DP_TX_COMP_DESC_VALIDATION
+#ifdef DP_SW_DESC_VALIDATION
 static inline void dp_tx_panic_on_tx_desc_invalid(void)
 {
 }

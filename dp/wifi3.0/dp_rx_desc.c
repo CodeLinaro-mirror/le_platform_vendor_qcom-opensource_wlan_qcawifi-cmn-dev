@@ -335,6 +335,9 @@ void dp_rx_desc_pool_init(struct dp_soc *soc, uint32_t pool_id,
 	/* link SW rx descs into a freelist */
 	rx_desc_pool->freelist = &rx_desc_pool->array[0];
 	qdf_mem_zero(rx_desc_pool->freelist, rx_desc_pool->pool_size);
+	dp_dst_ring_sw_desc_info_init(soc, DP_DST_RING_RX,
+			rx_desc_pool->freelist,
+			sizeof(union dp_rx_desc_list_elem_t), pool_size);
 
 	status = soc->arch_ops.dp_rx_desc_pool_init(soc, rx_desc_pool,
 						    pool_id);
