@@ -2247,6 +2247,23 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 			hal_srng_dst_get_next(hal_soc, mon_dst_srng);
 			continue;
 		}
+
+		dma_sync_single_for_cpu(soc->osdev->dev, mon_desc->paddr,
+					DP_MON_DATA_BUFFER_SIZE,
+					__qdf_dma_dir_to_os(QDF_DMA_FROM_DEVICE));
+		dma_rmb();
+		/* tag is not present, dma not finished, avoid smmu fault soon,
+		 * do not unmap this entry (will be unmap and freed during pool deinit),
+		 * which may cause later REO ring dma write OOB: tracked REO buffer
+		 * mapping address and size, skb_shared_info skb->end nearby area is
+		 * polluted.
+		 */
+		if (*mon_desc->buf_addr == 0 && (*(mon_desc->buf_addr + 1) == 0)) {
+			qdf_err("mon rx buffer tlv tag not present, skip entry");
+			hal_srng_dst_get_next(hal_soc, mon_dst_srng);
+			continue;
+		}
+
 		mon_pdev_be->prev_rxmon_desc = mon_desc;
 		mon_pdev_be->prev_rxmon_cookie = mon_desc->cookie;
 
