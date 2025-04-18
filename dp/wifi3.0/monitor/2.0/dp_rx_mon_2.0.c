@@ -2149,6 +2149,20 @@ dp_rx_mu_stats(struct dp_pdev *pdev, struct hal_rx_ppdu_info *ppdu_info)
 		dp_rx_he_ppdu_stats(pdev, ppdu_info);
 }
 
+static bool dp_rx_mon_is_dup_desc(struct dp_mon_pdev_be *mon_pdev_be,
+				  struct dp_mon_desc *mon_desc)
+{
+	uint16_t status_buf_count, idx;
+
+	status_buf_count = mon_pdev_be->desc_count;
+	for (idx = 0; idx < status_buf_count; idx++) {
+		if (mon_desc == mon_pdev_be->status[idx])
+			return true;
+	}
+
+	return false;
+}
+
 static inline uint32_t
 dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 			   uint32_t mac_id, uint32_t quota)
@@ -2195,6 +2209,7 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 				&& quota--)) {
 		struct hal_mon_desc hal_mon_rx_desc = {0};
 		struct dp_mon_desc *mon_desc;
+		bool dup_desc;
 		hal_be_get_mon_dest_status(soc->hal_soc,
 					   rx_mon_dst_ring_desc,
 					   &hal_mon_rx_desc);
@@ -2211,8 +2226,16 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 		}
 		mon_desc = (struct dp_mon_desc *)(uintptr_t)(hal_mon_rx_desc.buf_addr);
 		qdf_assert_always(mon_desc);
-		if (!dp_dst_ring_is_sw_desc_valid(soc, DP_DST_RING_MON, mon_desc)) {
-			qdf_err("sw_desc va invalid %pK", mon_desc);
+		dup_desc = dp_rx_mon_is_dup_desc(mon_pdev_be, mon_desc);
+		/*
+		 * dup_desc: duplicate mon_desc exists in same irq reap batch
+		 * in_use: check if duplicate mon_desc which has been reaped in previous irq,
+		 * both cases are observed.
+		 */
+		if (!dp_dst_ring_is_sw_desc_valid(soc, DP_DST_RING_MON, mon_desc) ||
+		     dup_desc || mon_desc->in_use == 0) {
+			qdf_err("sw_desc va invalid %pK dup %d", mon_desc, dup_desc);
+			hal_srng_dst_get_next(hal_soc, mon_dst_srng);
 			continue;
 		}
 

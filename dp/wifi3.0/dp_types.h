@@ -2618,8 +2618,6 @@ struct test_qaddr_del {
 enum dp_dst_ring_id {
 	DP_DST_RING_RX,
 	DP_DST_RING_MON,
-	DP_DST_RING_RX_WBM_ERR,
-	DP_DST_RING_RX_ERR,
 	DP_DST_RING_MAX,
 };
 

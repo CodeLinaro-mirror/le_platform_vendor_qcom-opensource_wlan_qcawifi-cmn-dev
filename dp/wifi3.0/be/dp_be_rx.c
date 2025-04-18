@@ -1825,6 +1825,11 @@ dp_rx_wbm_err_reap_desc_be(struct dp_intr *int_ctx, struct dp_soc *soc,
 						   rx.err.rx_desc_null))
 			continue;
 
+		if (!dp_dst_ring_is_sw_desc_valid(soc, DP_DST_RING_RX, rx_desc)) {
+			qdf_err("sw_desc va invalid %pK", rx_desc);
+			continue;
+		}
+
 		if (!dp_rx_desc_check_magic(rx_desc)) {
 			dp_rx_err_err("%pk: Invalid rx_desc %pk",
 				      soc, rx_desc);
