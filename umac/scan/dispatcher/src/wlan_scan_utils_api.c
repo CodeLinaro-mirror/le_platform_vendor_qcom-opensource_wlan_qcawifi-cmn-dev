@@ -1452,6 +1452,13 @@ util_scan_parse_vendor_ie(struct scan_cache_entry *scan_params,
 	} else if (is_qcn_oui((uint8_t *)ie)) {
 		scan_params->ie_list.qcn = (uint8_t *)ie;
 	}
+#ifdef IOT_DRONE_MESH
+	else if (is_iot_drone_mesh_node_info_oui((uint8_t *)ie)) {
+		scan_params->ie_list.iot_drone_mesh_node_ie = (uint8_t *)ie;
+	} else if (is_iot_drone_mesh_edge_node_info_oui((uint8_t *)ie)) {
+		scan_params->ie_list.iot_drone_mesh_edge_node_ie = (uint8_t *)ie;
+	}
+#endif
 	return QDF_STATUS_SUCCESS;
 }
 
