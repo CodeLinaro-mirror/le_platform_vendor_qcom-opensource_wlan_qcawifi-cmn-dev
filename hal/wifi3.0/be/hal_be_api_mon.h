@@ -111,6 +111,16 @@ defined(QCA_SINGLE_WIFI_3_0)
 #define RX_MON_MSDU_END_WMASK                 0x0AE1
 #define RX_MON_PPDU_END_USR_STATS_WMASK       0xB7E
 
+enum radiotap_channel_flags {
+	RADIOTAP_CHAN_CCK = 0x0020,
+	RADIOTAP_CHAN_OFDM = 0x0040,
+	RADIOTAP_CHAN_2GHZ = 0x0080,
+	RADIOTAP_CHAN_5GHZ = 0x0100,
+	RADIOTAP_CHAN_DYN = 0x0400,
+	RADIOTAP_CHAN_HALF = 0x4000,
+	RADIOTAP_CHAN_QUARTER = 0x8000,
+};
+
 #ifdef CONFIG_MON_WORD_BASED_TLV
 #ifndef BIG_ENDIAN_HOST
 struct rx_mpdu_start_mon_data {
@@ -2511,6 +2521,20 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 		ppdu_info->rx_status.chan_freq =
 			(HAL_RX_GET_64(rx_tlv, RX_PPDU_START,
 				       SW_PHY_META_DATA) & 0xFFFF0000) >> 16;
+
+		if (ppdu_info->rx_status.chan_freq > CHANNEL_FREQ_5150)
+			ppdu_info->rx_status.chan_flags = RADIOTAP_CHAN_5GHZ;
+		else
+			ppdu_info->rx_status.chan_flags = RADIOTAP_CHAN_2GHZ;
+
+		// MSB2 for half/quarter rate flag
+		if ((ppdu_info->rx_status.chan_num & RADIOTAP_CHAN_HALF) == RADIOTAP_CHAN_HALF)
+			ppdu_info->rx_status.chan_flags |= RADIOTAP_CHAN_HALF;
+		else if ((ppdu_info->rx_status.chan_num & RADIOTAP_CHAN_QUARTER) == RADIOTAP_CHAN_QUARTER)
+			ppdu_info->rx_status.chan_flags |= RADIOTAP_CHAN_QUARTER;
+
+		// LSB14 for channel number
+		ppdu_info->rx_status.chan_num &= 0x3FFF;
 		if (ppdu_info->rx_status.chan_num &&
 		    ppdu_info->rx_status.chan_freq) {
 			ppdu_info->rx_status.chan_freq =
