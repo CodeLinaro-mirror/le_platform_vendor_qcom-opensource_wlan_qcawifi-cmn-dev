@@ -2627,7 +2627,33 @@ QDF_STATUS dp_peer_find_attach(struct dp_soc *soc)
 	if (!QDF_IS_STATUS_SUCCESS(status))
 		goto map_detach;
 
+#ifdef IOT_DRONE_MESH
+	if (cfg_get(soc->ctrl_psoc,CFG_DP_IOT_MESH_ENABLE)) {
+		status = dp_peer_ast_table_attach(soc);
+		if (!QDF_IS_STATUS_SUCCESS(status))
+			goto hash_detach;
+
+		status = dp_peer_ast_hash_attach(soc);
+		if (!QDF_IS_STATUS_SUCCESS(status))
+			goto ast_table_detach;
+
+		status = dp_peer_mec_hash_attach(soc);
+		if (QDF_IS_STATUS_SUCCESS(status)) {
+			dp_soc_wds_attach(soc);
+			return status;
+		}
+
+		dp_peer_ast_hash_detach(soc);
+	} else {
+		return status;
+	}
+ast_table_detach:
+	dp_peer_ast_table_detach(soc);
+hash_detach:
+	dp_peer_find_hash_detach(soc);
+#else
 	return status;
+#endif
 map_detach:
 	dp_peer_find_map_detach(soc);
 
@@ -3364,6 +3390,14 @@ dp_peer_find_detach(struct dp_soc *soc)
 {
 	dp_peer_find_map_detach(soc);
 	dp_peer_find_hash_detach(soc);
+#ifdef IOT_DRONE_MESH
+	if (cfg_get(soc->ctrl_psoc, CFG_DP_IOT_MESH_ENABLE)) {
+		dp_soc_wds_detach(soc);
+		dp_peer_ast_hash_detach(soc);
+		dp_peer_ast_table_detach(soc);
+		dp_peer_mec_hash_detach(soc);
+	}
+#endif
 }
 #endif
 

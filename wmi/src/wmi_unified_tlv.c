@@ -9534,6 +9534,10 @@ void wmi_copy_resource_config(wmi_resource_config *resource_cfg,
 			(resource_cfg->flags2,
 			 tgt_res_cfg->fw_ast_indication_disable);
 	}
+        if (tgt_res_cfg->iot_mesh_enable) {
+		WMI_RSRC_CFG_FLAGS2_DISABLE_WDS_MEC_INTRABSS_OFFLOAD_SET(
+			resource_cfg->flags2, 1);
+	}
 }
 
 #ifdef FEATURE_SET
