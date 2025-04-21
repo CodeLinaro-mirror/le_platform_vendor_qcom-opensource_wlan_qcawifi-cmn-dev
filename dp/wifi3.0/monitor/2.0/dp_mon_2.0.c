@@ -347,11 +347,8 @@ dp_mon_buffers_replenish(struct dp_soc *dp_soc,
 						&mon_desc,
 						mon_desc_pool);
 
-		if (qdf_unlikely(QDF_IS_STATUS_ERROR(ret))) {
-			if (qdf_unlikely(ret  == QDF_STATUS_E_FAULT))
-				continue;
+		if (qdf_unlikely(QDF_IS_STATUS_ERROR(ret)))
 			break;
-		}
 
 		count++;
 		next = (*desc_list)->next;
