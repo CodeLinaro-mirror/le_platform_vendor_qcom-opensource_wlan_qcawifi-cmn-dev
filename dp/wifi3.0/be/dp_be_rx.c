@@ -168,6 +168,18 @@ dp_rx_wds_learn(struct dp_soc *soc,
 }
 #endif
 
+static bool dp_rx_nbuf_tlv_is_valid(struct dp_soc *soc, qdf_nbuf_t nbuf)
+{
+	uint8_t *rx_tlv_hdr = qdf_nbuf_data(nbuf);
+
+	qdf_nbuf_sync_for_cpu(soc->osdev, nbuf, QDF_DMA_FROM_DEVICE);
+	dma_rmb();
+	if ((*nbuf->data == 0) && (*(nbuf->data + 1) == 0))
+		return false;
+
+	return true;
+}
+
 uint32_t dp_rx_process_be(struct dp_intr *int_ctx,
 			  hal_ring_handle_t hal_ring_hdl, uint8_t reo_ring_num,
 			  uint32_t quota)
@@ -362,6 +374,11 @@ more_data:
 			dp_info_rl("Reaping rx_desc not in use!");
 			dp_rx_dump_info_and_assert(soc, hal_ring_hdl,
 						   ring_desc, rx_desc);
+			continue;
+		}
+
+		if (qdf_unlikely(!dp_rx_nbuf_tlv_is_valid(soc, rx_desc->nbuf))) {
+			qdf_err("rx buffer tlv tag not present, skip entry");
 			continue;
 		}
 
