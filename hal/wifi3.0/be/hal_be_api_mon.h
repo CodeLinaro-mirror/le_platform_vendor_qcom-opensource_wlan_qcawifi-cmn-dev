@@ -111,6 +111,16 @@ defined(QCA_SINGLE_WIFI_3_0)
 #define RX_MON_MSDU_END_WMASK                 0x0AE1
 #define RX_MON_PPDU_END_USR_STATS_WMASK       0xB7E
 
+enum radiotap_channel_flags {
+	RADIOTAP_CHAN_CCK = 0x0020,
+	RADIOTAP_CHAN_OFDM = 0x0040,
+	RADIOTAP_CHAN_2GHZ = 0x0080,
+	RADIOTAP_CHAN_5GHZ = 0x0100,
+	RADIOTAP_CHAN_DYN = 0x0400,
+	RADIOTAP_CHAN_HALF = 0x4000,
+	RADIOTAP_CHAN_QUARTER = 0x8000,
+};
+
 #ifdef CONFIG_MON_WORD_BASED_TLV
 #ifndef BIG_ENDIAN_HOST
 struct rx_mpdu_start_mon_data {
@@ -2469,7 +2479,7 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 				      qdf_nbuf_t nbuf)
 {
 	struct hal_soc *hal = (struct hal_soc *)hal_soc_hdl;
-	uint32_t tlv_tag, user_id, tlv_len, value;
+	uint32_t tlv_tag, user_id, tlv_len, value, su_ext;
 	uint8_t group_id = 0;
 	uint8_t he_dcm = 0;
 	uint8_t he_stbc = 0;
@@ -2511,6 +2521,20 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 		ppdu_info->rx_status.chan_freq =
 			(HAL_RX_GET_64(rx_tlv, RX_PPDU_START,
 				       SW_PHY_META_DATA) & 0xFFFF0000) >> 16;
+
+		if (ppdu_info->rx_status.chan_freq > CHANNEL_FREQ_5150)
+			ppdu_info->rx_status.chan_flags = RADIOTAP_CHAN_5GHZ;
+		else
+			ppdu_info->rx_status.chan_flags = RADIOTAP_CHAN_2GHZ;
+
+		// MSB2 for half/quarter rate flag
+		if ((ppdu_info->rx_status.chan_num & RADIOTAP_CHAN_HALF) == RADIOTAP_CHAN_HALF)
+			ppdu_info->rx_status.chan_flags |= RADIOTAP_CHAN_HALF;
+		else if ((ppdu_info->rx_status.chan_num & RADIOTAP_CHAN_QUARTER) == RADIOTAP_CHAN_QUARTER)
+			ppdu_info->rx_status.chan_flags |= RADIOTAP_CHAN_QUARTER;
+
+		// LSB14 for channel number
+		ppdu_info->rx_status.chan_num &= 0x3FFF;
 		if (ppdu_info->rx_status.chan_num &&
 		    ppdu_info->rx_status.chan_freq) {
 			ppdu_info->rx_status.chan_freq =
@@ -2929,6 +2953,13 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 				 QDF_MON_STATUS_HE_SU_FORMAT_TYPE;
 		}
 
+               su_ext = HAL_RX_GET(he_sig_a_su_info, HE_SIG_A_SU_INFO,
+                               DOT11AX_SU_EXTENDED);
+               if (su_ext) {
+                       ppdu_info->rx_status.he_data1 =
+                              QDF_MON_STATUS_HE_EXT_SU_FORMAT_TYPE;
+               }
+
 		/* data1 */
 		ppdu_info->rx_status.he_data1 |=
 			QDF_MON_STATUS_HE_BSS_COLOR_KNOWN |
@@ -3004,6 +3035,24 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 				   HE_SIG_A_SU_INFO, TRANSMIT_BW);
 		ppdu_info->rx_status.he_data5 = value;
 		ppdu_info->rx_status.bw = value;
+		if (su_ext) {
+			value = HAL_RX_GET(he_sig_a_su_info,
+				HE_SIG_A_SU_INFO, DOT11AX_EXT_RU_SIZE);
+			switch (value) {
+			case EXT_RU_26:
+				ppdu_info->rx_status.he_data5 = HE_RU_26_TONE;
+				break;
+			case EXT_RU_52:
+				ppdu_info->rx_status.he_data5 = HE_RU_52_TONE;
+				break;
+			case EXT_RU_106:
+				ppdu_info->rx_status.he_data5 = HE_RU_106_TONE;
+				break;
+			case EXT_RU_242:
+				ppdu_info->rx_status.he_data5 = HE_RU_242_TONE;
+				break;
+			}
+		}
 		value = HAL_RX_GET(he_sig_a_su_info,
 				   HE_SIG_A_SU_INFO, CP_LTF_SIZE);
 		switch (value) {

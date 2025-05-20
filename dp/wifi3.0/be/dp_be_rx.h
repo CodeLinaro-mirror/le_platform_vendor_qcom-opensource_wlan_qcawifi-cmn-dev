@@ -495,6 +495,12 @@ dp_rx_prefetch_hw_sw_nbuf_32_byte_desc(struct dp_soc *soc,
 		*last_prefetched_sw_desc =
 			dp_rx_va_prefetch(*last_prefetched_hw_desc);
 
+		if (*last_prefetched_sw_desc &&
+		    !dp_dst_ring_is_sw_desc_valid(soc, DP_DST_RING_RX, *last_prefetched_sw_desc)) {
+			qdf_err("sw_desc va invalid %pK", *last_prefetched_sw_desc);
+			*last_prefetched_sw_desc = NULL;
+		}
+
 		if ((uintptr_t)*last_prefetched_hw_desc & 0x3f)
 			*last_prefetched_hw_desc =
 				hal_srng_dst_prefetch_next_cached_desc(hal_soc,

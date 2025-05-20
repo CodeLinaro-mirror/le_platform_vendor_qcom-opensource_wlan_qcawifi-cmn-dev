@@ -347,11 +347,8 @@ dp_mon_buffers_replenish(struct dp_soc *dp_soc,
 						&mon_desc,
 						mon_desc_pool);
 
-		if (qdf_unlikely(QDF_IS_STATUS_ERROR(ret))) {
-			if (qdf_unlikely(ret  == QDF_STATUS_E_FAULT))
-				continue;
+		if (qdf_unlikely(QDF_IS_STATUS_ERROR(ret)))
 			break;
-		}
 
 		count++;
 		next = (*desc_list)->next;
@@ -396,7 +393,7 @@ free_desc:
 }
 
 QDF_STATUS
-dp_mon_desc_pool_init(struct dp_mon_desc_pool *mon_desc_pool,
+dp_mon_desc_pool_init(struct dp_soc *soc, struct dp_mon_desc_pool *mon_desc_pool,
 		      uint32_t pool_size)
 {
 	int desc_id;
@@ -412,6 +409,10 @@ dp_mon_desc_pool_init(struct dp_mon_desc_pool *mon_desc_pool,
 	qdf_mem_zero(mon_desc_pool->freelist,
 		     mon_desc_pool->pool_size *
 		     sizeof(union dp_mon_desc_list_elem_t));
+
+	dp_dst_ring_sw_desc_info_init(soc, DP_DST_RING_MON,
+			mon_desc_pool->freelist,
+			sizeof(union dp_mon_desc_list_elem_t), pool_size);
 
 	for (desc_id = 0; desc_id < mon_desc_pool->pool_size; desc_id++) {
 		if (desc_id == mon_desc_pool->pool_size - 1)

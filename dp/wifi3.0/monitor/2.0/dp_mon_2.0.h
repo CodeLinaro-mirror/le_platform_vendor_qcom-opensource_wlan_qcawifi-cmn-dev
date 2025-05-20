@@ -295,7 +295,7 @@ struct dp_mon_soc_be {
  * Return: non-zero for failure, zero for success
  */
 QDF_STATUS
-dp_mon_desc_pool_init(struct dp_mon_desc_pool *mon_desc_pool,
+dp_mon_desc_pool_init(struct dp_soc *soc, struct dp_mon_desc_pool *mon_desc_pool,
 		      uint32_t pool_size);
 
 /**

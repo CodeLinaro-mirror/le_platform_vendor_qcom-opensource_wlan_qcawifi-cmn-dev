@@ -469,6 +469,10 @@ static const uint32_t pdev_param_tlv[] = {
 		  PDEV_PARAM_HESIGA_POWER_SCALING),
 	PARAM_MAP(pdev_param_preamble_power_removal,
 		  PDEV_PARAM_PREAMBLE_POWER_REMOVAL),
+        PARAM_MAP(pdev_param_ul_ofdma_rtd,
+                  PDEV_PARAM_UL_OFDMA_RTD),
+	PARAM_MAP(pdev_param_iot_mesh_status,
+		  PDEV_PARAM_IOT_MESH_STATUS),
 
 };
 
@@ -755,6 +759,8 @@ static const uint32_t vdev_param_tlv[] = {
 		  VDEV_PARAM_11AZ_SECURITY_CONFIG),
 	PARAM_MAP(vdev_param_pure_11ax_mode,
 		  VDEV_PARAM_PURE_11AX_MODE),
+	PARAM_MAP(vdev_param_he_ulofdma_dcm,
+		  VDEV_PARAM_HE_ULOFDMA_DCM),
 };
 #endif
 
@@ -9527,6 +9533,10 @@ void wmi_copy_resource_config(wmi_resource_config *resource_cfg,
 		WMI_RSRC_CFG_FLAGS2_DISABLE_WDS_PEER_MAP_UNMAP_EVENT_SET
 			(resource_cfg->flags2,
 			 tgt_res_cfg->fw_ast_indication_disable);
+	}
+        if (tgt_res_cfg->iot_mesh_enable) {
+		WMI_RSRC_CFG_FLAGS2_DISABLE_WDS_MEC_INTRABSS_OFFLOAD_SET(
+			resource_cfg->flags2, 1);
 	}
 }
 
@@ -22624,6 +22634,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 	wmi_service[wmi_service_peer_ul_rtd_estimate] =
 			WMI_SERVICE_PEER_UL_RTD_ESTIMATE;
 #endif
+	wmi_service[wmi_service_dcm_ulofdma_support] =
+			WMI_SERVICE_DCM_ULOFDMA_SUPPORT;
 }
 
 /**

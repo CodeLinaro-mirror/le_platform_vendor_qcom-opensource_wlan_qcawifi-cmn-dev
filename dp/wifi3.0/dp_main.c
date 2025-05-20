@@ -714,6 +714,10 @@ static int dp_peer_add_ast_wifi3(struct cdp_soc_t *soc_hdl,
 				 uint32_t flags)
 {
 	int ret = -1;
+#ifdef IOT_DRONE_MESH
+	struct dp_vdev *vdev;
+	struct dp_pdev *pdev;
+#endif
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
 	struct dp_peer *peer = dp_peer_find_hash_find((struct dp_soc *)soc_hdl,
 						       peer_mac, 0, vdev_id,
@@ -723,7 +727,27 @@ static int dp_peer_add_ast_wifi3(struct cdp_soc_t *soc_hdl,
 		dp_peer_debug("Peer is NULL!");
 		return ret;
 	}
+#ifdef IOT_DRONE_MESH
+	vdev = peer->vdev;
+	pdev = vdev->pdev;
 
+	status = dp_peer_add_ast((struct dp_soc *)soc_hdl,
+				 peer,
+				 mac_addr,
+				 type,
+				 flags);
+	if ((status == QDF_STATUS_SUCCESS) ||
+		(status == QDF_STATUS_E_AGAIN))
+		ret = 0;
+
+	if (pdev->iot_mesh_en) {
+		if (status == QDF_STATUS_E_ALREADY)
+			ret = -1;
+	} else {
+		if (status == QDF_STATUS_E_ALREADY)
+			ret = 0;
+	}
+#else
 	status = dp_peer_add_ast((struct dp_soc *)soc_hdl,
 				 peer,
 				 mac_addr,
@@ -733,6 +757,7 @@ static int dp_peer_add_ast_wifi3(struct cdp_soc_t *soc_hdl,
 	    (status == QDF_STATUS_E_ALREADY) ||
 	    (status == QDF_STATUS_E_AGAIN))
 		ret = 0;
+#endif
 
 	dp_hmwds_ast_add_notify(peer, mac_addr,
 				type, status, false);
@@ -11152,6 +11177,11 @@ static QDF_STATUS dp_set_pdev_param(struct cdp_soc_t *cdp_soc, uint8_t pdev_id,
 	case CDP_CONFIG_VOW:
 		pdev->vow_stats = val.cdp_pdev_param_cfg_vow;
 		break;
+#ifdef IOT_DRONE_MESH
+	case CDP_CONFIG_IOT_MESH_EN:
+	pdev->iot_mesh_en = val.cdp_pdev_param_iot_mesh_en;
+	break;
+#endif
 
 	default:
 		return QDF_STATUS_E_INVAL;
@@ -16254,6 +16284,39 @@ static void dp_soc_set_qref_debug_list(struct dp_soc *soc)
 					       max_list_size);
 }
 
+#ifdef DP_SW_DESC_VALIDATION
+void dp_tx_init_pending_desc_list(struct dp_soc *soc)
+{
+	int i;
+
+	qdf_spinlock_create(&soc->pending_tx_desc_lock);
+	for (i = 0; i < DP_PENDING_TX_DESC_BUCKETS; i++)
+		INIT_HLIST_HEAD(&soc->pending_tx_desc[i]);
+}
+
+void dp_tx_deinit_pending_desc_list(struct dp_soc *soc)
+{
+	int i;
+	struct dp_tx_desc_s *tx_desc;
+	struct hlist_node *tmp;
+
+	/* usually pending tx_desc->nbuf are freed by dp_tx_desc_pool_cleanup,
+	 * below hlist is empty
+	 */
+	for (i = 0; i < DP_PENDING_TX_DESC_BUCKETS; i++) {
+		hlist_for_each_entry_safe(tx_desc, tmp, &soc->pending_tx_desc[i], hnode) {
+			if (tx_desc->nbuf) {
+				qdf_alert("freeing pending tx_desc nbuf %pK",
+						 tx_desc->nbuf);
+				qdf_nbuf_free(tx_desc->nbuf);
+			}
+			hlist_del(&tx_desc->hnode);
+		}
+	}
+	qdf_spinlock_destroy(&soc->pending_tx_desc_lock);
+}
+#endif
+
 
 /**
  * dp_soc_attach() - Attach txrx SOC
@@ -17939,7 +18002,12 @@ static void dp_soc_cfg_init(struct dp_soc *soc)
 		soc->wbm_release_desc_rx_sg_support = 1;
 		soc->rxdma2sw_rings_not_supported = 1;
 		soc->wbm_sg_last_msdu_war = 1;
-		soc->ast_offload_support = AST_OFFLOAD_ENABLE_STATUS;
+#ifdef IOT_DRONE_MESH
+		if (cfg_get(soc->ctrl_psoc, CFG_DP_IOT_MESH_ENABLE))
+			soc->ast_offload_support = 0;
+		else
+#endif
+			soc->ast_offload_support = AST_OFFLOAD_ENABLE_STATUS;
 		soc->mec_fw_offload = FW_MEC_FW_OFFLOAD_ENABLED;
 		soc->num_hw_dscp_tid_map = HAL_MAX_HW_DSCP_TID_V2_MAPS;
 		wlan_cfg_set_txmon_hw_support(soc->wlan_cfg_ctx, true);

@@ -2149,6 +2149,20 @@ dp_rx_mu_stats(struct dp_pdev *pdev, struct hal_rx_ppdu_info *ppdu_info)
 		dp_rx_he_ppdu_stats(pdev, ppdu_info);
 }
 
+static bool dp_rx_mon_is_dup_desc(struct dp_mon_pdev_be *mon_pdev_be,
+				  struct dp_mon_desc *mon_desc)
+{
+	uint16_t status_buf_count, idx;
+
+	status_buf_count = mon_pdev_be->desc_count;
+	for (idx = 0; idx < status_buf_count; idx++) {
+		if (mon_desc == mon_pdev_be->status[idx])
+			return true;
+	}
+
+	return false;
+}
+
 static inline uint32_t
 dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 			   uint32_t mac_id, uint32_t quota)
@@ -2195,6 +2209,7 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 				&& quota--)) {
 		struct hal_mon_desc hal_mon_rx_desc = {0};
 		struct dp_mon_desc *mon_desc;
+		bool dup_desc;
 		hal_be_get_mon_dest_status(soc->hal_soc,
 					   rx_mon_dst_ring_desc,
 					   &hal_mon_rx_desc);
@@ -2211,6 +2226,18 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 		}
 		mon_desc = (struct dp_mon_desc *)(uintptr_t)(hal_mon_rx_desc.buf_addr);
 		qdf_assert_always(mon_desc);
+		dup_desc = dp_rx_mon_is_dup_desc(mon_pdev_be, mon_desc);
+		/*
+		 * dup_desc: duplicate mon_desc exists in same irq reap batch
+		 * in_use: check if duplicate mon_desc which has been reaped in previous irq,
+		 * both cases are observed.
+		 */
+		if (!dp_dst_ring_is_sw_desc_valid(soc, DP_DST_RING_MON, mon_desc) ||
+		     dup_desc || mon_desc->in_use == 0) {
+			qdf_err("sw_desc va invalid %pK dup %d", mon_desc, dup_desc);
+			hal_srng_dst_get_next(hal_soc, mon_dst_srng);
+			continue;
+		}
 
 		if ((mon_desc == mon_pdev_be->prev_rxmon_desc) &&
 		    (mon_desc->cookie == mon_pdev_be->prev_rxmon_cookie)) {
@@ -2220,6 +2247,23 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 			hal_srng_dst_get_next(hal_soc, mon_dst_srng);
 			continue;
 		}
+
+		dma_sync_single_for_cpu(soc->osdev->dev, mon_desc->paddr,
+					DP_MON_DATA_BUFFER_SIZE,
+					__qdf_dma_dir_to_os(QDF_DMA_FROM_DEVICE));
+		dma_rmb();
+		/* tag is not present, dma not finished, avoid smmu fault soon,
+		 * do not unmap this entry (will be unmap and freed during pool deinit),
+		 * which may cause later REO ring dma write OOB: tracked REO buffer
+		 * mapping address and size, skb_shared_info skb->end nearby area is
+		 * polluted.
+		 */
+		if (*mon_desc->buf_addr == 0 && (*(mon_desc->buf_addr + 1) == 0)) {
+			qdf_err("mon rx buffer tlv tag not present, skip entry");
+			hal_srng_dst_get_next(hal_soc, mon_dst_srng);
+			continue;
+		}
+
 		mon_pdev_be->prev_rxmon_desc = mon_desc;
 		mon_pdev_be->prev_rxmon_cookie = mon_desc->cookie;
 
@@ -2342,7 +2386,8 @@ dp_rx_mon_buf_desc_pool_init(struct dp_soc *soc)
 
 	num_entries =
 		wlan_cfg_get_dp_soc_rx_mon_buf_ring_size(soc->wlan_cfg_ctx);
-	return dp_mon_desc_pool_init(&mon_soc_be->rx_desc_mon, num_entries);
+
+	return dp_mon_desc_pool_init(soc, &mon_soc_be->rx_desc_mon, num_entries);
 }
 
 void dp_rx_mon_buf_desc_pool_free(struct dp_soc *soc)

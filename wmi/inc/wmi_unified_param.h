@@ -5696,6 +5696,10 @@ typedef enum {
 		   PDEV_PARAM_HESIGA_POWER_SCALING),
 	PDEV_PARAM(pdev_param_preamble_power_removal,
 		   PDEV_PARAM_PREAMBLE_POWER_REMOVAL),
+	PDEV_PARAM(pdev_param_ul_ofdma_rtd,
+                   PDEV_PARAM_UL_OFDMA_RTD),
+	PDEV_PARAM(pdev_param_iot_mesh_status,
+		   PDEV_PARAM_IOT_MESH_STATUS),
 	pdev_param_max,
 } wmi_conv_pdev_params_id;
 
@@ -6022,6 +6026,8 @@ typedef enum {
 		   VDEV_PARAM_RTT_11AZ_NTB_MIN_TIME_BW_MEAS),
 	VDEV_PARAM(vdev_param_pure_11ax_mode,
 		   VDEV_PARAM_PURE_11AX_MODE),
+	VDEV_PARAM(vdev_param_he_ulofdma_dcm,
+		   VDEV_PARAM_HE_ULOFDMA_DCM),
 	vdev_param_max,
 } wmi_conv_vdev_param_id;
 
@@ -6392,6 +6398,7 @@ typedef enum {
 	wmi_service_halphy_get_ani_err_support,
 	wmi_service_hpa_support,
 	wmi_service_peer_ul_rtd_estimate,
+	wmi_service_dcm_ulofdma_support,
 	wmi_services_max,
 } wmi_conv_service_ids;
 #define WMI_SERVICE_UNAVAILABLE 0xFFFF
@@ -6894,6 +6901,7 @@ typedef struct {
 	uint8_t dp_peer_meta_data_ver;
 	bool rf_path;
 	bool fw_ast_indication_disable;
+	bool iot_mesh_enable;
 } target_resource_config;
 
 /**

@@ -168,6 +168,18 @@ dp_rx_wds_learn(struct dp_soc *soc,
 }
 #endif
 
+static bool dp_rx_nbuf_tlv_is_valid(struct dp_soc *soc, qdf_nbuf_t nbuf)
+{
+	uint8_t *rx_tlv_hdr = qdf_nbuf_data(nbuf);
+
+	qdf_nbuf_sync_for_cpu(soc->osdev, nbuf, QDF_DMA_FROM_DEVICE);
+	dma_rmb();
+	if ((*nbuf->data == 0) && (*(nbuf->data + 1) == 0))
+		return false;
+
+	return true;
+}
+
 uint32_t dp_rx_process_be(struct dp_intr *int_ctx,
 			  hal_ring_handle_t hal_ring_hdl, uint8_t reo_ring_num,
 			  uint32_t quota)
@@ -324,6 +336,11 @@ more_data:
 				hal_rx_get_reo_desc_va(ring_desc);
 		dp_rx_desc_sw_cc_check(soc, rx_buf_cookie, &rx_desc);
 
+		if (!dp_dst_ring_is_sw_desc_valid(soc, DP_DST_RING_RX, rx_desc)) {
+			qdf_err("sw_desc va invalid %pK", rx_desc);
+			continue;
+		}
+
 		status = dp_rx_desc_sanity(soc, hal_soc, hal_ring_hdl,
 					   ring_desc, rx_desc);
 		if (QDF_IS_STATUS_ERROR(status)) {
@@ -357,6 +374,11 @@ more_data:
 			dp_info_rl("Reaping rx_desc not in use!");
 			dp_rx_dump_info_and_assert(soc, hal_ring_hdl,
 						   ring_desc, rx_desc);
+			continue;
+		}
+
+		if (qdf_unlikely(!dp_rx_nbuf_tlv_is_valid(soc, rx_desc->nbuf))) {
+			qdf_err("rx buffer tlv tag not present, skip entry");
 			continue;
 		}
 
@@ -1819,6 +1841,11 @@ dp_rx_wbm_err_reap_desc_be(struct dp_intr *int_ctx, struct dp_soc *soc,
 		if (dp_assert_always_internal_stat(rx_desc, soc,
 						   rx.err.rx_desc_null))
 			continue;
+
+		if (!dp_dst_ring_is_sw_desc_valid(soc, DP_DST_RING_RX, rx_desc)) {
+			qdf_err("sw_desc va invalid %pK", rx_desc);
+			continue;
+		}
 
 		if (!dp_rx_desc_check_magic(rx_desc)) {
 			dp_rx_err_err("%pk: Invalid rx_desc %pk",

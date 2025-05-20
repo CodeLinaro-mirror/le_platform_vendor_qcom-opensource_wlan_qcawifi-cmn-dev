@@ -185,10 +185,16 @@ void dp_tx_comp_get_params_from_hal_desc_be(struct dp_soc *soc,
 					     r_tx_desc,
 					     tx_desc_va,
 					     true);
-	if (*r_tx_desc)
-		(*r_tx_desc)->peer_id =
-				dp_tx_comp_get_peer_id_be(soc,
-							  tx_comp_hal_desc);
+	if (*r_tx_desc) {
+		if (!dp_tx_is_tx_desc_under_track(soc, *r_tx_desc)) {
+			*r_tx_desc = NULL;
+			return;
+		} else {
+			(*r_tx_desc)->peer_id =
+					dp_tx_comp_get_peer_id_be(soc,
+								  tx_comp_hal_desc);
+		}
+	}
 }
 #endif /* DP_HW_COOKIE_CONVERT_EXCEPTION */
 #else

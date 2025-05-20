@@ -140,6 +140,10 @@ dp_peer_age_multi_ast_entries(struct dp_soc *soc, void *arg,
 	TAILQ_INIT(&wds_list.ase_list);
 	for (i = 0; i < MAX_PDEV_CNT && soc->pdev_list[i]; i++) {
 		pdev = soc->pdev_list[i];
+#ifdef IOT_DRONE_MESH
+                if (pdev->iot_mesh_en)
+			continue;
+#endif
 		dp_pdev_iterate_peer(pdev, dp_pdev_build_peer_ase_list,
 				     &wds_list, mod_id);
 		if (wds_list.num_entries > 0) {

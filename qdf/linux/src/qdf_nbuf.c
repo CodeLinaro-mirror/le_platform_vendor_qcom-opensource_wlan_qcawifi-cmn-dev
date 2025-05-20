@@ -5393,11 +5393,8 @@ unsigned int qdf_nbuf_update_radiotap(struct mon_rx_status *rx_status,
 	it_present_val |= (1 << IEEE80211_RADIOTAP_CHANNEL);
 	put_unaligned_le16(rx_status->chan_freq, &rtap_buf[rtap_len]);
 	rtap_len += 2;
+
 	/* Channel flags. */
-	if (rx_status->chan_freq > CHANNEL_FREQ_5150)
-		rx_status->chan_flags = RADIOTAP_5G_SPECTRUM_CHANNEL;
-	else
-		rx_status->chan_flags = RADIOTAP_2G_SPECTRUM_CHANNEL;
 	if (rx_status->cck_flag)
 		rx_status->chan_flags |= RADIOTAP_CCK_CHANNEL;
 	if (rx_status->ofdm_flag)

@@ -67,6 +67,8 @@
 #define DP_IPV6_PRIORITY_SHIFT 20
 #define MAX_MON_LINK_DESC_BANKS 2
 #define DP_VDEV_ALL CDP_VDEV_ALL
+#define DP_PENDING_TX_DESC_BITS 10
+#define DP_PENDING_TX_DESC_BUCKETS (1 << DP_PENDING_TX_DESC_BITS)
 
 #if defined(WLAN_MAX_PDEVS) && (WLAN_MAX_PDEVS == 1)
 #define WLAN_DP_RESET_MON_BUF_RING_FILTER
@@ -712,6 +714,7 @@ struct dp_tx_desc_s {
 	struct dp_tx_ext_desc_elem_s *msdu_ext_desc;
 	qdf_ktime_t timestamp;
 	struct hal_tx_desc_comp_s comp;
+	struct hlist_node hnode;
 };
 
 #ifdef QCA_AC_BASED_FLOW_CONTROL
@@ -2603,6 +2606,28 @@ struct test_qaddr_del {
 	uint8_t chip_id;
 };
 
+#define DP_DST_RING_MAX_POOL_NUM 4
+
+/* tx comp ring allocated pages for tx_desc individually, hence the va is not
+ * contiguous, it links elements located in different pages. As the va is not
+ * contiguous, do not check sw_desc va with below method: check
+ * sw_desc > start_va and < end_va, and it's with offset of multiple times
+ * of desc size
+ */
+
+enum dp_dst_ring_id {
+	DP_DST_RING_RX,
+	DP_DST_RING_MON,
+	DP_DST_RING_MAX,
+};
+
+struct dp_dst_ring_sw_desc_info {
+	void *sw_desc_start_va[DP_DST_RING_MAX_POOL_NUM];
+	void *sw_desc_end_va[DP_DST_RING_MAX_POOL_NUM];
+	uint32_t sw_desc_size;
+	uint8_t pool_num;
+};
+
 /* SOC level structure for data path */
 struct dp_soc {
 	/**
@@ -3156,6 +3181,11 @@ struct dp_soc {
 	uint64_t alloc_addr_list_idx;
 	uint64_t shared_qaddr_del_idx;
 	uint64_t write_paddr_list_idx;
+#ifdef DP_SW_DESC_VALIDATION
+	struct hlist_head pending_tx_desc[DP_PENDING_TX_DESC_BUCKETS];
+	qdf_spinlock_t pending_tx_desc_lock;
+	struct dp_dst_ring_sw_desc_info sw_desc_info[DP_DST_RING_MAX];
+#endif
 };
 
 #ifdef IPA_OFFLOAD
@@ -3784,6 +3814,10 @@ struct dp_pdev {
 
 	/* For Checking Pending Firmware Response */
 	bool pending_fw_stats_response;
+#ifdef IOT_DRONE_MESH
+	/* Flag to indicate iot_drone_mesh enabled or not */
+	uint8_t iot_mesh_en;
+#endif
 };
 
 struct dp_peer;
