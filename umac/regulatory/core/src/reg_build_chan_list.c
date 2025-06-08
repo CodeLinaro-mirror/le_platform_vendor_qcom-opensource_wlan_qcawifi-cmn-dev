@@ -56,11 +56,11 @@
  */
 static void reg_init_chan(struct regulatory_channel *dst_list,
 			  enum channel_enum beg_enum,
-			  enum channel_enum end_enum, uint8_t dst_idx_adj,
+			  enum channel_enum end_enum, uint16_t dst_idx_adj,
 			  struct wlan_regulatory_psoc_priv_obj *soc_reg)
 {
 	enum channel_enum chan_enum;
-	uint8_t dst_idx;
+	uint16_t dst_idx;
 
 	for (chan_enum = beg_enum; chan_enum <= end_enum; chan_enum++) {
 		dst_idx = chan_enum - dst_idx_adj;
@@ -1972,7 +1972,7 @@ reg_append_mas_chan_list_for_6g_lpi(struct wlan_regulatory_pdev_priv_obj
 			       *pdev_priv_obj)
 {
 	struct regulatory_channel *master_chan_list_6g_client_lpi;
-	uint8_t i, j;
+	uint16_t i, j;
 
 	if (!pdev_priv_obj->reg_rules.num_of_6g_client_reg_rules[REG_INDOOR_AP]) {
 		reg_debug("No LPI reg rules");
@@ -2012,7 +2012,7 @@ reg_append_mas_chan_list_for_6g_vlp(struct wlan_regulatory_pdev_priv_obj
 			       *pdev_priv_obj)
 {
 	struct regulatory_channel *master_chan_list_6g_client_vlp;
-	uint8_t i, j;
+	uint16_t i, j;
 
 	if (!pdev_priv_obj->reg_rules.num_of_6g_client_reg_rules[REG_VERY_LOW_POWER_AP]) {
 		reg_debug("No VLP reg rules");
@@ -3145,7 +3145,7 @@ reg_is_sp_pwr_mode_allowed_in_supchan(enum supported_6g_pwr_types supp_pwr_mode)
 static void
 reg_fill_best_pwr_mode(struct wlan_regulatory_pdev_priv_obj *pdev_priv_obj,
 		       struct super_chan_info *super_chan_list,
-		       uint8_t chn_idx,
+		       uint16_t chn_idx,
 		       enum supported_6g_pwr_types supp_pwr_mode,
 		       uint8_t mas_chan_list_power,
 		       uint8_t *max_eirp_pwr)
@@ -3193,7 +3193,7 @@ reg_fill_best_pwr_mode(struct wlan_regulatory_pdev_priv_obj *pdev_priv_obj,
 static void
 reg_fill_best_pwr_mode(struct wlan_regulatory_pdev_priv_obj *pdev_priv_obj,
 		       struct super_chan_info *super_chan_list,
-		       uint8_t chn_idx,
+		       uint16_t chn_idx,
 		       enum supported_6g_pwr_types supp_pwr_mode,
 		       uint8_t mas_chan_list_power,
 		       uint8_t *max_eirp_pwr)
@@ -3219,7 +3219,7 @@ static void
 reg_assign_afc_chan_entry_to_mas_chan(
 		struct wlan_regulatory_pdev_priv_obj *pdev_priv_obj,
 		struct regulatory_channel **mas_chan,
-		uint8_t chn_idx)
+		uint16_t chn_idx)
 {
 	*mas_chan = &pdev_priv_obj->afc_chan_list[chn_idx];
 }
@@ -3241,7 +3241,7 @@ static inline void
 reg_assign_afc_chan_entry_to_mas_chan(
 		struct wlan_regulatory_pdev_priv_obj *pdev_priv_obj,
 		struct regulatory_channel **mas_chan,
-		uint8_t chn_idx)
+		uint16_t chn_idx)
 {
 }
 
@@ -3435,7 +3435,7 @@ reg_compute_super_chan_list(struct wlan_regulatory_pdev_priv_obj *pdev_priv_obj)
 static void
 reg_disable_enable_opclass_channels(struct wlan_regulatory_pdev_priv_obj *pdev_priv_obj)
 {
-	uint8_t i;
+	uint16_t i;
 	struct regulatory_channel *cur_chan_list;
 
 	cur_chan_list = pdev_priv_obj->cur_chan_list;

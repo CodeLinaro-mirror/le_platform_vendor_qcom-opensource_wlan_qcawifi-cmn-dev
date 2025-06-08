@@ -928,7 +928,7 @@ static void init_deinit_update_phy_reg_cap(struct wlan_objmgr_psoc *psoc,
 	struct target_psoc_info *tgt_hdl;
 	enum wmi_host_hw_mode_config_type mode;
 	uint32_t num_hw_modes;
-	uint8_t idx;
+	uint16_t idx;
 
 	tgt_hdl = (struct target_psoc_info *)wlan_psoc_get_tgt_if_handle(
 						psoc);

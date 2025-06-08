@@ -53,7 +53,8 @@ static void
 scm_sort_6ghz_channel_list(struct wlan_objmgr_vdev *vdev,
 			   struct chan_list *chan_list)
 {
-	uint8_t i, j = 0, max, tmp_list_count;
+	uint16_t i, j = 0;
+	uint8_t max, tmp_list_count;
 	struct meta_rnr_channel *channel;
 	struct chan_info temp_list[MAX_6GHZ_CHANNEL];
 	struct rnr_chan_weight *rnr_chan_info, temp;
@@ -259,10 +260,10 @@ scm_is_scan_type_exempted_from_optimization(struct scan_start_request *req)
 
 void scm_add_all_valid_6g_channels(struct wlan_objmgr_pdev *pdev,
 				   struct chan_list *chan_list,
-				   uint8_t *num_scan_ch,
+				   uint16_t *num_scan_ch,
 				   bool is_colocated_6ghz_scan_enabled)
 {
-	uint8_t i, j;
+	uint16_t i, j;
 	enum channel_enum freq_idx;
 	struct regulatory_channel *cur_chan_list;
 	bool found;
@@ -322,13 +323,13 @@ static void
 scm_copy_valid_channels(struct wlan_objmgr_psoc *psoc,
 			enum scan_mode_6ghz scan_mode,
 			struct scan_start_request *req,
-			uint8_t *num_scan_ch)
+			uint16_t *num_scan_ch)
 {
-	uint8_t i, num_ch = *num_scan_ch;
+	uint16_t i, num_ch = *num_scan_ch;
 	struct chan_list *chan_list = &req->scan_req.chan_list;
 	qdf_freq_t freq;
 	chan_list->num_chan =
-			qdf_min(chan_list->num_chan, (uint8_t)NUM_CHANNELS);
+			qdf_min(chan_list->num_chan, NUM_CHANNELS);
 
 	switch (scan_mode) {
 	case SCAN_MODE_6G_NO_CHANNEL:
@@ -423,14 +424,14 @@ scm_is_6ghz_scan_optimization_supported(struct wlan_objmgr_psoc *psoc)
 
 void scm_add_channel_flags(struct wlan_objmgr_vdev *vdev,
 			   struct chan_list *chan_list,
-			   uint8_t *num_chan,
+			   uint16_t *num_chan,
 			   bool is_colocated_6ghz_scan_enabled,
 			   bool is_pno_scan)
 {
 	struct wlan_scan_obj *scan_obj;
 	enum scan_mode_6ghz scan_mode;
 	struct wlan_objmgr_pdev *pdev;
-	uint8_t num_scan_chan = *num_chan;
+	uint16_t num_scan_chan = *num_chan;
 
 	pdev = wlan_vdev_get_pdev(vdev);
 	if (!pdev)
@@ -508,7 +509,7 @@ scm_update_6ghz_channel_list(struct scan_start_request *req,
 	struct wlan_objmgr_pdev *pdev;
 	struct chan_list *chan_list = &req->scan_req.chan_list;
 	enum scan_mode_6ghz scan_mode;
-	uint8_t num_scan_ch = 0;
+	uint16_t num_scan_ch = 0;
 	enum QDF_OPMODE op_mode;
 	struct wlan_objmgr_psoc *psoc;
 

@@ -1663,11 +1663,11 @@ reg_get_op_class_tbl_by_chan_map(const struct
  */
 static void reg_get_channel_cen(const struct
 				reg_dmn_op_class_map_t *op_class_tbl,
-				uint8_t *idx,
+				uint16_t *idx,
 				uint8_t num_channels,
 				uint8_t *center_chan)
 {
-	uint8_t i;
+	uint16_t i;
 	uint16_t new_chan = 0;
 
 	for (i = *idx; i < (*idx + num_channels); i++)
@@ -1709,7 +1709,7 @@ static bool reg_is_chan_320mhz(uint16_t chan_spacing)
  */
 static uint8_t reg_get_chan_or_chan_center(const struct
 					   reg_dmn_op_class_map_t *op_class_tbl,
-					   uint8_t *idx)
+					   uint16_t *idx)
 {
 	uint8_t center_chan;
 
@@ -2033,7 +2033,7 @@ static void reg_get_cfis_from_opclassmap_for_non6g(
 			enum supported_6g_pwr_types in_6g_pwr_mode)
 {
 	qdf_freq_t start_freq = op_class_tbl->start_freq;
-	uint8_t chan_idx = 0, n_sup_chans = 0, n_unsup_chans = 0;
+	uint16_t chan_idx = 0, n_sup_chans = 0, n_unsup_chans = 0;
 
 	while (op_class_tbl->channels[chan_idx]) {
 		uint8_t op_cls_chan;

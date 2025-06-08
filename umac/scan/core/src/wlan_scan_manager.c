@@ -1056,7 +1056,7 @@ wlan_is_freq_allowable(qdf_freq_t freq, struct scan_req_params *req,
 static bool
 wlan_is_freq_added_to_scan_chan(qdf_freq_t freq,
 			        struct scan_req_params *req,
-				uint8_t num_chan_index)
+				uint16_t num_chan_index)
 {
 	int16_t i;
 
@@ -1078,8 +1078,8 @@ static void
 scm_update_channel_list(struct scan_start_request *req,
 			struct wlan_scan_obj *scan_obj)
 {
-	uint8_t i;
-	uint8_t num_scan_channels = 0;
+	uint16_t i;
+	uint16_t num_scan_channels = 0;
 	struct scan_vdev_obj *scan_vdev_obj;
 	struct wlan_objmgr_pdev *pdev;
 	bool first_scan_done = true;

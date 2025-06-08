@@ -494,7 +494,7 @@ static void wifi_pos_pdev_iterator(struct wlan_objmgr_psoc *psoc,
 				   void *obj, void *arg)
 {
 	QDF_STATUS status;
-	uint8_t num_channels;
+	uint16_t num_channels;
 	struct wlan_objmgr_pdev *pdev = obj;
 	struct wifi_pos_channel_list *chan_list = arg;
 	struct channel_power *ch_info = NULL;

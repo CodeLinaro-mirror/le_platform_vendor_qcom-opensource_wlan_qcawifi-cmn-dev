@@ -63,7 +63,7 @@
 void
 scm_add_channel_flags(struct wlan_objmgr_vdev *vdev,
 		      struct chan_list *chan_list,
-		      uint8_t *num_chan,
+		      uint16_t *num_chan,
 		      bool is_colocated_6ghz_scan_enabled,
 		      bool is_pno_scan);
 
@@ -113,7 +113,7 @@ scm_is_6ghz_scan_optimization_supported(struct wlan_objmgr_psoc *psoc);
  */
 void scm_add_all_valid_6g_channels(struct wlan_objmgr_pdev *pdev,
 				   struct chan_list *chan_list,
-				   uint8_t *num_scan_ch,
+				   uint16_t *num_scan_ch,
 				   bool is_colocated_6ghz_scan_enabled);
 
 #else

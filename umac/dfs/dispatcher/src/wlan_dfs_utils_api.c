@@ -1343,8 +1343,9 @@ uint32_t utils_dfs_chan_to_freq(uint8_t chan)
 				DFS_CHAN_SPACING_20MHZ);
 	else if (chan == DFS_5_GHZ_CHANNEL_170)
 		return DFS_CHAN_170_FREQ;
-	else if (chan > WLAN_24_GHZ_2PT5MHZ_BASECHAN &&
-		 chan <= WLAN_24_GHZ_2PT5MHZ_END_CHAN)
+	else if ((chan > WLAN_24_GHZ_2PT5MHZ_CHAN_190 &&
+			 chan <= WLAN_24_GHZ_2PT5MHZ_END_CHAN) ||
+				 (chan > WLAN_24_GHZ_2PT5MHZ_CHAN_224))
 		return wlan_2pt5mhz_step_chan_to_freq(chan);
 	else
 		return DFS_5_GHZ_BASE_FREQ + (chan * DFS_CHAN_SPACING_5MHZ);

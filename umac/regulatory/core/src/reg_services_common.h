@@ -1102,7 +1102,7 @@ reg_get_min_max_bw_on_cur_chan_list(struct wlan_objmgr_pdev *pdev,
 QDF_STATUS
 reg_get_channel_list_with_power_for_freq(struct wlan_objmgr_pdev *pdev,
 					 struct channel_power *ch_list,
-					 uint8_t *num_chan);
+					 uint16_t *num_chan);
 
 #ifdef CONFIG_REG_6G_PWRMODE
 /**

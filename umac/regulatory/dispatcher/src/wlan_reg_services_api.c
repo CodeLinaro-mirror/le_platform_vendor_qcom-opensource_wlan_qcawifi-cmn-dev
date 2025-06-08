@@ -1236,7 +1236,7 @@ bool wlan_reg_is_passive_for_freq(struct wlan_objmgr_pdev *pdev,
 QDF_STATUS
 wlan_reg_get_channel_list_with_power_for_freq(struct wlan_objmgr_pdev *pdev,
 					      struct channel_power *ch_list,
-					      uint8_t *num_chan)
+					      uint16_t *num_chan)
 {
 	return reg_get_channel_list_with_power_for_freq(pdev,
 							ch_list,
