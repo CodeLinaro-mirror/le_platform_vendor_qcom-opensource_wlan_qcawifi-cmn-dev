@@ -1593,6 +1593,46 @@ static inline struct wlan_psoc_host_mac_phy_caps *target_psoc_get_mac_phy_cap
 }
 
 /**
+ * target_psoc_get_mac_phy_cap2() - get mac_phy_cap
+ * @psoc_info:  pointer to structure target_psoc_info
+ * @band: band ID
+ *
+ * API to get mac_phy_cap
+ *
+ * Return: structure pointer to wlan_psoc_host_mac_phy_caps
+ */
+static inline struct wlan_psoc_host_mac_phy_caps *target_psoc_get_mac_phy_cap2
+		(struct target_psoc_info *psoc_info,
+		 WMI_HOST_WLAN_BAND_CAPABILITY band)
+{
+	uint8_t i;
+	uint32_t preferred_hw_mode;
+	struct wlan_psoc_host_mac_phy_caps *mac_phy_cap;
+	struct tgt_info *info;
+
+	if (!psoc_info)
+		return NULL;
+
+	info = &psoc_info->info;
+	preferred_hw_mode =
+		target_psoc_get_preferred_hw_mode(psoc_info);
+
+	if (preferred_hw_mode >= WMI_HOST_HW_MODE_MAX)
+		return psoc_info->info.mac_phy_cap;
+
+	for (i = 0; i < info->total_mac_phy_cnt; i++) {
+		if ((info->mac_phy_cap[i].hw_mode_id == preferred_hw_mode) &&
+		    (info->mac_phy_cap[i].supported_bands & band))
+			break;
+	}
+
+	if (i == info->total_mac_phy_cnt)
+		return NULL;
+
+	return &info->mac_phy_cap[i];
+}
+
+/**
  * target_psoc_get_mac_phy_cap_ext2() - get mac_phy_caps_ext2
  * @psoc_info:  pointer to structure target_psoc_info
  *
