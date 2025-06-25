@@ -7204,7 +7204,7 @@ typedef enum {
 #endif
 } WMI_HOST_RATE_PREAMBLE;
 
-#define WMI_HOST_FIXED_RATE_NONE	(0xff)
+#define WMI_HOST_FIXED_RATE_NONE	(0xffff)
 
 /** preablbe long */
 #define WMI_HOST_VDEV_PREAMBLE_LONG	0x1
