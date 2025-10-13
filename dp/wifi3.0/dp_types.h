@@ -3539,7 +3539,6 @@ struct dp_soc {
 	/* Second ring used to replenish rx buffers */
 	struct dp_srng rx_refill_buf_ring2;
 
-#ifdef WLAN_FEATURE_STATS_EXT
 	struct {
 		uint32_t rx_mpdu_received;
 		uint32_t rx_mpdu_missed;
@@ -3548,7 +3547,6 @@ struct dp_soc {
 	qdf_spinlock_t rx_hw_stats_lock;
 	bool is_last_stats_ctx_init;
 	struct dp_req_rx_hw_stats_t *rx_hw_stats;
-#endif /* WLAN_FEATURE_STATS_EXT */
 
 	/* Indicates HTT map/unmap versions*/
 	uint8_t peer_map_unmap_versions;
