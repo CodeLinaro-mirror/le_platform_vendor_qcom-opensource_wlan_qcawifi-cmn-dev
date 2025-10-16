@@ -503,6 +503,8 @@ static const uint32_t pdev_param_tlv[] = {
 		  PDEV_PARAM_HESIGA_POWER_SCALING),
 	PARAM_MAP(pdev_param_preamble_power_removal,
 		  PDEV_PARAM_PREAMBLE_POWER_REMOVAL),
+	PARAM_MAP(pdev_param_pre_11ax_packet_removal,
+		  PDEV_PARAM_PRE_11AX_PACKET_REMOVAL),
 };
 
 /* Populate vdev_param array whose index is host param, value is target param */
@@ -798,6 +800,8 @@ static const uint32_t vdev_param_tlv[] = {
 		  VDEV_PARAM_DISABLE_LPI_ANT_OPTIMIZATION),
 	PARAM_MAP(vdev_param_chanbw_set,
 		  VDEV_PARAM_CHANBW_SET),
+	PARAM_MAP(vdev_param_pure_11ax_mode,
+		  VDEV_PARAM_PURE_11AX_MODE),
 };
 #endif
 
@@ -25357,6 +25361,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 				WMI_SERVICE_SPECTRAL_SPUR_BIN_INFO_SUPPORT;
 	wmi_service[wmi_service_halphy_get_ani_err_support] =
 			WMI_SERVICE_HALPHY_ANI_ERROR_SUPPORT;
+	wmi_service[wmi_service_vdev_pure11ax_support] =
+			WMI_SERVICE_VDEV_PURE11AX_SUPPORT;
 }
 
 /**
