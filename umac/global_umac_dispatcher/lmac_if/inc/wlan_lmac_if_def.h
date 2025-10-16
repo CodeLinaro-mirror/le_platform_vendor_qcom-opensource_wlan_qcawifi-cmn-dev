@@ -435,6 +435,7 @@ struct wlan_lmac_if_mgmt_txrx_tx_ops {
  * @scan_unreg_ev_handler: function to unregister for scan events
  * @set_chan_list:
  * @is_platform_eht_capable:
+ * @get_ic_chanbwflag: function to fetch the chanbw flag for 5/10 MHZ
  *
  * scan module uses these functions to avail ol/da lmac services
  */
@@ -456,6 +457,7 @@ struct wlan_lmac_if_scan_tx_ops {
 	QDF_STATUS (*set_chan_list)(struct wlan_objmgr_pdev *pdev, void *arg);
 	bool (*is_platform_eht_capable)(struct wlan_objmgr_psoc *psoc,
 					uint8_t pdev_id);
+	int (*extract_chanbw)(struct wlan_objmgr_pdev *pdev);
 };
 
 /**
@@ -1206,6 +1208,11 @@ struct wlan_lmac_if_ftm_rx_ops {
  * 6GHz 80p80 channel.
  * @is_freq_80p80_supported: Callback function to check if the given primary
  * frequency supports 80P80 mode of operation.
+ * @reg_is_chanbw_20mhz: Checks if the user configured chanbw is 20MHZ. If
+ *                      user configured chanbw is half/quarter, the channel is
+ *                      considered non-DFS irrespective of the regulatory
+ *                      channel flag. If chanbw is full rate, the channel is
+ *                      marked DFS based on regulatory channel flag.
  */
 struct wlan_lmac_if_reg_tx_ops {
 	QDF_STATUS (*register_master_handler)(struct wlan_objmgr_psoc *psoc,
@@ -1281,6 +1288,8 @@ struct wlan_lmac_if_reg_tx_ops {
 	bool (*is_80p80_supported)(struct wlan_objmgr_pdev *pdev);
 	bool (*is_freq_80p80_supported)(struct wlan_objmgr_pdev *pdev,
 					qdf_freq_t freq);
+	bool (*reg_is_chanbw_20mhz) (struct wlan_objmgr_pdev *pdev);
+
 };
 
 /**

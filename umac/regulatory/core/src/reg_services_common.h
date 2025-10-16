@@ -176,6 +176,14 @@ extern const struct chan_map channel_map_global[];
 #define PRIM_SEG_IEEE_CENTER_240MHZ_5G_CHAN 146
 #define PRIM_SEG_FREQ_CENTER_240MHZ_5G_CHAN 5730
 
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+#define MIN_CHANBW 5
+#define MAX_CHANBW 10
+#else
+#define MIN_CHANBW 20
+#define MAX_CHANBW 160
+#endif
+
 #ifdef CONFIG_AFC_SUPPORT
 /**
  * struct afc_cb_handler - defines structure for afc request received  event
@@ -1406,6 +1414,9 @@ void reg_update_nol_ch_for_freq(struct wlan_objmgr_pdev *pdev,
 				bool nol_chan);
 /**
  * reg_is_dfs_for_freq() - Checks the channel state for DFS
+ * If "CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS" is defined, the channel
+ * is marked DFS only if half/qtr rate is not set. If half/qtr rate is
+ * is set, the channel is considered non-DFS.
  * @pdev: pdev ptr
  * @freq: Channel center frequency
  *

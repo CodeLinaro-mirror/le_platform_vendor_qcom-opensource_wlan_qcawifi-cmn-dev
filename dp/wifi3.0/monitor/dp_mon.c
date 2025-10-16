@@ -3963,8 +3963,13 @@ dp_process_ppdu_stats_user_rate_tlv(struct dp_pdev *pdev,
 	ppdu_user_desc->txbf =
 		HTT_PPDU_STATS_USER_RATE_TLV_TXBF_GET(*tag_buf);
 	bw = HTT_PPDU_STATS_USER_RATE_TLV_BW_GET(*tag_buf);
+	/* Assign 20MHz bw for half/quarter rate as
+	   we don't have separate rate table/index for HR/QR */
 	/* Align bw value as per host data structures */
-	if (bw == HTT_PPDU_STATS_BANDWIDTH_320MHZ)
+	if ((bw == HTT_PPDU_STATS_BANDWIDTH_5MHZ) || (bw == HTT_PPDU_STATS_BANDWIDTH_10MHZ) ) {
+		ppdu_user_desc->bw = CMN_BW_20MHZ;
+	}
+	else if(bw == HTT_PPDU_STATS_BANDWIDTH_320MHZ)
 		ppdu_user_desc->bw = bw - 3;
 	else
 		ppdu_user_desc->bw = bw - 2;

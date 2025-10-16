@@ -36,6 +36,9 @@
 #endif
 #include <wlan_dfs_utils_api.h>
 #include <cfg_scan.h>
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+#include <wlan_reg_channel_api.h>
+#endif
 
 QDF_STATUS
 scm_scan_free_scan_request_mem(struct scan_start_request *req)
@@ -994,6 +997,76 @@ static inline void scm_scan_chlist_concurrency_modify(
 #endif
 
 /**
+* wlan_is_scan_req_only_full_rate () - Determine if the user
+*  has requested for *only* full rate (scan on 20MHZ channels) scan.
+* @req: Pointer to struct scan_req_params
+*
+* Return - True if the req is for full rate scan, false otherwise
+*/
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+static inline bool
+wlan_is_scan_req_only_full_rate(struct scan_req_params *req)
+{
+	return !(req->scan_f_quarter_rate || req->scan_f_half_rate);
+}
+#endif
+
+/**
+* wlan_is_freq_allowable() - Verify if the given input frequency is an
+* allowed channel to scan for the scan rate (1/2, 1/4, full) configured
+* by the user. If the requested scan is for full rate and the channel
+* does not support full rate, return false (do not add the
+* channels that support only half/quarter rate to the scan channel list)
+* @req: Pointer to scan_req_params
+* @freq: Input scan frequency in MHZ
+* @pdev: Pointer to wlan_objmgr_pdev
+*
+* Return: True if the frequency is allowed for scan, false otherwise.
+*/
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+static bool
+wlan_is_freq_allowable(qdf_freq_t freq, struct scan_req_params *req,
+		       struct wlan_objmgr_pdev *pdev)
+{
+	if ((wlan_is_scan_req_only_full_rate(req)) &&
+	    (!wlan_reg_is_freq_full_rate_supptd(pdev, freq)))
+		return false;
+	else
+		return true;
+}
+#else
+static bool
+wlan_is_freq_allowable(qdf_freq_t freq, struct scan_req_params *req,
+		       struct wlan_objmgr_pdev *pdev)
+{
+	return true;
+}
+#endif
+
+/**
+ * wlan_is_freq_added_to_scan_chan()  - Finds out if the given freq is
+ * already part of the scan channel index.
+ * @freq: Input frequency
+ * @req: Pointer to  struct scan_req_params
+ * @num_chan_index: Channel index of the scan channels
+ *
+ * Return - True if channels are already part of the scan index, false
+ * otherwise.
+ */
+static bool
+wlan_is_freq_added_to_scan_chan(qdf_freq_t freq,
+			        struct scan_req_params *req,
+				uint8_t num_chan_index)
+{
+	int16_t i;
+
+	for (i = num_chan_index; i >= 0 ; i--)
+		if (freq == req->chan_list.chan[i].freq)
+			return true;
+	return false;
+}
+
+/**
  * scm_update_channel_list() - update scan req params depending on dfs inis
  * and initial scan request.
  * @req: scan request
@@ -1069,6 +1142,17 @@ scm_update_channel_list(struct scan_start_request *req,
 		}
 		if (utils_dfs_is_freq_in_nol(pdev, freq)) {
 			scm_nofl_debug("Skip NOL freq %d", freq);
+			continue;
+		}
+		/* For duplicates, search the unique channels added so far */
+		if (num_scan_channels &&
+		    wlan_is_freq_added_to_scan_chan(freq, &req->scan_req,
+						    num_scan_channels-1)) {
+			scm_nofl_debug("Skip freq %d as it already part of scan channel list", freq);
+			continue;
+		}
+		if (!wlan_is_freq_allowable(freq, &req->scan_req, pdev)) {
+			scm_nofl_debug("Skip freq %d", freq);
 			continue;
 		}
 

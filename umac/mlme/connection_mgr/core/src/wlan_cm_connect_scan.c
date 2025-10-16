@@ -29,6 +29,36 @@
  */
 #define SCAN_FOR_SSID_TIMEOUT       (PLATFORM_VALUE(10000, 50000))
 
+int wlan_scan_reg_get_chanbw(struct wlan_objmgr_pdev *pdev)
+{
+	struct wlan_objmgr_psoc *psoc = NULL;
+	struct wlan_lmac_if_tx_ops *tx_ops = NULL;
+	struct wlan_lmac_if_scan_tx_ops *scan_ops = NULL;
+
+	psoc = wlan_pdev_get_psoc(pdev);
+	if (!psoc) {
+	    scm_debug_rl("psoc is null");
+	    return -1;
+	}
+	tx_ops = wlan_psoc_get_lmac_if_txops(psoc);
+	if (!tx_ops) {
+	    scm_debug_rl("tx_ops is null");
+	    return -1;
+	}
+	scan_ops = &tx_ops->scan;
+	if (!scan_ops) {
+	    scm_debug_rl("scan_ops is null");
+	    return -1;
+	}
+	if (scan_ops->extract_chanbw)
+	    return scan_ops->extract_chanbw(pdev);
+
+	return -1;
+}
+
+#define IEEE80211_CHAN_HALF             0x0000000004000000 /* Half rate channel */
+#define IEEE80211_CHAN_QUARTER          0x0000000008000000 /* Quarter rate channel */
+
 static QDF_STATUS cm_fill_scan_req(struct cnx_mgr *cm_ctx,
 				   struct cm_connect_req *cm_req,
 				   struct scan_start_request *req)
@@ -39,6 +69,7 @@ static QDF_STATUS cm_fill_scan_req(struct cnx_mgr *cm_ctx,
 	QDF_STATUS status = QDF_STATUS_E_INVAL;
 	enum channel_state state;
 	qdf_freq_t ch_freq;
+	int chanbw = 0;
 
 	pdev = wlan_vdev_get_pdev(cm_ctx->vdev);
 	if (!pdev) {
@@ -64,6 +95,13 @@ static QDF_STATUS cm_fill_scan_req(struct cnx_mgr *cm_ctx,
 	req->scan_req.scan_req_id = cm_ctx->scan_requester_id;
 	req->scan_req.scan_f_passive = false;
 	req->scan_req.scan_f_bcast_probe = false;
+
+	/* get chanbw from the driver and fill half and quarter rate flags */
+	chanbw = wlan_scan_reg_get_chanbw(pdev);
+	if ((IEEE80211_CHAN_HALF & chanbw))
+		req->scan_req.scan_f_half_rate = true;
+	if ((IEEE80211_CHAN_QUARTER & chanbw))
+		req->scan_req.scan_f_quarter_rate = true;
 
 	if (cm_req->req.scan_ie.len) {
 		req->scan_req.extraie.ptr =

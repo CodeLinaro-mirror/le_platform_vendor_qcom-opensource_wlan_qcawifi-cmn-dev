@@ -4691,4 +4691,52 @@ struct csa_offload_params {
 	uint32_t ies_present_flag;
 	struct qdf_mac_addr bssid;
 };
+
+#define QCA_OUI_GENERIC_TYPE_1          0x04 /* WARNING: Please do not define
+					      * a new type for VIE. Please use
+					      * this type and use the subtype
+					      * for future use until subtype
+					      * reaches 255,then define
+					      * GENERIC_TYPE_2 as 5 and proceed.
+					      */
+#define QCA_OUI_SUB_BW_INFO_SUBTYPE     0x02 /* This represents Sub-Band Width
+                                              * info, refers to 5MHz/10MHz band
+                                              * width.
+                                              */
+#define QCA_OUI_LEN                     6     /* OUI len of SBW IE */
+/** SBW IE offset is 8, we have skipped the following fields
+ * to read SBW channel width. Validation of the OUI is already
+ * done before we read the SBW BW.
+ * OUI          - 3 octet
+ * OUI Type     - 1 octet
+ * OUI Subtype  - 1 octet
+ * OUI Version  - 1 octet
+ * ISE length   - 1 octet
+ * SBW capabilities - 1 octet
+ */
+#define WLAN_VENDOR_SBW_IE_OFFSET       8
+
+/**
+ * is_sbw_oui() - If vendor IE is Sub-bandwidth OUI (SBW_OUI)
+ * @frm: vendor IE pointer
+ *
+ * API to check if vendor IE is SBW_OUI
+ *
+ * Return: true if its SBW_OUI
+ */
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+static inline bool
+is_sbw_oui(uint8_t *frm)
+{
+	return (frm[1] > QCA_OUI_LEN) && (LE_READ_4(frm + 2) ==
+		((QCA_OUI_GENERIC_TYPE_1 << 24) | QCA_OUI)) &&
+		(frm[6] == QCA_OUI_SUB_BW_INFO_SUBTYPE);
+}
+#else
+static inline bool is_sbw_oui(uint8_t *frm)
+{
+	return false;
+}
+#endif
+
 #endif /* _WLAN_CMN_IEEE80211_DEFS_H_ */
