@@ -70,6 +70,13 @@ uint32_t wlan_construct_shortssid(uint8_t *ssid, uint8_t ssid_len);
  * @return frequency of the channel
  */
 uint32_t wlan_chan_to_freq(uint8_t chan);
+/**
+ * wlan_2pt5mhz_step_chan_to_freq() - converts 2.5MHZ step channel to frequency
+ * @chan: channel number
+ *
+ * @return frequency of the channel
+ */
+uint16_t wlan_2pt5mhz_step_chan_to_freq(uint8_t chan);
 
 /**
   * wlan_get_320_center_freq() - find center frequencies for 320Mhz channel
@@ -83,6 +90,22 @@ void
 wlan_get_320_center_freq(qdf_freq_t freq,
 			 qdf_freq_t *center_freq1,
 			 qdf_freq_t *center_freq2);
+
+/**
+ * wlan_freq_to_chan() - converts frequency to channel
+ * @freq: frequency
+ *
+ * Return: channel of frequency
+ */
+uint8_t wlan_freq_to_chan(uint32_t freq);
+
+/**
+ * wlan_freq_to_chan_2g() - converts frequency to channel for 2.4GHz spectrum.
+ * @freq: frequency
+ *
+ * Return: channel of frequency
+ */
+uint8_t wlan_freq_to_chan_2g(qdf_freq_t freq);
 
 /**
  * wlan_is_ie_valid() - Determine if an IE sequence is valid

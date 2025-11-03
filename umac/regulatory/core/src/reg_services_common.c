@@ -47,6 +47,7 @@
 #ifndef CONFIG_REG_CLIENT
 #include <wlan_reg_channel_api.h>
 #endif
+#include <wlan_utility.h>
 
 const struct chan_map *channel_map;
 uint8_t g_reg_max_5g_chan_num;
@@ -510,6 +511,8 @@ const struct chan_map channel_map_us[NUM_CHANNELS] = {
 	[CHAN_ENUM_2479] = {2479, 216, MIN_CHANBW, 10},
 	[CHAN_ENUM_2482] = {2482, 222, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
+	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
+	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4915] = {4915, INVALID_CHANNEL_NUM, 2, 20},
@@ -828,6 +831,8 @@ const struct chan_map channel_map_eu[NUM_CHANNELS] = {
 	[CHAN_ENUM_2479] = {2479, 216, MIN_CHANBW, 10},
 	[CHAN_ENUM_2482] = {2482, 222, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
+	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
+	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4915] = {4915, INVALID_CHANNEL_NUM, 2, 20},
@@ -1155,6 +1160,8 @@ const struct chan_map channel_map_jp[NUM_CHANNELS] = {
 	[CHAN_ENUM_2472] = {2472, 13, MIN_CHANBW, 40},
 	[CHAN_ENUM_2474] = {2474, 215, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
+	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
+	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, 182, 5, 5},
 	[CHAN_ENUM_4915] = {4915, 183, 10, 10},
@@ -1473,6 +1480,8 @@ const struct chan_map channel_map_global[NUM_CHANNELS] = {
 	[CHAN_ENUM_2479] = {2479, 216, MIN_CHANBW, 10},
 	[CHAN_ENUM_2482] = {2482, 222, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
+	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
+	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4915] = {4915, INVALID_CHANNEL_NUM, 2, 20},
@@ -1791,6 +1800,8 @@ const struct chan_map channel_map_china[NUM_CHANNELS] = {
 	[CHAN_ENUM_2479] = {2479, 216, MIN_CHANBW, 10},
 	[CHAN_ENUM_2482] = {2482, 222, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
+	[CHAN_ENUM_2487] = {2487, 223, 5, 20},
+	[CHAN_ENUM_2492] = {2492, 224, 5, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, INVALID_CHANNEL_NUM, 2, 20},
 	[CHAN_ENUM_4915] = {4915, INVALID_CHANNEL_NUM, 2, 20},
@@ -2489,9 +2500,9 @@ uint8_t reg_freq_to_chan(struct wlan_objmgr_pdev *pdev,
 #ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
 static bool reg_is_freq_2pt5mhz(qdf_freq_t freq)
 {
-	if ((freq == REG_24_GHZ_2PT5MHZ_CHAN_222_FREQ) ||
-		(freq == REG_24_GHZ_2PT5MHZ_CHAN_221_FREQ) ||
-		REG_IS_FREQ_2p5MHZ(freq))
+	if ((freq == WLAN_24_GHZ_2PT5MHZ_CHAN_222_FREQ) ||
+		(freq == WLAN_24_GHZ_2PT5MHZ_CHAN_221_FREQ) ||
+		 WLAN_IS_FREQ_2P5MHZ(freq))
 		return true;
 	return false;
 }
@@ -6780,44 +6791,6 @@ static qdf_freq_t reg_get_sec_ch_2g_freq(struct wlan_objmgr_pdev *pdev,
 }
 #endif
 
-#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
-/**
- * reg_compute_2p5mhz_chan_ieee() - Compute the IEEE channel number given
- * 2.5MHZ step size channel's center freq.
- * @freq: Channel frequency in MHZ.
- * Return - IEEE channel number
- */
-static uint8_t reg_compute_2p5mhz_chan_ieee(qdf_freq_t freq)
-{
-	if (freq == REG_24_GHZ_2PT5MHZ_CHAN_221_FREQ)
-		return REG_24_GHZ_2PT5MHZ_CHAN_221;
-
-	if (freq == REG_24_GHZ_2PT5MHZ_CHAN_222_FREQ)
-		return REG_24_GHZ_2PT5MHZ_CHAN_222;
-
-	return (((freq - REG_24_GHZ_2PT5MHZ_CHAN_BASE_FREQ) /
-		 FREQ_TO_CHAN_SCALE) +
-		REG_24_GHZ_2PT5MHZ_CHAN_OFFSET);
-}
-#else
-static uint8_t reg_compute_2p5mhz_chan_ieee(qdf_freq_t freq)
-{
-	return 0;
-}
-#endif
-
-static void reg_fill_ch_ieee(qdf_freq_t center_freq,
-			     uint8_t *chan_ieee)
-{
-	if (center_freq == TWOG_CHAN_14_IN_MHZ)
-		*chan_ieee = TWOG_CHAN_14_IEEE;
-	else if (REG_IS_FREQ_2p5MHZ(center_freq))
-		*chan_ieee = reg_compute_2p5mhz_chan_ieee(center_freq);
-	else
-		*chan_ieee = (center_freq - TWOG_STARTING_FREQ) /
-			FREQ_TO_CHAN_SCALE;
-}
-
 void reg_set_2g_channel_params_for_freq(struct wlan_objmgr_pdev *pdev,
 					uint16_t oper_freq,
 					struct ch_params *ch_params,
@@ -6877,8 +6850,9 @@ void reg_set_2g_channel_params_for_freq(struct wlan_objmgr_pdev *pdev,
 			} else {
 				ch_params->sec_ch_offset = NO_SEC_CH;
 				ch_params->mhz_freq_seg0 = oper_freq;
-				reg_fill_ch_ieee(ch_params->mhz_freq_seg0,
-						 &ch_params->center_freq_seg0);
+				ch_params->center_freq_seg0 =
+					wlan_freq_to_chan_2g(
+						ch_params->mhz_freq_seg0);
 			}
 			break;
 		}

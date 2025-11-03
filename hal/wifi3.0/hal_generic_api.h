@@ -85,11 +85,39 @@ static inline void hal_get_radiotap_he_gi_ltf(uint16_t *he_gi, uint16_t *he_ltf)
 #define BASE_CHANNEL_NUM_2PT5MHZ 200
 #define BASE_CHANNEL_FREQ_2PT5MHZ 2399
 #define CHANNEL_NUMBER_221 221
-#define CHANNEL_NUMBER_222 222
-#define CHANNEL_FREQ_2482 2482
 #define CHANNEL_FREQ_2477 2477
 #define IS_FREQ_2P5MHZ(freq) \
-    ((freq - CHANNEL_FREQ_2407) % FREQ_MULTIPLIER_CONST_5MHZ)
+    (((freq - CHANNEL_FREQ_2407) % FREQ_MULTIPLIER_CONST_5MHZ) && \
+     WLAN_REG_IS_24GHZ_CH_FREQ(freq))
+
+static uint8_t hal_rx_radiotap_freq_to_num(uint16_t freq)
+{
+	uint8_t start_chan = 0;
+	qdf_freq_t start_freq = CHANNEL_FREQ_2407;
+
+	/* Channel 14 is always special */
+	if (freq == CHANNEL_FREQ_2484)
+		return CHANNEL_NUM_14;
+
+	if (IS_FREQ_2P5MHZ(freq)) {
+		/* For all channels which are not spaced by multiples of
+		 * 5MHz when starting from 2407.
+		 */
+		start_chan = BASE_CHANNEL_NUM_2PT5MHZ;
+		start_freq = BASE_CHANNEL_FREQ_2PT5MHZ;
+	} else if (freq >= CHANNEL_FREQ_2477) {
+		/* If channel is spaced with 5MHz gap from 2407,
+		 * they are standard IEEE channels (1 - 13) till 2472.
+		 * Frequencies after 2472 will have channel numbers starting
+		 * from 221.
+		 */
+		start_chan = CHANNEL_NUMBER_221;
+		start_freq = CHANNEL_FREQ_2477;
+	}
+
+	return start_chan + (freq - start_freq) / FREQ_MULTIPLIER_CONST_5MHZ;
+}
+
 /**
  * hal_rx_radiotap_num_to_freq() - Get frequency from chan number
  * @chan_num: Input channel number

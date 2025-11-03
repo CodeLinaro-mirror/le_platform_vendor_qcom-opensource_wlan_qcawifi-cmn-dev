@@ -92,6 +92,19 @@ uint32_t wlan_construct_shortssid(uint8_t *ssid, uint8_t ssid_len)
 	return (shortssid ^ 0xffffffff);
 }
 
+uint16_t wlan_2pt5mhz_step_chan_to_freq(uint8_t chan)
+{
+	qdf_freq_t start_freq = WLAN_24_GHZ_2PT5MHZ_CHAN_BASE_FREQ;
+	uint8_t start_chan = WLAN_24_GHZ_2PT5MHZ_BASECHAN;
+
+	if (chan >= WLAN_24_GHZ_2PT5MHZ_CHAN_221) {
+		start_freq = WLAN_24_GHZ_2PT5MHZ_CHAN_221_FREQ;
+		start_chan = WLAN_24_GHZ_2PT5MHZ_CHAN_221;
+	}
+
+	return start_freq + (chan - start_chan) * WLAN_CHAN_SPACING_5MHZ;
+}
+
 uint32_t wlan_chan_to_freq(uint8_t chan)
 {
 	if (chan == 0 )
@@ -107,19 +120,59 @@ uint32_t wlan_chan_to_freq(uint8_t chan)
 		  (chan - WLAN_24_GHZ_CHANNEL_15) * WLAN_CHAN_SPACING_20MHZ;
 	else if (chan == WLAN_5_GHZ_CHANNEL_170)
 		return WLAN_CHAN_170_FREQ;
-	else if (chan > WLAN_24_GHZ_2PT5MHZ_CHAN_OFFSET)
-	{
-		if (chan == WLAN_24_GHZ_2PT5MHZ_CHAN_221)
-			return WLAN_24_GHZ_2PT5MHZ_CHAN_221_FREQ;
-		else if (chan == WLAN_24_GHZ_2PT5MHZ_CHAN_222)
-			return WLAN_24_GHZ_2PT5MHZ_CHAN_222_FREQ;
-		else
-			return WLAN_24_GHZ_2PT5MHZ_CHAN_BASE_FREQ +
-				(chan - WLAN_24_GHZ_2PT5MHZ_CHAN_OFFSET) *
-				WLAN_CHAN_SPACING_5MHZ;
-	}
+	else if (chan > WLAN_24_GHZ_2PT5MHZ_BASECHAN &&
+		 chan <= WLAN_24_GHZ_2PT5MHZ_END_CHAN)
+		return wlan_2pt5mhz_step_chan_to_freq(chan);
 	else
 		return WLAN_5_GHZ_BASE_FREQ + chan * WLAN_CHAN_SPACING_5MHZ;
+}
+
+uint8_t wlan_freq_to_chan_2g(qdf_freq_t freq)
+{
+	uint8_t start_chan = 0;
+	qdf_freq_t start_freq = WLAN_24_GHZ_BASE_FREQ;
+
+	/* Channel 14 is always special */
+	if (freq == WLAN_CHAN_14_FREQ)
+		return WLAN_24_GHZ_CHANNEL_14;
+
+	if (WLAN_IS_FREQ_2P5MHZ(freq)) {
+		/* For all channels which are not spaced by multiples of
+		 * 5MHz when starting from 2407.
+		 */
+		start_chan = WLAN_24_GHZ_2PT5MHZ_BASECHAN;
+		start_freq = WLAN_24_GHZ_2PT5MHZ_CHAN_BASE_FREQ;
+	} else if (freq >= WLAN_24_GHZ_2PT5MHZ_CHAN_221_FREQ) {
+		/* If channel is spaced with 5MHz gap from 2407,
+		 * they are standard IEEE channels (1 - 13) till 2472.
+		 * Frequencies after 2472 will have channel numbers starting
+		 * from 221.
+		 */
+		start_chan = WLAN_24_GHZ_2PT5MHZ_CHAN_221;
+		start_freq = WLAN_24_GHZ_2PT5MHZ_CHAN_221_FREQ;
+	}
+
+	return start_chan + (freq - start_freq) / WLAN_CHAN_SPACING_5MHZ;
+}
+
+uint8_t wlan_freq_to_chan(uint32_t freq)
+{
+	uint8_t chan;
+
+	if (freq == 0)
+		return 0;
+	if (WLAN_REG_IS_24GHZ_CH_FREQ(freq))
+		chan = wlan_freq_to_chan_2g(freq);
+	else if ((freq > WLAN_24_GHZ_BASE_FREQ) &&
+		 (freq < WLAN_5_GHZ_BASE_FREQ))
+		chan = (((freq - WLAN_CHAN_15_FREQ) /
+			 WLAN_CHAN_SPACING_20MHZ) +
+			WLAN_24_GHZ_CHANNEL_15);
+	else
+		chan = (freq - WLAN_5_GHZ_BASE_FREQ) /
+			WLAN_CHAN_SPACING_5MHZ;
+
+	return chan;
 }
 
 void

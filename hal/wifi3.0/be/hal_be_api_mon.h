@@ -3047,20 +3047,13 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 		/* The channel values received through 'chan_num'
 		 * are not correct for the non-standard channels. Fix them.
 		 */
-		if (ppdu_info->rx_status.chan_freq == CHANNEL_FREQ_2482)
-			ppdu_info->rx_status.chan_num = CHANNEL_NUMBER_222;
-		else if (ppdu_info->rx_status.chan_freq == CHANNEL_FREQ_2477)
-			ppdu_info->rx_status.chan_num = CHANNEL_NUMBER_221;
-		else if (IS_FREQ_2P5MHZ(ppdu_info->rx_status.chan_freq)) {
+		if (ppdu_info->rx_status.chan_freq &&
+		    WLAN_REG_IS_24GHZ_CH_FREQ(
+			ppdu_info->rx_status.chan_freq)) {
 			ppdu_info->rx_status.chan_num =
-				(ppdu_info->rx_status.chan_freq -
-				 BASE_CHANNEL_FREQ_2PT5MHZ)/
-				FREQ_MULTIPLIER_CONST_5MHZ +
-				BASE_CHANNEL_NUM_2PT5MHZ;
-		}
-
-		if (ppdu_info->rx_status.chan_num &&
-		    ppdu_info->rx_status.chan_freq && (!IS_FREQ_2P5MHZ(ppdu_info->rx_status.chan_freq)) ) {
+				hal_rx_radiotap_freq_to_num(
+					ppdu_info->rx_status.chan_freq);
+		} else if (ppdu_info->rx_status.chan_num) {
 			ppdu_info->rx_status.chan_freq =
 				hal_rx_radiotap_num_to_freq(
 				ppdu_info->rx_status.chan_num,
