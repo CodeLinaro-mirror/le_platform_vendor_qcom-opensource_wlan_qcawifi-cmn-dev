@@ -81,6 +81,15 @@ static inline void hal_get_radiotap_he_gi_ltf(uint16_t *he_gi, uint16_t *he_ltf)
 #define CHANNEL_FREQ_5935 5935
 #define FREQ_MULTIPLIER_CONST_5MHZ 5
 #define FREQ_MULTIPLIER_CONST_20MHZ 20
+/* Following macros are related to 2.5MHz channel separation feature */
+#define BASE_CHANNEL_NUM_2PT5MHZ 200
+#define BASE_CHANNEL_FREQ_2PT5MHZ 2399
+#define CHANNEL_NUMBER_221 221
+#define CHANNEL_NUMBER_222 222
+#define CHANNEL_FREQ_2482 2482
+#define CHANNEL_FREQ_2477 2477
+#define IS_FREQ_2P5MHZ(freq) \
+    ((freq - CHANNEL_FREQ_2407) % FREQ_MULTIPLIER_CONST_5MHZ)
 /**
  * hal_rx_radiotap_num_to_freq() - Get frequency from chan number
  * @chan_num: Input channel number

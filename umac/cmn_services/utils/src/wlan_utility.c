@@ -107,6 +107,17 @@ uint32_t wlan_chan_to_freq(uint8_t chan)
 		  (chan - WLAN_24_GHZ_CHANNEL_15) * WLAN_CHAN_SPACING_20MHZ;
 	else if (chan == WLAN_5_GHZ_CHANNEL_170)
 		return WLAN_CHAN_170_FREQ;
+	else if (chan > WLAN_24_GHZ_2PT5MHZ_CHAN_OFFSET)
+	{
+		if (chan == WLAN_24_GHZ_2PT5MHZ_CHAN_221)
+			return WLAN_24_GHZ_2PT5MHZ_CHAN_221_FREQ;
+		else if (chan == WLAN_24_GHZ_2PT5MHZ_CHAN_222)
+			return WLAN_24_GHZ_2PT5MHZ_CHAN_222_FREQ;
+		else
+			return WLAN_24_GHZ_2PT5MHZ_CHAN_BASE_FREQ +
+				(chan - WLAN_24_GHZ_2PT5MHZ_CHAN_OFFSET) *
+				WLAN_CHAN_SPACING_5MHZ;
+	}
 	else
 		return WLAN_5_GHZ_BASE_FREQ + chan * WLAN_CHAN_SPACING_5MHZ;
 }
