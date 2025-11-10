@@ -4443,3 +4443,12 @@ wmi_extract_vbss_sta_context(
 	return QDF_STATUS_E_FAILURE;
 }
 #endif
+QDF_STATUS
+wmi_unified_send_set_ack_cts_resp_rate(wmi_unified_t wmi_handle,
+                                       struct wmi_host_send_set_ack_cts_resp_rate_info *param)
+{
+        if (wmi_handle->ops->send_set_ack_cts_resp_rate)
+                return wmi_handle->ops->send_set_ack_cts_resp_rate(wmi_handle, param);
+
+        return QDF_STATUS_E_FAILURE;
+}

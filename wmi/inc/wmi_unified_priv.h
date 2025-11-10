@@ -3670,6 +3670,9 @@ QDF_STATUS
 			struct win_host_vbss_sta_context *vbss_sta_context);
 #endif /* WLAN_FEATURE_VBSS */
 
+QDF_STATUS
+(*send_set_ack_cts_resp_rate)(wmi_unified_t wmi_handle,
+                              struct wmi_host_send_set_ack_cts_resp_rate_info *param);
 };
 
 /* Forward declaration for psoc*/
