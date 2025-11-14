@@ -5554,4 +5554,14 @@ wmi_extract_vbss_sta_context(
 			wmi_unified_t wmi_handle, uint8_t *evt_buf,
 			struct win_host_vbss_sta_context *vbss_sta_context);
 #endif /* WLAN_FEATURE_VBSS */
+/**
+ * wmi_unified_send_set_ack_cts_resp_rate() - send set ack cts resp rate
+ * @wmi_handle: wmi handle
+ * @param: set ack cts resp rate input info
+ *
+ * Return: QDF_STATUS_SUCCESS for success or error code
+ */
+QDF_STATUS
+wmi_unified_send_set_ack_cts_resp_rate(wmi_unified_t wmi_handle,
+                                       struct wmi_host_send_set_ack_cts_resp_rate_info *param);
 #endif /* _WMI_UNIFIED_API_H_ */
