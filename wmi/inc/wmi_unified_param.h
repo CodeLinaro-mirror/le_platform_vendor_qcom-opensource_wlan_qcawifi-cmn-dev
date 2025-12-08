@@ -5650,6 +5650,7 @@ typedef enum {
 #ifdef WLAN_FEATURE_VBSS
 	wmi_vdev_vbss_config_eventid,
 #endif
+	wmi_pdev_get_ani_err_event_id,
 	wmi_events_max,
 } wmi_conv_event_id;
 
@@ -6053,6 +6054,20 @@ typedef enum {
 		   PDEV_PARAM_RX_CHAIN_MASK),
 	PDEV_PARAM(pdev_param_enable_scan_radio_dfs,
 		   PDEV_PARAM_ENABLE_SCAN_RADIO_DFS),
+	PDEV_PARAM(pdev_param_tx_rx_switch_over,
+		   PDEV_PARAM_TX_RX_SWITCH_OVER),
+	PDEV_PARAM(pdev_param_preamble_pwr,
+		   PDEV_PARAM_PREAMBLE_PWR),
+	PDEV_PARAM(pdev_param_stomper_thrshold,
+		   PDEV_PARAM_STOMPER_THRSHOLD),
+	PDEV_PARAM(pdev_param_agc_gain_value,
+		   PDEV_PARAM_AGC_GAIN_VALUE),
+	PDEV_PARAM(pdev_param_lsig_rlsig_power_scaling,
+		   PDEV_PARAM_LSIG_RLSIG_POWER_SCALING),
+	PDEV_PARAM(pdev_param_hesiga_power_scaling,
+		   PDEV_PARAM_HESIGA_POWER_SCALING),
+	PDEV_PARAM(pdev_param_preamble_power_removal,
+		   PDEV_PARAM_PREAMBLE_POWER_REMOVAL),
 	pdev_param_max,
 } wmi_conv_pdev_params_id;
 
@@ -6831,6 +6846,7 @@ typedef enum {
 	wmi_service_therm_throt_5_levels,
 	wmi_service_mrsno_support,
 	wmi_service_spectral_spur_bin_info_support,
+	wmi_service_halphy_get_ani_err_support,
 
 	wmi_services_max,
 } wmi_conv_service_ids;
@@ -10720,6 +10736,70 @@ struct wmi_host_pdev_pb_dma_buf {
 	uint32_t paddr_aligned_lo;
 	uint32_t paddr_aligned_hi;
 	uint32_t size;
+};
+
+/**
+ * struct wmi_host_send_halphy_get_ani_err
+ * @pdev_id: pdev id
+ */
+struct wmi_host_send_get_ani_err {
+	uint8_t pdev_id;
+};
+/**
+  * struct wmi_host_halphy_get_ani_err_event
+  * @pdev_id: pdev id
+  * @rx_ofdma_timing_err_cnt:
+  * @rx_cck_fail_cnt:
+  * @lsig_phy_err_cnt:
+  * @scaled_err:
+  * @timestamp_vreg:
+  * @status: 0-Success, 1-Listen Time is small, 2-VREG value overflow
+  */
+struct wmi_host_halphy_get_ani_err_event {
+	uint32_t pdev_id;       /* PDEV Id set by the command */
+
+	/* number of RXTD OFDMA OTA error counts except power surge and drop */
+	uint32_t rx_ofdma_phy_err_cnt;
+
+	/* rx_cck_fail_cnt:
+	 * number of cck error counts due to rx reception failure because of
+	 * timing error in cck
+	 */
+	uint32_t rx_cck_phy_err_cnt;
+	uint32_t rx_cck1_phy_err_cnt;
+	uint32_t rx_cck2_phy_err_cnt;
+	uint32_t rx_cck7_phy_err_cnt;
+
+	/* lsig_phy_err_cnt
+	 * LSIG Error count per source;
+	 */
+	uint32_t lsig_phy_err_cnt;
+
+	/* scaled_err:
+	 * This error takes into account all the above errors (ofdm_timing_err, cck_err, lsig_phy_err),
+	 * adds weightage to it and decides whether desense is necessary or not
+	 */
+	uint32_t scaled_err;
+
+	/* sizing:
+	 * This is to account the sizing events occured in phy
+	 */
+	uint32_t sizing;
+	/* phy_err_rate:
+	 * This error takes into account the scaled error to listen time
+	 */
+	uint32_t phy_err_rate;
+
+	/* Timestamp value when VREG error values are dumped
+	 */
+	uint32_t timestamp_vreg;
+
+	/* Status indication
+	 * 0 = Success
+	 * 1 = Listen Time is small (Error)
+	 * 2 = VREG values overflowed (Error)
+	 */
+	uint32_t status;
 };
 
 #endif /* _WMI_UNIFIED_PARAM_H_ */

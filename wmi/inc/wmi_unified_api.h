@@ -5564,4 +5564,25 @@ wmi_extract_vbss_sta_context(
 QDF_STATUS
 wmi_unified_send_set_ack_cts_resp_rate(wmi_unified_t wmi_handle,
                                        struct wmi_host_send_set_ack_cts_resp_rate_info *param);
+/**
+ * wmi_unified_halphy_get_ani_err() - send command to get the ani errors
+ * @wmi_handle: wmi handle
+ * @param: ger_ani_err info
+ *
+ * Return: QDF_STATUS_SUCCESS for success or error code
+ */
+QDF_STATUS wmi_unified_send_get_ani_err(wmi_unified_t wmi_handle,
+				struct wmi_host_send_get_ani_err *param);
+
+/**
+ * wmi_extract_halphy_get_ani_err_ev_param() - extract ani_err from FW event
+ * @wmi_handle: wmi handle
+ * @evt_buf: pointer to event buf
+ * @param: halphy ani err info
+ *
+ * Return: QDF_STATUS_SUCCESS for success or error code
+ */
+QDF_STATUS
+wmi_extract_halphy_get_ani_err_ev_param(wmi_unified_t wmi_handle,void *evt_buf,
+							struct wmi_host_halphy_get_ani_err_event *param);
 #endif /* _WMI_UNIFIED_API_H_ */

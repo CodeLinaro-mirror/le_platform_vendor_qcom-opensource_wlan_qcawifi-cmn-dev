@@ -489,6 +489,20 @@ static const uint32_t pdev_param_tlv[] = {
 		  PDEV_PARAM_RX_CHAIN_MASK),
 	PARAM_MAP(pdev_param_enable_scan_radio_dfs,
 		  PDEV_PARAM_ENABLE_SCAN_RADIO_DFS),
+	PARAM_MAP(pdev_param_tx_rx_switch_over,
+		  PDEV_PARAM_TX_RX_SWITCH_OVER),
+	PARAM_MAP(pdev_param_preamble_pwr,
+		  PDEV_PARAM_PREAMBLE_PWR),
+	PARAM_MAP(pdev_param_stomper_thrshold,
+		  PDEV_PARAM_STOMPER_THRSHOLD),
+	PARAM_MAP(pdev_param_agc_gain_value,
+		  PDEV_PARAM_AGC_GAIN_VALUE),
+	PARAM_MAP(pdev_param_lsig_rlsig_power_scaling,
+		  PDEV_PARAM_LSIG_RLSIG_POWER_SCALING),
+	PARAM_MAP(pdev_param_hesiga_power_scaling,
+		  PDEV_PARAM_HESIGA_POWER_SCALING),
+	PARAM_MAP(pdev_param_preamble_power_removal,
+		  PDEV_PARAM_PREAMBLE_POWER_REMOVAL),
 };
 
 /* Populate vdev_param array whose index is host param, value is target param */
@@ -23460,6 +23474,92 @@ send_set_ack_cts_resp_rate_tlv(wmi_unified_t wmi_handle,
         return ret;
 }
 
+static QDF_STATUS
+send_get_ani_err_tlv(wmi_unified_t wmi_handle,
+					struct wmi_host_send_get_ani_err *param)
+{
+	wmi_buf_t buf;
+	wmi_pdev_get_ani_err_cmd_fixed_param *cmd;
+	QDF_STATUS ret;
+	uint32_t len;
+	if (!param) {
+		wmi_err("Invalid param for get ani err command");
+		return QDF_STATUS_E_INVAL;
+	}
+
+	len = sizeof(*cmd);
+
+	buf = wmi_buf_alloc(wmi_handle, len);
+	if (!buf)
+		return QDF_STATUS_E_FAILURE;
+
+	cmd = (void *)wmi_buf_data(buf);
+
+	WMITLV_SET_HDR(&cmd->tlv_header,
+			WMITLV_TAG_STRUC_wmi_pdev_get_ani_err_cmd_fixed_param,
+			WMITLV_GET_STRUCT_TLVLEN(wmi_pdev_get_ani_err_cmd_fixed_param));
+
+	cmd->pdev_id = wmi_handle->ops->convert_pdev_id_host_to_target(wmi_handle,
+																param->pdev_id);
+
+	ret = wmi_unified_cmd_send(wmi_handle, buf, len,
+								WMI_PDEV_GET_ANI_ERR_CMDID);
+
+	if (QDF_IS_STATUS_ERROR(ret)) {
+		wmi_err("WMI_PDEV_GET_ANI_ERR_CMDID send returned Error %d", ret);
+		wmi_buf_free(buf);
+	}
+
+	return ret;
+}
+
+/**
+ * extract_halphy_get_ani_err_ev_param_tlv() - extract ani_err values from FW
+ * @wmi_handle: wmi handle
+ * @evt_buf: event buffer
+ * @param: ani_error values
+ *
+ * Return: QDF_STATUS_SUCCESS for success or error code
+ */
+static QDF_STATUS
+extract_halphy_get_ani_err_ev_param_tlv(
+			wmi_unified_t wmi_handle,
+			void *evt_buf,
+			struct wmi_host_halphy_get_ani_err_event *param)
+{
+	WMI_PDEV_GET_ANI_ERR_EVENTID_param_tlvs *param_buf;
+	wmi_pdev_get_ani_err_evt_fixed_param *get_ani_err;
+
+	param_buf = (WMI_PDEV_GET_ANI_ERR_EVENTID_param_tlvs *)evt_buf;
+	if (!param_buf) {
+		wmi_err("Invalid Event get ani err");
+		return QDF_STATUS_E_INVAL;
+	}
+
+	get_ani_err = param_buf->fixed_param;
+
+	if (!get_ani_err) {
+		wmi_err("Invalid fixed_param in get ani err event");
+		return QDF_STATUS_E_INVAL;
+	}
+
+	param->pdev_id = wmi_handle->ops->convert_pdev_id_target_to_host(
+								wmi_handle, get_ani_err->pdev_id);
+	param->status = get_ani_err->status;
+	param->rx_ofdma_phy_err_cnt= get_ani_err->rx_ofdma_phy_err_cnt;
+	param->rx_cck_phy_err_cnt= get_ani_err->rx_cck_phy_err_cnt;
+	param->rx_cck1_phy_err_cnt= get_ani_err->rx_cck1_phy_err_cnt;
+	param->rx_cck2_phy_err_cnt= get_ani_err->rx_cck2_phy_err_cnt;
+	param->rx_cck7_phy_err_cnt= get_ani_err->rx_cck7_phy_err_cnt;
+	param->lsig_phy_err_cnt = get_ani_err->lsig_phy_err_cnt;
+	param->scaled_err = get_ani_err->scaled_err;
+	param->sizing = get_ani_err->sizing;
+	param->phy_err_rate= get_ani_err->phy_err_rate;
+	param->timestamp_vreg = get_ani_err->timestamp_vreg;
+
+	return QDF_STATUS_SUCCESS;
+}
+
 struct wmi_ops tlv_ops =  {
 	.send_vdev_create_cmd = send_vdev_create_cmd_tlv,
 	.send_vdev_delete_cmd = send_vdev_delete_cmd_tlv,
@@ -24008,6 +24108,9 @@ struct wmi_ops tlv_ops =  {
 #endif /* WLAN_FEATURE_VBSS */
 	.extract_rf_path_resp = extract_rf_path_resp_tlv,
 	.send_set_ack_cts_resp_rate = send_set_ack_cts_resp_rate_tlv,
+	.send_get_ani_err = send_get_ani_err_tlv,
+	.extract_halphy_get_ani_err_ev_param =
+			extract_halphy_get_ani_err_ev_param_tlv,
 };
 
 #ifdef WLAN_FEATURE_11BE_MLO
@@ -24580,6 +24683,8 @@ static void populate_tlv_events_id(WMI_EVT_ID *event_ids)
 #ifdef WLAN_FEATURE_VBSS
 	event_ids[wmi_vdev_vbss_config_eventid] = WMI_VDEV_VBSS_CONFIG_EVENTID;
 #endif
+	event_ids[wmi_pdev_get_ani_err_event_id] =
+		WMI_PDEV_GET_ANI_ERR_EVENTID;
 }
 
 #ifdef WLAN_FEATURE_LINK_LAYER_STATS
@@ -25250,6 +25355,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 	wmi_service[wmi_service_mrsno_support] = WMI_SERVICE_MULTI_RSNO_SUPPORT;
 	wmi_service[wmi_service_spectral_spur_bin_info_support] =
 				WMI_SERVICE_SPECTRAL_SPUR_BIN_INFO_SUPPORT;
+	wmi_service[wmi_service_halphy_get_ani_err_support] =
+			WMI_SERVICE_HALPHY_ANI_ERROR_SUPPORT;
 }
 
 /**
