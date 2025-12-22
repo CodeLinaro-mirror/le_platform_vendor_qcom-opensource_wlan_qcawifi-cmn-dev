@@ -44,6 +44,7 @@
 #include <wmi_unified_param.h>
 #include <qdf_hrtimer.h>
 
+#define FREQ_OFFSET_5MHZ (5)
 #define FREQ_OFFSET_10MHZ (10)
 #define FREQ_OFFSET_40MHZ (40)
 #define FREQ_OFFSET_80MHZ (80)

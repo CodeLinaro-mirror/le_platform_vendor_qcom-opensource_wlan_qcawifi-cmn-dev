@@ -601,6 +601,14 @@ target_if_send_vdev_spectral_configure_cmd(struct target_if_spectral *spectral,
 	sparam.center_freq2 = param->ss_frequency.cfreq2;
 	sparam.chan_width = param->ss_bandwidth;
 
+	/* According ucode team's suggestion, for current design,
+	 * we still send 0 (CH_WIDTH_20MHZ)
+	 * as the value of chan_width in 5/10M mode.
+	 */
+	if (sparam.chan_width == CH_WIDTH_5MHZ ||
+	    sparam.chan_width == CH_WIDTH_10MHZ)
+		sparam.chan_width = CH_WIDTH_20MHZ;
+
 	return psoc_spectral->wmi_ops.wmi_spectral_configure_cmd_send(
 				GET_WMI_HDL_FROM_PDEV(pdev), &sparam);
 }
@@ -2214,6 +2222,10 @@ target_if_init_spectral_param_min_max(
 				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN3_QCN9000;
 			param_min_max->fft_size_max[CH_WIDTH_80P80MHZ] =
 				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN3_QCN9000;
+			param_min_max->fft_size_max[CH_WIDTH_5MHZ] =
+				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN3_QCN9000;
+			param_min_max->fft_size_max[CH_WIDTH_10MHZ] =
+				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN3_QCN9000;
 		} else {
 			param_min_max->fft_size_max[CH_WIDTH_40MHZ] =
 				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN3_DEFAULT;
@@ -2222,6 +2234,10 @@ target_if_init_spectral_param_min_max(
 			param_min_max->fft_size_max[CH_WIDTH_160MHZ] =
 				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN3_DEFAULT;
 			param_min_max->fft_size_max[CH_WIDTH_80P80MHZ] =
+				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN3_DEFAULT;
+			param_min_max->fft_size_max[CH_WIDTH_5MHZ] =
+				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN3_DEFAULT;
+			param_min_max->fft_size_max[CH_WIDTH_10MHZ] =
 				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN3_DEFAULT;
 		}
 		break;
@@ -2238,6 +2254,10 @@ target_if_init_spectral_param_min_max(
 					SPECTRAL_PARAM_FFT_SIZE_MAX_GEN2;
 		param_min_max->fft_size_max[CH_WIDTH_160MHZ] =
 					SPECTRAL_PARAM_FFT_SIZE_MAX_GEN2;
+		param_min_max->fft_size_max[CH_WIDTH_5MHZ] =
+				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN2;
+		param_min_max->fft_size_max[CH_WIDTH_10MHZ] =
+				SPECTRAL_PARAM_FFT_SIZE_MAX_GEN2;
 		break;
 
 	default:
@@ -2363,6 +2383,9 @@ target_if_populate_supported_sscan_bws_be(struct target_if_spectral *spectral)
 			return QDF_STATUS_E_FAILURE;
 		}
 
+		if (op_bw == CH_WIDTH_5MHZ || op_bw == CH_WIDTH_10MHZ)
+                       is_supported = true;
+
 		if (!is_supported)
 			continue;
 
@@ -2427,7 +2450,7 @@ target_if_populate_supported_sscan_bws(struct target_if_spectral *spectral,
 		return QDF_STATUS_E_NULL_VALUE;
 	}
 
-	for (op_bw = CH_WIDTH_20MHZ; op_bw < CH_WIDTH_MAX; op_bw++) {
+	for (op_bw = CH_WIDTH_5MHZ; op_bw < CH_WIDTH_MAX; op_bw++) {
 		bool is_supported;
 
 		status = wlan_reg_is_chwidth_supported(spectral->pdev_obj,
@@ -2437,6 +2460,8 @@ target_if_populate_supported_sscan_bws(struct target_if_spectral *spectral,
 				     op_bw);
 			return QDF_STATUS_E_FAILURE;
 		}
+		if (op_bw == CH_WIDTH_5MHZ || op_bw == CH_WIDTH_10MHZ)
+                       is_supported = true;
 
 		if (!is_supported)
 			continue;
@@ -2566,6 +2591,8 @@ target_if_init_spectral_capability(struct target_if_spectral *spectral,
 	}
 
 	pcap->num_detectors_20mhz = 1;
+	pcap->num_detectors_5mhz = pcap->num_detectors_20mhz;
+	pcap->num_detectors_10mhz = pcap->num_detectors_20mhz;
 	pcap->num_detectors_40mhz = 1;
 	pcap->num_detectors_80mhz = 1;
 	if (target_type == TARGET_TYPE_QCN9000 ||
@@ -4330,7 +4357,9 @@ target_if_calculate_center_freq(struct target_if_spectral *spectral,
 		return QDF_STATUS_E_FAILURE;
 	}
 
-	if (agile_ch_width == CH_WIDTH_20MHZ) {
+	if (agile_ch_width == CH_WIDTH_20MHZ ||
+	    agile_ch_width == CH_WIDTH_10MHZ ||
+	    agile_ch_width == CH_WIDTH_5MHZ) {
 		*center_freq = chan_freq;
 	} else {
 		uint16_t start_freq;
@@ -4526,7 +4555,16 @@ target_if_is_agile_span_overlap_with_operating_span
 		return QDF_STATUS_E_FAILURE;
 	}
 
-	if (op_ch_width == CH_WIDTH_20MHZ) {
+	if (op_ch_width == CH_WIDTH_5MHZ) {
+		if (center_freq->cfreq1 == chan_freq)
+			*is_overlapping = true;
+		else
+			*is_overlapping = false;
+		return QDF_STATUS_SUCCESS;
+	} else if (op_ch_width == CH_WIDTH_10MHZ) {
+		op_start_freq = chan_freq - FREQ_OFFSET_5MHZ;
+		op_end_freq = chan_freq + FREQ_OFFSET_5MHZ;
+	} else if (op_ch_width == CH_WIDTH_20MHZ) {
 		op_start_freq = chan_freq - FREQ_OFFSET_10MHZ;
 		op_end_freq = chan_freq + FREQ_OFFSET_10MHZ;
 	} else {
@@ -5390,6 +5428,14 @@ target_if_spectral_get_num_detectors(struct target_if_spectral *spectral,
 	}
 
 	switch (ch_width) {
+	case CH_WIDTH_5MHZ:
+		*num_detectors = spectral->capability.num_detectors_5mhz;
+		break;
+
+	case CH_WIDTH_10MHZ:
+		*num_detectors = spectral->capability.num_detectors_10mhz;
+		break;
+
 	case CH_WIDTH_20MHZ:
 		*num_detectors = spectral->capability.num_detectors_20mhz;
 		break;
@@ -5551,7 +5597,9 @@ target_if_spectral_scan_enable_params(struct target_if_spectral *spectral,
 			spectral->rb_edge_extrabins = 4;
 		}
 
-		if (spectral->ch_width[smode] == CH_WIDTH_20MHZ) {
+		if (spectral->ch_width[smode] == CH_WIDTH_20MHZ ||
+		    spectral->ch_width[smode] == CH_WIDTH_10MHZ ||
+		    spectral->ch_width[smode] == CH_WIDTH_5MHZ) {
 			spectral->sc_spectral_20_40_mode = 0;
 
 			spectral->spectral_numbins =
@@ -6276,6 +6324,8 @@ target_if_spectral_populate_session_det_host_info(
 		}
 		det_map->det_map_valid[smode] = true;
 		qdf_spin_unlock_bh(&spectral->session_det_map_lock);
+		spectral->rparams.detid_mode_table[
+                               detector_list->detectors[det]] = smode;
 	}
 	qdf_spin_unlock_bh(&spectral->detector_list_lock);
 	qdf_spin_unlock_bh(&spectral->session_report_info_lock);
