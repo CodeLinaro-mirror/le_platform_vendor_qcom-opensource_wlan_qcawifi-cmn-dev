@@ -3683,6 +3683,16 @@ QDF_STATUS
 			wmi_unified_t wmi_handle,
 			void *evt_buf,
 			struct wmi_host_halphy_get_ani_err_event *param);
+
+QDF_STATUS (*send_get_ulrtd_time)(wmi_unified_t wmi_handle,
+                                  struct wmi_host_send_get_ulrtd_time *param);
+QDF_STATUS
+(*extract_get_ulrtd_time_ev_param)(wmi_unified_t wmi_handle,
+                                   void *evt_buf,
+                                   struct wmi_host_get_ulrtd_time_event *param);
+QDF_STATUS
+(*send_start_measure_ul_rtd)(wmi_unified_t wmi_handle,
+                             struct wmi_host_send_start_measure_ul_rtd *param);
 };
 
 /* Forward declaration for psoc*/
