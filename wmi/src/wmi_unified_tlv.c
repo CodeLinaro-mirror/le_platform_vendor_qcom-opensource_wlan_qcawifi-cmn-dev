@@ -802,6 +802,8 @@ static const uint32_t vdev_param_tlv[] = {
 		  VDEV_PARAM_CHANBW_SET),
 	PARAM_MAP(vdev_param_pure_11ax_mode,
 		  VDEV_PARAM_PURE_11AX_MODE),
+	PARAM_MAP(vdev_param_he_ulofdma_dcm,
+		  VDEV_PARAM_HE_ULOFDMA_DCM),
 };
 #endif
 
@@ -25466,6 +25468,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 			WMI_SERVICE_VDEV_PURE11AX_SUPPORT;
 	wmi_service[wmi_service_peer_ul_rtd_estimate] =
 			WMI_SERVICE_PEER_UL_RTD_ESTIMATE;
+	wmi_service[wmi_service_dcm_ulofdma_support] =
+			WMI_SERVICE_DCM_ULOFDMA_SUPPORT;
 }
 
 /**
