@@ -1553,12 +1553,15 @@ dp_raw_strip_overhead(struct sk_buff *nbuf)
 	unsigned int clen=0, transport_hdr_len = 0;
 	struct iphdr *ipHeader;
 	uint8_t ip_protocol;
+	uint16_t hdr_len = 0;
 
 	if(nbuf->data!= NULL) {
-		/*get the pointers for the start of LLC HDR and the IP HDR */
-		llc_hdr = nbuf->data + sizeof(struct ieee80211_frame);
-		ip_hdr =  llc_hdr + sizeof(qdf_llc_t);
-		transport_hdr = ip_hdr + sizeof(struct iphdr);
+	    	uint16_t fc = le16_to_cpu(((struct ieee80211_hdr *)nbuf->data)->frame_control);
+   	        /*get the pointers for the start of LLC HDR and the IP HDR */
+	    	hdr_len = ieee80211_hdrlen(fc);
+            	llc_hdr = nbuf->data + hdr_len;
+	    	ip_hdr =  llc_hdr + sizeof(qdf_llc_t);
+	    	transport_hdr = ip_hdr + sizeof(struct iphdr);
 
 		/**
 		 * Check if the packet is TCP or UDP and get the transport
@@ -1578,7 +1581,7 @@ dp_raw_strip_overhead(struct sk_buff *nbuf)
 			memset(llc_hdr, 0x55,1);
 			/* Length of data to be copied after
 			 * the IP and Transport layer header */
-			clen = nbuf->len - sizeof(struct ieee80211_frame)
+			clen = nbuf->len - hdr_len
 					 - sizeof(qdf_llc_t)
 					 - sizeof(struct iphdr)
 					 - transport_hdr_len;
@@ -1589,7 +1592,7 @@ dp_raw_strip_overhead(struct sk_buff *nbuf)
 				       transport_hdr+transport_hdr_len,
 				       clen);
 			/* Update the nbuf->len after the stripped headers */
-			nbuf->len = sizeof(struct ieee80211_frame) + 1 + clen;
+			nbuf->len = hdr_len + 1 + clen;
 		}
 	}
 }
