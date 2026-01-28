@@ -259,6 +259,28 @@ reg_populate_band_channels_ext_for_6g(enum channel_enum start_chan,
 #endif
 
 /**
+ * reg_disable_half_qtr_24gchan() - Disable 2.4 Ghz channels
+ * that dont have 20 mhz bw. If the config_half_qtr_rate is defined,
+ * allow 2.4GHZ channels that have bw less than 20MHZ.
+ *
+ * @mas_chan_list: Pointer to struct regulatory_channel
+ * Return - None
+ */
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+static void
+reg_disable_half_qtr_24gchan(struct regulatory_channel *mas_chan_list)
+{
+}
+#else
+static void
+reg_disable_half_qtr_24gchan(struct regulatory_channel *mas_chan_list)
+{
+	mas_chan_list->chan_flags |= REGULATORY_CHAN_DISABLED;
+	mas_chan_list->state = CHANNEL_STATE_DISABLE;
+}
+#endif
+
+/**
  * reg_populate_band_channels() - For all the valid regdb channels in the master
  * channel list, find the regulatory rules and call reg_fill_channel_info() to
  * populate master channel list with txpower, antennagain, BW info, etc.
@@ -326,6 +348,7 @@ static void reg_populate_band_channels(enum channel_enum start_chan,
 						CHANNEL_STATE_DISABLE;
 			}
 #endif
+			reg_disable_half_qtr_24gchan(&mas_chan_list[chan_enum]);
 		}
 	}
 }

@@ -481,18 +481,34 @@ enum phy_ch_width get_next_lower_bandwidth(enum phy_ch_width ch_width)
 
 const struct chan_map channel_map_us[NUM_CHANNELS] = {
 	[CHAN_ENUM_2412] = {2412, 1, MIN_CHANBW, 40},
+	[CHAN_ENUM_2414] = {2414, 203, MIN_CHANBW, 10},
 	[CHAN_ENUM_2417] = {2417, 2, MIN_CHANBW, 40},
+	[CHAN_ENUM_2419] = {2419, 204, MIN_CHANBW, 10},
 	[CHAN_ENUM_2422] = {2422, 3, MIN_CHANBW, 40},
+	[CHAN_ENUM_2424] = {2424, 205, MIN_CHANBW, 10},
 	[CHAN_ENUM_2427] = {2427, 4, MIN_CHANBW, 40},
+	[CHAN_ENUM_2429] = {2429, 206, MIN_CHANBW, 10},
 	[CHAN_ENUM_2432] = {2432, 5, MIN_CHANBW, 40},
+	[CHAN_ENUM_2434] = {2434, 207, MIN_CHANBW, 10},
 	[CHAN_ENUM_2437] = {2437, 6, MIN_CHANBW, 40},
+	[CHAN_ENUM_2439] = {2439, 208, MIN_CHANBW, 10},
 	[CHAN_ENUM_2442] = {2442, 7, MIN_CHANBW, 40},
+	[CHAN_ENUM_2444] = {2444, 209, MIN_CHANBW, 10},
 	[CHAN_ENUM_2447] = {2447, 8, MIN_CHANBW, 40},
+	[CHAN_ENUM_2449] = {2449, 210, MIN_CHANBW, 10},
 	[CHAN_ENUM_2452] = {2452, 9, MIN_CHANBW, 40},
+	[CHAN_ENUM_2454] = {2454, 211, MIN_CHANBW, 10},
 	[CHAN_ENUM_2457] = {2457, 10, MIN_CHANBW, 40},
+	[CHAN_ENUM_2459] = {2459, 212, MIN_CHANBW, 10},
 	[CHAN_ENUM_2462] = {2462, 11, MIN_CHANBW, 40},
+	[CHAN_ENUM_2464] = {2464, 213, MIN_CHANBW, 10},
 	[CHAN_ENUM_2467] = {2467, 12, MIN_CHANBW, 40},
+	[CHAN_ENUM_2469] = {2469, 214, MIN_CHANBW, 10},
 	[CHAN_ENUM_2472] = {2472, 13, MIN_CHANBW, 40},
+	[CHAN_ENUM_2474] = {2474, 215, MIN_CHANBW, 10},
+	[CHAN_ENUM_2477] = {2477, 221, MIN_CHANBW, 10},
+	[CHAN_ENUM_2479] = {2479, 216, MIN_CHANBW, 10},
+	[CHAN_ENUM_2482] = {2482, 222, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, INVALID_CHANNEL_NUM, 2, 20},
@@ -783,18 +799,34 @@ const struct chan_map channel_map_us[NUM_CHANNELS] = {
 
 const struct chan_map channel_map_eu[NUM_CHANNELS] = {
 	[CHAN_ENUM_2412] = {2412, 1, MIN_CHANBW, 40},
+	[CHAN_ENUM_2414] = {2414, 203, MIN_CHANBW, 10},
 	[CHAN_ENUM_2417] = {2417, 2, MIN_CHANBW, 40},
+	[CHAN_ENUM_2419] = {2419, 204, MIN_CHANBW, 10},
 	[CHAN_ENUM_2422] = {2422, 3, MIN_CHANBW, 40},
+	[CHAN_ENUM_2424] = {2424, 205, MIN_CHANBW, 10},
 	[CHAN_ENUM_2427] = {2427, 4, MIN_CHANBW, 40},
+	[CHAN_ENUM_2429] = {2429, 206, MIN_CHANBW, 10},
 	[CHAN_ENUM_2432] = {2432, 5, MIN_CHANBW, 40},
+	[CHAN_ENUM_2434] = {2434, 207, MIN_CHANBW, 10},
 	[CHAN_ENUM_2437] = {2437, 6, MIN_CHANBW, 40},
+	[CHAN_ENUM_2439] = {2439, 208, MIN_CHANBW, 10},
 	[CHAN_ENUM_2442] = {2442, 7, MIN_CHANBW, 40},
+	[CHAN_ENUM_2444] = {2444, 209, MIN_CHANBW, 10},
 	[CHAN_ENUM_2447] = {2447, 8, MIN_CHANBW, 40},
+	[CHAN_ENUM_2449] = {2449, 210, MIN_CHANBW, 10},
 	[CHAN_ENUM_2452] = {2452, 9, MIN_CHANBW, 40},
+	[CHAN_ENUM_2454] = {2454, 211, MIN_CHANBW, 10},
 	[CHAN_ENUM_2457] = {2457, 10, MIN_CHANBW, 40},
+	[CHAN_ENUM_2459] = {2459, 212, MIN_CHANBW, 10},
 	[CHAN_ENUM_2462] = {2462, 11, MIN_CHANBW, 40},
+	[CHAN_ENUM_2464] = {2464, 213, MIN_CHANBW, 10},
 	[CHAN_ENUM_2467] = {2467, 12, MIN_CHANBW, 40},
+	[CHAN_ENUM_2469] = {2469, 214, MIN_CHANBW, 10},
 	[CHAN_ENUM_2472] = {2472, 13, MIN_CHANBW, 40},
+	[CHAN_ENUM_2474] = {2474, 215, MIN_CHANBW, 10},
+	[CHAN_ENUM_2477] = {2477, 221, MIN_CHANBW, 10},
+	[CHAN_ENUM_2479] = {2479, 216, MIN_CHANBW, 10},
+	[CHAN_ENUM_2482] = {2482, 222, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, INVALID_CHANNEL_NUM, 2, 20},
@@ -1097,18 +1129,31 @@ const struct chan_map channel_map_eu[NUM_CHANNELS] = {
 
 const struct chan_map channel_map_jp[NUM_CHANNELS] = {
 	[CHAN_ENUM_2412] = {2412, 1, MIN_CHANBW, 40},
+	[CHAN_ENUM_2414] = {2414, 203, MIN_CHANBW, 10},
 	[CHAN_ENUM_2417] = {2417, 2, MIN_CHANBW, 40},
+	[CHAN_ENUM_2419] = {2419, 204, MIN_CHANBW, 10},
 	[CHAN_ENUM_2422] = {2422, 3, MIN_CHANBW, 40},
+	[CHAN_ENUM_2424] = {2424, 205, MIN_CHANBW, 10},
 	[CHAN_ENUM_2427] = {2427, 4, MIN_CHANBW, 40},
+	[CHAN_ENUM_2429] = {2429, 206, MIN_CHANBW, 10},
 	[CHAN_ENUM_2432] = {2432, 5, MIN_CHANBW, 40},
+	[CHAN_ENUM_2434] = {2434, 207, MIN_CHANBW, 10},
 	[CHAN_ENUM_2437] = {2437, 6, MIN_CHANBW, 40},
+	[CHAN_ENUM_2439] = {2439, 208, MIN_CHANBW, 10},
 	[CHAN_ENUM_2442] = {2442, 7, MIN_CHANBW, 40},
+	[CHAN_ENUM_2444] = {2444, 209, MIN_CHANBW, 10},
 	[CHAN_ENUM_2447] = {2447, 8, MIN_CHANBW, 40},
+	[CHAN_ENUM_2449] = {2449, 210, MIN_CHANBW, 10},
 	[CHAN_ENUM_2452] = {2452, 9, MIN_CHANBW, 40},
+	[CHAN_ENUM_2454] = {2454, 211, MIN_CHANBW, 10},
 	[CHAN_ENUM_2457] = {2457, 10, MIN_CHANBW, 40},
+	[CHAN_ENUM_2459] = {2459, 212, MIN_CHANBW, 10},
 	[CHAN_ENUM_2462] = {2462, 11, MIN_CHANBW, 40},
+	[CHAN_ENUM_2464] = {2464, 213, MIN_CHANBW, 10},
 	[CHAN_ENUM_2467] = {2467, 12, MIN_CHANBW, 40},
+	[CHAN_ENUM_2469] = {2469, 214, MIN_CHANBW, 10},
 	[CHAN_ENUM_2472] = {2472, 13, MIN_CHANBW, 40},
+	[CHAN_ENUM_2474] = {2474, 215, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, 182, 5, 5},
@@ -1399,18 +1444,34 @@ const struct chan_map channel_map_jp[NUM_CHANNELS] = {
 
 const struct chan_map channel_map_global[NUM_CHANNELS] = {
 	[CHAN_ENUM_2412] = {2412, 1, MIN_CHANBW, 40},
+	[CHAN_ENUM_2414] = {2414, 203, MIN_CHANBW, 10},
 	[CHAN_ENUM_2417] = {2417, 2, MIN_CHANBW, 40},
+	[CHAN_ENUM_2419] = {2419, 204, MIN_CHANBW, 10},
 	[CHAN_ENUM_2422] = {2422, 3, MIN_CHANBW, 40},
+	[CHAN_ENUM_2424] = {2424, 205, MIN_CHANBW, 10},
 	[CHAN_ENUM_2427] = {2427, 4, MIN_CHANBW, 40},
+	[CHAN_ENUM_2429] = {2429, 206, MIN_CHANBW, 10},
 	[CHAN_ENUM_2432] = {2432, 5, MIN_CHANBW, 40},
+	[CHAN_ENUM_2434] = {2434, 207, MIN_CHANBW, 10},
 	[CHAN_ENUM_2437] = {2437, 6, MIN_CHANBW, 40},
+	[CHAN_ENUM_2439] = {2439, 208, MIN_CHANBW, 10},
 	[CHAN_ENUM_2442] = {2442, 7, MIN_CHANBW, 40},
+	[CHAN_ENUM_2444] = {2444, 209, MIN_CHANBW, 10},
 	[CHAN_ENUM_2447] = {2447, 8, MIN_CHANBW, 40},
+	[CHAN_ENUM_2449] = {2449, 210, MIN_CHANBW, 10},
 	[CHAN_ENUM_2452] = {2452, 9, MIN_CHANBW, 40},
+	[CHAN_ENUM_2454] = {2454, 211, MIN_CHANBW, 10},
 	[CHAN_ENUM_2457] = {2457, 10, MIN_CHANBW, 40},
+	[CHAN_ENUM_2459] = {2459, 212, MIN_CHANBW, 10},
 	[CHAN_ENUM_2462] = {2462, 11, MIN_CHANBW, 40},
+	[CHAN_ENUM_2464] = {2464, 213, MIN_CHANBW, 10},
 	[CHAN_ENUM_2467] = {2467, 12, MIN_CHANBW, 40},
+	[CHAN_ENUM_2469] = {2469, 214, MIN_CHANBW, 10},
 	[CHAN_ENUM_2472] = {2472, 13, MIN_CHANBW, 40},
+	[CHAN_ENUM_2474] = {2474, 215, MIN_CHANBW, 10},
+	[CHAN_ENUM_2477] = {2477, 221, MIN_CHANBW, 10},
+	[CHAN_ENUM_2479] = {2479, 216, MIN_CHANBW, 10},
+	[CHAN_ENUM_2482] = {2482, 222, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, INVALID_CHANNEL_NUM, 2, 20},
@@ -1701,18 +1762,34 @@ const struct chan_map channel_map_global[NUM_CHANNELS] = {
 
 const struct chan_map channel_map_china[NUM_CHANNELS] = {
 	[CHAN_ENUM_2412] = {2412, 1, MIN_CHANBW, 40},
+	[CHAN_ENUM_2414] = {2414, 203, MIN_CHANBW, 10},
 	[CHAN_ENUM_2417] = {2417, 2, MIN_CHANBW, 40},
+	[CHAN_ENUM_2419] = {2419, 204, MIN_CHANBW, 10},
 	[CHAN_ENUM_2422] = {2422, 3, MIN_CHANBW, 40},
+	[CHAN_ENUM_2424] = {2424, 205, MIN_CHANBW, 10},
 	[CHAN_ENUM_2427] = {2427, 4, MIN_CHANBW, 40},
+	[CHAN_ENUM_2429] = {2429, 206, MIN_CHANBW, 10},
 	[CHAN_ENUM_2432] = {2432, 5, MIN_CHANBW, 40},
+	[CHAN_ENUM_2434] = {2434, 207, MIN_CHANBW, 10},
 	[CHAN_ENUM_2437] = {2437, 6, MIN_CHANBW, 40},
+	[CHAN_ENUM_2439] = {2439, 208, MIN_CHANBW, 10},
 	[CHAN_ENUM_2442] = {2442, 7, MIN_CHANBW, 40},
+	[CHAN_ENUM_2444] = {2444, 209, MIN_CHANBW, 10},
 	[CHAN_ENUM_2447] = {2447, 8, MIN_CHANBW, 40},
+	[CHAN_ENUM_2449] = {2449, 210, MIN_CHANBW, 10},
 	[CHAN_ENUM_2452] = {2452, 9, MIN_CHANBW, 40},
+	[CHAN_ENUM_2454] = {2454, 211, MIN_CHANBW, 10},
 	[CHAN_ENUM_2457] = {2457, 10, MIN_CHANBW, 40},
+	[CHAN_ENUM_2459] = {2459, 212, MIN_CHANBW, 10},
 	[CHAN_ENUM_2462] = {2462, 11, MIN_CHANBW, 40},
+	[CHAN_ENUM_2464] = {2464, 213, MIN_CHANBW, 10},
 	[CHAN_ENUM_2467] = {2467, 12, MIN_CHANBW, 40},
+	[CHAN_ENUM_2469] = {2469, 214, MIN_CHANBW, 10},
 	[CHAN_ENUM_2472] = {2472, 13, MIN_CHANBW, 40},
+	[CHAN_ENUM_2474] = {2474, 215, MIN_CHANBW, 10},
+	[CHAN_ENUM_2477] = {2477, 221, MIN_CHANBW, 10},
+	[CHAN_ENUM_2479] = {2479, 216, MIN_CHANBW, 10},
+	[CHAN_ENUM_2482] = {2482, 222, MIN_CHANBW, 10},
 	[CHAN_ENUM_2484] = {2484, 14, MIN_CHANBW, 20},
 #ifdef CONFIG_49GHZ_CHAN
 	[CHAN_ENUM_4912] = {4912, INVALID_CHANNEL_NUM, 2, 20},
@@ -2403,6 +2480,28 @@ uint8_t reg_freq_to_chan(struct wlan_objmgr_pdev *pdev,
 	return chan;
 }
 
+/**
+ * reg_is_freq_2pt5mhz() - Validate if the given input freq
+ * is a 2.5MHZ step frequency.
+ *
+ * Return - True if the freq is 2.5MHZ, false otherwise.
+ */
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+static bool reg_is_freq_2pt5mhz(qdf_freq_t freq)
+{
+	if ((freq == REG_24_GHZ_2PT5MHZ_CHAN_222_FREQ) ||
+		(freq == REG_24_GHZ_2PT5MHZ_CHAN_221_FREQ) ||
+		REG_IS_FREQ_2p5MHZ(freq))
+		return true;
+	return false;
+}
+#else
+static bool reg_is_freq_2pt5mhz(qdf_freq_t freq)
+{
+    return false;
+}
+#endif
+
 static uint16_t
 reg_compute_chan_to_freq_for_chlist(struct regulatory_channel *chan_list,
 				    uint8_t chan_num,
@@ -2420,9 +2519,11 @@ reg_compute_chan_to_freq_for_chlist(struct regulatory_channel *chan_list,
 	}
 
 	for (count = min_chan_range; count <= max_chan_range; count++) {
+		qdf_freq_t center_freq = chan_list[count].center_freq;
 		if ((chan_list[count].state != CHANNEL_STATE_DISABLE) &&
 		    !(chan_list[count].chan_flags & REGULATORY_CHAN_DISABLED)) {
-			if (REG_IS_49GHZ_FREQ(chan_list[count].center_freq)) {
+			if (REG_IS_49GHZ_FREQ(chan_list[count].center_freq) ||
+				reg_is_freq_2pt5mhz(center_freq)) {
 				if (chan_list[count].chan_num == chan_num)
 					break;
 				continue;
@@ -6679,6 +6780,44 @@ static qdf_freq_t reg_get_sec_ch_2g_freq(struct wlan_objmgr_pdev *pdev,
 }
 #endif
 
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+/**
+ * reg_compute_2p5mhz_chan_ieee() - Compute the IEEE channel number given
+ * 2.5MHZ step size channel's center freq.
+ * @freq: Channel frequency in MHZ.
+ * Return - IEEE channel number
+ */
+static uint8_t reg_compute_2p5mhz_chan_ieee(qdf_freq_t freq)
+{
+	if (freq == REG_24_GHZ_2PT5MHZ_CHAN_221_FREQ)
+		return REG_24_GHZ_2PT5MHZ_CHAN_221;
+
+	if (freq == REG_24_GHZ_2PT5MHZ_CHAN_222_FREQ)
+		return REG_24_GHZ_2PT5MHZ_CHAN_222;
+
+	return (((freq - REG_24_GHZ_2PT5MHZ_CHAN_BASE_FREQ) /
+		 FREQ_TO_CHAN_SCALE) +
+		REG_24_GHZ_2PT5MHZ_CHAN_OFFSET);
+}
+#else
+static uint8_t reg_compute_2p5mhz_chan_ieee(qdf_freq_t freq)
+{
+	return 0;
+}
+#endif
+
+static void reg_fill_ch_ieee(qdf_freq_t center_freq,
+			     uint8_t *chan_ieee)
+{
+	if (center_freq == TWOG_CHAN_14_IN_MHZ)
+		*chan_ieee = TWOG_CHAN_14_IEEE;
+	else if (REG_IS_FREQ_2p5MHZ(center_freq))
+		*chan_ieee = reg_compute_2p5mhz_chan_ieee(center_freq);
+	else
+		*chan_ieee = (center_freq - TWOG_STARTING_FREQ) /
+			FREQ_TO_CHAN_SCALE;
+}
+
 void reg_set_2g_channel_params_for_freq(struct wlan_objmgr_pdev *pdev,
 					uint16_t oper_freq,
 					struct ch_params *ch_params,
@@ -6738,14 +6877,8 @@ void reg_set_2g_channel_params_for_freq(struct wlan_objmgr_pdev *pdev,
 			} else {
 				ch_params->sec_ch_offset = NO_SEC_CH;
 				ch_params->mhz_freq_seg0 = oper_freq;
-				if (ch_params->mhz_freq_seg0 ==
-						TWOG_CHAN_14_IN_MHZ)
-					ch_params->center_freq_seg0 = 14;
-				else
-					ch_params->center_freq_seg0 =
-						(ch_params->mhz_freq_seg0 -
-						 TWOG_STARTING_FREQ) /
-						FREQ_TO_CHAN_SCALE;
+				reg_fill_ch_ieee(ch_params->mhz_freq_seg0,
+						 &ch_params->center_freq_seg0);
 			}
 			break;
 		}
