@@ -1559,7 +1559,10 @@ dp_raw_strip_overhead(struct sk_buff *nbuf)
 	    	uint16_t fc = le16_to_cpu(((struct ieee80211_hdr *)nbuf->data)->frame_control);
    	        /*get the pointers for the start of LLC HDR and the IP HDR */
 	    	hdr_len = ieee80211_hdrlen(fc);
-            	llc_hdr = nbuf->data + hdr_len;
+                llc_hdr = nbuf->data + hdr_len;
+		if (fc & (IEEE80211_FC1_WEP << 8)) {
+ 			llc_hdr += 8;
+                }
 	    	ip_hdr =  llc_hdr + sizeof(qdf_llc_t);
 	    	transport_hdr = ip_hdr + sizeof(struct iphdr);
 
