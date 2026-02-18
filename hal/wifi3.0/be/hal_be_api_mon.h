@@ -2993,7 +2993,7 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 				      qdf_nbuf_t nbuf)
 {
 	struct hal_soc *hal = (struct hal_soc *)hal_soc_hdl;
-	uint32_t tlv_tag, user_id, tlv_len, value;
+	uint32_t tlv_tag, user_id, tlv_len, value, su_ext;
 	uint8_t group_id = 0;
 	uint8_t he_dcm = 0;
 	uint8_t he_stbc = 0;
@@ -3482,6 +3482,13 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 				 QDF_MON_STATUS_HE_SU_FORMAT_TYPE;
 		}
 
+               su_ext = HAL_RX_GET(he_sig_a_su_info, HE_SIG_A_SU_INFO,
+                               DOT11AX_SU_EXTENDED);
+               if (su_ext) {
+                       ppdu_info->rx_status.he_data1 =
+                              QDF_MON_STATUS_HE_EXT_SU_FORMAT_TYPE;
+               }
+
 		/* data1 */
 		ppdu_info->rx_status.he_data1 |=
 			QDF_MON_STATUS_HE_BSS_COLOR_KNOWN |
@@ -3559,6 +3566,24 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 				   HE_SIG_A_SU_INFO, TRANSMIT_BW);
 		ppdu_info->rx_status.he_data5 = value;
 		ppdu_info->rx_status.bw = value;
+		if (su_ext) {
+			value = HAL_RX_GET(he_sig_a_su_info,
+				HE_SIG_A_SU_INFO, DOT11AX_EXT_RU_SIZE);
+			switch (value) {
+			case EXT_RU_26:
+				ppdu_info->rx_status.he_data5 = HE_RU_26_TONE;
+				break;
+			case EXT_RU_52:
+				ppdu_info->rx_status.he_data5 = HE_RU_52_TONE;
+				break;
+			case EXT_RU_106:
+				ppdu_info->rx_status.he_data5 = HE_RU_106_TONE;
+				break;
+			case EXT_RU_242:
+				ppdu_info->rx_status.he_data5 = HE_RU_242_TONE;
+				break;
+			}
+		}
 		value = HAL_RX_GET(he_sig_a_su_info,
 				   HE_SIG_A_SU_INFO, CP_LTF_SIZE);
 		switch (value) {
