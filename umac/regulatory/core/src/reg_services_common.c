@@ -2772,7 +2772,8 @@ reg_compute_chan_to_freq_for_chlist(struct regulatory_channel *chan_list,
 		if ((chan_list[count].state != CHANNEL_STATE_DISABLE) &&
 		    !(chan_list[count].chan_flags & REGULATORY_CHAN_DISABLED)) {
 			if (REG_IS_49GHZ_FREQ(chan_list[count].center_freq) ||
-				reg_is_freq_2pt5mhz(center_freq)) {
+				reg_is_freq_2pt5mhz(center_freq) ||
+				((chan_list[count].chan_num >= 223) && (chan_list[count].chan_num <= 230))) {
 				if (chan_list[count].chan_num == chan_num)
 					break;
 				continue;
