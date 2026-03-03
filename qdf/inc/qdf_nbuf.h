@@ -875,6 +875,42 @@ struct qdf_radiotap_ext2 {
 #define QDF_MON_STATUS_PE_DISAMBIGUITY_SHIFT 15
 #define QDF_MON_STATUS_PRE_FEC_PAD_SHIFT 12
 
+/**
+ * enum he_data_su_ext_ru_size - Radiotap header HE data SU Ext Range RU Size
+ * @EXT_RU_26: Ext Range RU 26 tones
+ * @EXT_RU_52: Ext Range RU 52 tones
+ * @EXT_RU_106: Ext Range RU 106 tones
+ * @EXT_RU_242: Ext Range RU 242 tones
+ */
+enum he_data_su_ext_ru_size {
+	EXT_RU_26,
+	EXT_RU_52,
+	EXT_RU_106,
+	EXT_RU_242,
+};
+
+/**
+ * enum he_data_su_bw_ru_alloc - Radiotap header HE data BW/RU tones idx alloc
+ * @HE_BW_20MHZ: 20MHz BW
+ * @HE_BW_40MHZ: 40MHz BW
+ * @HE_BW_80MHZ: 80MHz BW
+ * @HE_BW_160MHZ: 160MHz BW
+ * @HE_RU_26_TONE: RU 26 tones
+ * @HE_RU_52_TONE: RU 52 tones
+ * @HE_RU_106_TONE: RU 106 tones
+ * @HE_RU_242_TONE: RU 242 tones
+ */
+enum he_data_su_bw_ru_alloc {
+	HE_BW_20MHZ,
+	HE_BW_40MHZ,
+	HE_BW_80MHZ,
+	HE_BW_160MHZ,
+	HE_RU_26_TONE,
+	HE_RU_52_TONE,
+	HE_RU_106_TONE,
+	HE_RU_242_TONE,
+};
+
 /* HE radiotap data6 */
 #define QDF_MON_STATUS_HE_DATA_6_NSS_SHIFT 0
 #define QDF_MON_STATUS_DOPPLER_SHIFT 4
