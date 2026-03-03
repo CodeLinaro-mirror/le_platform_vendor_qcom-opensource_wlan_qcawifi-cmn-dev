@@ -1383,12 +1383,12 @@ static inline void scm_print_scan_req_info(struct scan_req_params *req)
 	struct chan_list *chan_lst;
 #define MAX_SCAN_FREQ_TO_PRINT 25
 
-	scm_nofl_debug("Scan start: scan id %d vdev %d Dwell time: act %d pass %d act_2G %d act_6G %d pass_6G %d, probe time %d n_probes %d flags %x ext_flag %x events %x policy %d is_wb: %d pri %d",
+	scm_nofl_debug("Scan start: scan id %d vdev %d Dwell time: act %d pass %d act_2G %d act_6G %d pass_6G %d, probe time %d idle time %d n_probes %d flags %x ext_flag %x events %x policy %d is_wb: %d pri %d",
 		       req->scan_id, req->vdev_id, req->dwell_time_active,
 		       req->dwell_time_passive, req->dwell_time_active_2g,
 		       req->dwell_time_active_6g, req->dwell_time_passive_6g,
-		       req->repeat_probe_time, req->n_probes, req->scan_flags,
-		       req->scan_ctrl_flags_ext, req->scan_events,
+		       req->repeat_probe_time, req->idle_time, req->n_probes, 
+		       req->scan_flags, req->scan_ctrl_flags_ext, req->scan_events,
 		       req->scan_policy_type, req->scan_f_wide_band,
 		       req->scan_priority);
 	scm_nofl_debug("Scan Type %d rest time: min %d max %d probe spacing %d idle %d probe delay %d scan offset %d burst duration %d adaptive dwell mode %d",
