@@ -6419,6 +6419,8 @@ typedef enum {
 		   VDEV_PARAM_PURE_11AX_MODE),
 	VDEV_PARAM(vdev_param_he_ulofdma_dcm,
 		   VDEV_PARAM_HE_ULOFDMA_DCM),
+	VDEV_PARAM(vdev_param_pure_11be_mode,
+		   VDEV_PARAM_PURE_11BE_MODE),
 	vdev_param_max,
 } wmi_conv_vdev_param_id;
 
@@ -6857,6 +6859,7 @@ typedef enum {
 	wmi_service_vdev_pure11ax_support,
 	wmi_service_peer_ul_rtd_estimate,
 	wmi_service_dcm_ulofdma_support,
+	wmi_service_vdev_pure11be_support,
 
 	wmi_services_max,
 } wmi_conv_service_ids;
