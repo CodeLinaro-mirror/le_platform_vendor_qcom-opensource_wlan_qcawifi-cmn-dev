@@ -176,7 +176,7 @@
 #define HAL_RX_MAX_MPDU_H_PER_STATUS_BUFFER 16
 
 /* Max pilot count */
-#ifdef QCA_MONITOR_2_0_SUPPORT
+#ifdef WLAN_PKT_CAPTURE_RX_2_0
 #define HAL_RX_MAX_SU_EVM_COUNT 256
 #else
 #define HAL_RX_MAX_SU_EVM_COUNT 32
