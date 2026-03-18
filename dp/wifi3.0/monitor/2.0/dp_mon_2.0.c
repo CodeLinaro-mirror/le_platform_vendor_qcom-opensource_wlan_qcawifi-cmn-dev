@@ -757,6 +757,7 @@ void dp_pdev_mon_rings_deinit_2_0(struct dp_pdev *pdev)
 		dp_rx_mon_pdev_rings_deinit_2_0(pdev, lmac_id);
 		dp_tx_mon_pdev_rings_deinit_2_0(pdev, lmac_id);
 	}
+	qdf_spinlock_destroy(&pdev->monitor_pdev->mon_mac.mon_lock);
 }
 
 QDF_STATUS dp_pdev_mon_rings_init_2_0(struct dp_pdev *pdev)
@@ -765,6 +766,7 @@ QDF_STATUS dp_pdev_mon_rings_init_2_0(struct dp_pdev *pdev)
 	int mac_id = 0;
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
 
+	qdf_spinlock_create(&pdev->monitor_pdev->mon_mac.mon_lock);
 	for (mac_id = 0; mac_id < DP_NUM_MACS_PER_PDEV; mac_id++) {
 		int lmac_id = dp_get_lmac_id_for_pdev_id(soc, mac_id,
 							 pdev->pdev_id);
