@@ -2048,6 +2048,7 @@ QDF_STATUS dp_tx_desc_pool_init_be(struct dp_soc *soc,
 		tx_desc->pool_id = pool_id;
 		dp_tx_desc_set_magic(tx_desc, DP_TX_MAGIC_PATTERN_FREE);
 		tx_desc = tx_desc->next;
+#ifndef IOT_DRONE_WIFI
 		if (avail_entry_index == DP_CC_SPT_PAGE_MAX_ENTRIES_MASK) {
 			qdf_mem_dma_sync_single_for_device(
 						soc->osdev,
@@ -2055,6 +2056,7 @@ QDF_STATUS dp_tx_desc_pool_init_be(struct dp_soc *soc,
 						qdf_page_size,
 						DMA_FROM_DEVICE);
 		}
+#endif
 
 		avail_entry_index = (avail_entry_index + 1) &
 					DP_CC_SPT_PAGE_MAX_ENTRIES_MASK;
