@@ -7481,6 +7481,11 @@ mgmt_rx_reo_flush_list_per_pdev(uint8_t ml_grp_id, struct wlan_objmgr_pdev *pdev
 	struct mgmt_rx_reo_context *reo_context;
 	struct mgmt_rx_reo_list *reo_ingress_list;
 
+	if ((ml_grp_id ==  WLAN_MLO_GROUP_INVALID) ||
+	    (ml_grp_id < 0)) {
+		mgmt_rx_reo_err("reo context is null");
+		return QDF_STATUS_E_NULL_VALUE;
+	}
 	reo_context = mgmt_rx_reo_get_context(ml_grp_id);
 	if (!reo_context) {
 		mgmt_rx_reo_err("reo context is null");
