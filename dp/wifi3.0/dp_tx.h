@@ -2613,7 +2613,12 @@ void dp_tx_dump_tx_desc(struct dp_tx_desc_s *tx_desc)
 static inline
 struct dp_tx_desc_pool_s *dp_get_tx_desc_pool_wrapper(struct dp_soc *soc)
 {
-	return dp_get_tx_desc_pool(soc, qdf_get_smp_processor_id());
+	/* Limit cpu number, since MAX_TXDESC_POOLS is 4, but IOT host cpu
+	 * number range [0, 7]
+	 * There are more pools size related with this ring_id & desc_pool_id,
+	 * limit here only
+	 */
+	return dp_get_tx_desc_pool(soc, qdf_get_smp_processor_id() & 0x3);
 }
 #else
 static inline
