@@ -1067,7 +1067,16 @@ static inline void dp_tx_get_queue(struct dp_vdev *vdev,
 static inline void dp_tx_get_queue(struct dp_vdev *vdev,
 				   qdf_nbuf_t nbuf, struct dp_tx_queue *queue)
 {
-	queue->ring_id = qdf_get_cpu();
+#ifdef IOT_DRONE_WIFI
+		/* Limit cpu number, since MAX_TXDESC_POOLS is 4, but IOT host cpu
+		 * number range [0, 7]
+		 * There are more pools size related with this ring_id & desc_pool_id,
+		 * limit here only
+		 */
+		queue->ring_id = qdf_get_cpu() & 0x03;
+#else
+		queue->ring_id = qdf_get_cpu();
+#endif
 	queue->desc_pool_id = queue->ring_id;
 }
 #endif
