@@ -599,6 +599,13 @@ more_data:
 				hal_rx_get_reo_desc_va(ring_desc);
 		dp_rx_desc_sw_cc_check(soc, rx_buf_cookie, &rx_desc);
 
+		if (qdf_unlikely(!rx_desc)) {
+			dp_alert("NULL rx_desc from SW cookie conversion, cookie=0x%x",
+				 rx_buf_cookie);
+			DP_STATS_INC(soc, rx.err.invalid_cookie, 1);
+			continue;
+		}
+
 		status = dp_rx_desc_sanity(soc, hal_soc, hal_ring_hdl,
 					   ring_desc, rx_desc);
 		if (QDF_IS_STATUS_ERROR(status)) {
