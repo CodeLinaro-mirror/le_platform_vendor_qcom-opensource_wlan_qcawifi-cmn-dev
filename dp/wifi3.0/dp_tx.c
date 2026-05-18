@@ -3426,7 +3426,7 @@ fail_return:
 	dp_tx_get_tid(vdev, nbuf, msdu_info);
 	tx_sw_drop_stats_inc(pdev, nbuf, drop_code, enable_eapol_drop_stats);
 	tid_stats = &pdev->stats.tid_stats.
-		    tid_tx_stats[tx_q->ring_id][tid];
+		    tid_tx_stats[tx_q->ring_id][msdu_info->tid];
 	tid_stats->swdrop_cnt[drop_code]++;
 	return nbuf;
 }

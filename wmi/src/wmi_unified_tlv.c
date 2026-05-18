@@ -804,6 +804,8 @@ static const uint32_t vdev_param_tlv[] = {
 		  VDEV_PARAM_PURE_11AX_MODE),
 	PARAM_MAP(vdev_param_he_ulofdma_dcm,
 		  VDEV_PARAM_HE_ULOFDMA_DCM),
+	PARAM_MAP(vdev_param_pure_11be_mode,
+		  VDEV_PARAM_PURE_11BE_MODE),
 };
 #endif
 
@@ -1436,6 +1438,9 @@ static QDF_STATUS send_vdev_start_cmd_tlv(wmi_unified_t wmi_handle,
 
 	if (req->hidden_ssid)
 		cmd->flags |= WMI_UNIFIED_VDEV_START_HIDDEN_SSID;
+
+	if (req->special_vdev_mode)
+		cmd->flags |= WMI_UNIFIED_VDEV_START_CONNECTIONLESS_ALLOWED;
 
 	cmd->flags |= WMI_UNIFIED_VDEV_START_LDPC_RX_ENABLED;
 	cmd->num_noa_descriptors = req->num_noa_descriptors;
@@ -21025,21 +21030,29 @@ extract_roam_trigger_stats_tlv(wmi_unified_t wmi_handle, void *evt_buf,
 		return QDF_STATUS_E_FAILURE;
 	}
 
-	if (!param_buf->roam_result || idx >= param_buf->num_roam_result)
+	if (!param_buf->roam_result || idx >= param_buf->num_roam_result) {
 		wmi_err("roam_result or idx error.%u", idx);
+		return QDF_STATUS_E_FAILURE;
+	}
 
-	if (!param_buf->roam_scan_info || idx >= param_buf->num_roam_scan_info)
+	if (!param_buf->roam_scan_info ||
+	    idx >= param_buf->num_roam_scan_info) {
 		wmi_err("roam_scan_info or idx error.%u", idx);
+		return QDF_STATUS_E_FAILURE;
+	}
 
 	trig->present = true;
 
-	if (param_buf->roam_scan_info)
+	if (param_buf->roam_scan_info &&
+	    idx < param_buf->num_roam_scan_info)
 		scan_info = &param_buf->roam_scan_info[idx];
 
-	if (param_buf->roam_trigger_reason_cmm)
+	if (param_buf->roam_trigger_reason_cmm &&
+	    idx < param_buf->num_roam_trigger_reason_cmm)
 		cmn_data = &param_buf->roam_trigger_reason_cmm[idx];
 
-	if (param_buf->roam_trigger_reason)
+	if (param_buf->roam_trigger_reason &&
+	    idx < param_buf->num_roam_trigger_reason)
 		src_data = &param_buf->roam_trigger_reason[idx];
 
 	if (cmn_data) {
@@ -21358,9 +21371,14 @@ extract_roam_scan_ap_stats_tlv(wmi_unified_t wmi_handle, void *evt_buf,
 		return QDF_STATUS_E_FAILURE;
 	}
 
-	if (ap_idx >= param_buf->num_roam_ap_info) {
-		wmi_err("Invalid roam scan AP tlv ap_idx:%d total_ap:%d",
-			ap_idx, param_buf->num_roam_ap_info);
+	/*
+	 * Check to validate that the requested number of APs do not exceed the
+	 * remaining APs in param_buf after ap_idx to prevent out of bounds
+	 * access.
+	 */
+	if ((ap_idx + num_cand) > param_buf->num_roam_ap_info) {
+		wmi_err("Invalid roam scan AP tlv ap_idx:%d, num_cand:%d, total_ap:%d",
+			ap_idx, num_cand, param_buf->num_roam_ap_info);
 		return QDF_STATUS_E_FAILURE;
 	}
 
@@ -21984,6 +22002,12 @@ static QDF_STATUS extract_pdev_csa_switch_count_status_tlv(
 							wmi_handle,
 							csa_status->pdev_id);
 	param->current_switch_count = csa_status->current_switch_count;
+
+	if (param_buf->num_vdev_ids != csa_status->num_vdevs) {
+		wmi_err("Invalid number of vdevs: received = %d, expected = %d",
+			csa_status->num_vdevs, param_buf->num_vdev_ids);
+		return QDF_STATUS_E_INVAL;
+	}
 	param->num_vdevs = csa_status->num_vdevs;
 	param->vdev_ids = param_buf->vdev_ids;
 
@@ -25483,6 +25507,8 @@ static void populate_tlv_service(uint32_t *wmi_service)
 			WMI_SERVICE_PEER_UL_RTD_ESTIMATE;
 	wmi_service[wmi_service_dcm_ulofdma_support] =
 			WMI_SERVICE_DCM_ULOFDMA_SUPPORT;
+	wmi_service[wmi_service_vdev_pure11be_support] =
+			WMI_SERVICE_VDEV_PURE11BE_SUPPORT;
 }
 
 /**

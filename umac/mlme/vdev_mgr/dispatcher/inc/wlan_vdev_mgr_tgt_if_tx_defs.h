@@ -756,6 +756,7 @@ struct vdev_start_params {
 	bool ldpc_rx_enabled;
 	uint32_t mbssid_flags;
 	uint8_t vdevid_trans;
+	bool special_vdev_mode;
 #ifdef WLAN_FEATURE_11BE_MLO
 	struct mlo_vdev_start_flags mlo_flags;
 	struct mlo_vdev_start_partner_links mlo_partner;

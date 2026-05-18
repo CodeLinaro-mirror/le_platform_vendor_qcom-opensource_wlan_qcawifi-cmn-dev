@@ -259,33 +259,34 @@ util_scan_get_phymode_11be(struct wlan_objmgr_pdev *pdev,
 
 	if (QDF_GET_BITS(eht_ops->ehtop_param,
 			 EHTOP_INFO_PRESENT_IDX, EHTOP_INFO_PRESENT_BITS)) {
-		if (eht_ops->elem_len >= EHTOP_INFO_CONTROL_IDX) {
-			width = QDF_GET_BITS(eht_ops->control,
-					     EHTOP_INFO_CHAN_WIDTH_IDX,
-					     EHTOP_INFO_CHAN_WIDTH_BITS);
-			switch (width) {
-			case WLAN_EHT_CHWIDTH_20:
-				phymode = WLAN_PHYMODE_11BEA_EHT20;
-				break;
-			case WLAN_EHT_CHWIDTH_40:
-				phymode = WLAN_PHYMODE_11BEA_EHT40;
-				break;
-			case WLAN_EHT_CHWIDTH_80:
-				phymode = WLAN_PHYMODE_11BEA_EHT80;
-				break;
-			case WLAN_EHT_CHWIDTH_160:
-				phymode = WLAN_PHYMODE_11BEA_EHT160;
-				break;
-			case WLAN_EHT_CHWIDTH_320:
-				phymode = WLAN_PHYMODE_11BEA_EHT320;
-				break;
-			default:
-				scm_debug("Invalid eht_ops width: %d", width);
-				phymode = WLAN_PHYMODE_11BEA_EHT20;
-				break;
-			}
-		} else {
-			return original_phymode;
+		if (eht_ops->elem_len <
+			(offsetof(struct wlan_ie_ehtops, ccfs1) + 1)) {
+			scm_err("Invalid EHT OP IE length with EHT OP info");
+			return phymode;
+		}
+		width = QDF_GET_BITS(eht_ops->control,
+				     EHTOP_INFO_CHAN_WIDTH_IDX,
+				     EHTOP_INFO_CHAN_WIDTH_BITS);
+		switch (width) {
+		case WLAN_EHT_CHWIDTH_20:
+			phymode = WLAN_PHYMODE_11BEA_EHT20;
+			break;
+		case WLAN_EHT_CHWIDTH_40:
+			phymode = WLAN_PHYMODE_11BEA_EHT40;
+			break;
+		case WLAN_EHT_CHWIDTH_80:
+			phymode = WLAN_PHYMODE_11BEA_EHT80;
+			break;
+		case WLAN_EHT_CHWIDTH_160:
+			phymode = WLAN_PHYMODE_11BEA_EHT160;
+			break;
+		case WLAN_EHT_CHWIDTH_320:
+			phymode = WLAN_PHYMODE_11BEA_EHT320;
+			break;
+		default:
+			scm_debug("Invalid eht_ops width: %d", width);
+			phymode = WLAN_PHYMODE_11BEA_EHT20;
+			break;
 		}
 	} else {
 		switch (phymode) {
@@ -331,16 +332,16 @@ util_scan_get_phymode_11be(struct wlan_objmgr_pdev *pdev,
 	if (QDF_GET_BITS(eht_ops->ehtop_param,
 			 EHTOP_PARAM_DISABLED_SC_BITMAP_PRESENT_IDX,
 			 EHTOP_PARAM_DISABLED_SC_BITMAP_PRESENT_BITS)) {
-		if (eht_ops->elem_len >= EHTOP_INFO_MAX_LEN) {
-			scan_params->channel.puncture_bitmap =
-			    QDF_GET_BITS(eht_ops->disabled_sub_chan_bitmap[0],
-					 0, 8);
-			scan_params->channel.puncture_bitmap |=
-			    QDF_GET_BITS(eht_ops->disabled_sub_chan_bitmap[1],
-					 0, 8) << 8;
-		} else {
-			return original_phymode;
+		if (eht_ops->elem_len < sizeof(struct wlan_ie_ehtops)) {
+			 scm_err("Invalid EHT OP IE len with dis_sc_bitmap");
+			 return phymode;
 		}
+		scan_params->channel.puncture_bitmap =
+		    QDF_GET_BITS(eht_ops->disabled_sub_chan_bitmap[0],
+				 0, 8);
+		scan_params->channel.puncture_bitmap |=
+		    QDF_GET_BITS(eht_ops->disabled_sub_chan_bitmap[1],
+				 0, 8) << 8;
 	} else {
 		scan_params->channel.puncture_bitmap = 0;
 	}
@@ -450,6 +451,11 @@ util_scan_is_out_of_band_leak_eht(struct wlan_objmgr_pdev *pdev,
 	if (!QDF_GET_BITS(eht_ops->ehtop_param,
 			  EHTOP_INFO_PRESENT_IDX, EHTOP_INFO_PRESENT_BITS))
 		return false;
+
+	if (eht_ops->elem_len < (offsetof(struct wlan_ie_ehtops, ccfs1) + 1)) {
+		scm_err("Invalid EHT OP IE length with EHT OP info present");
+		return false;
+	}
 
 	ch_width = QDF_GET_BITS(eht_ops->control,
 				EHTOP_INFO_CHAN_WIDTH_IDX,
@@ -928,6 +934,31 @@ util_scan_get_phymode_2g(struct scan_cache_entry *scan_params)
 				phymode = WLAN_PHYMODE_11B;
 		} else {
 			phymode = WLAN_PHYMODE_11B;
+		}
+	}
+
+	/*
+	 * Sanity check for invalid HT40 configuration on 2.4 GHz.
+	 * If an AP advertises HT40PLUS/MINUS but the implied secondary
+	 * 20 MHz channel would be out of band or disabled, downgrade to HT20.
+	 */
+	if (IS_WLAN_PHYMODE_HT(phymode)) {
+		qdf_freq_t pri_freq = scan_params->channel.chan_freq;
+		qdf_freq_t sec_pri_freq = 0;
+
+		if (phymode == WLAN_PHYMODE_11NG_HT40PLUS)
+			sec_pri_freq = pri_freq + WLAN_CHAN_SPACING_20MHZ;
+		else if (phymode == WLAN_PHYMODE_11NG_HT40MINUS)
+			sec_pri_freq = pri_freq - WLAN_CHAN_SPACING_20MHZ;
+
+		/* If the secondary channel for HT40 operation is outside the 2.4 GHz band,
+		 * fall back to 20 MHz (HT20) mode.
+		 */
+		if (sec_pri_freq > 0 &&
+				(sec_pri_freq < WLAN_REG_MIN_24GHZ_CHAN_FREQ ||
+				 sec_pri_freq > WLAN_REG_MAX_24GHZ_CHAN_FREQ)) {
+			phymode = WLAN_PHYMODE_11NG_HT20;
+			scan_params->channel.cfreq0 = 0;
 		}
 	}
 

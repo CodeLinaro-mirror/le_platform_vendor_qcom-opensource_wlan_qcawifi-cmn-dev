@@ -2611,6 +2611,36 @@ void reg_set_dfs_region(struct wlan_objmgr_pdev *pdev,
 	reg_init_channel_map(dfs_reg);
 }
 
+#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
+static uint16_t reg_freq_to_chan_direct(qdf_freq_t freq)
+{
+	if (freq == 2484)
+		return 14;
+	else if ((freq <= 2474 && freq >= 2412) || freq == 2479)
+	{
+		if ((freq - 2407) % 5 == 0)
+			return (freq - 2407) / 5;
+		else
+			return (202 + ((freq - 2407) / 5));
+	}
+	else if ((freq < 2412 || freq > 2492) && (freq < 5010))
+		return (190 + (((freq - 2399) * 2)/5));
+	else if (freq >= 2477 && freq <= 2492)
+		return 221 + (freq - 2477) / 5;
+	else if (freq >= 4910 && freq <= 4980)
+		return (freq - 4000) / 5;
+	else if (freq < 5925)
+		return (freq - 5000) / 5;
+	else if (freq == 5935)
+		return 2;
+	else if (freq <= 45000)
+		return (freq - 5950) / 5;
+	else if (freq >= 58320 && freq <= 70200)
+		return (freq - 56160) / 2160;
+	else
+		return 0;
+}
+#else
 static uint8_t reg_freq_to_chan_direct(qdf_freq_t freq)
 {
 	if (freq >= TWOG_CHAN_1_IN_MHZ && freq <= TWOG_CHAN_13_IN_MHZ)
@@ -2633,6 +2663,7 @@ static uint8_t reg_freq_to_chan_direct(qdf_freq_t freq)
 
 	return 0;
 }
+#endif
 
 static uint8_t
 reg_freq_to_chan_for_chlist(struct regulatory_channel *chan_list,
