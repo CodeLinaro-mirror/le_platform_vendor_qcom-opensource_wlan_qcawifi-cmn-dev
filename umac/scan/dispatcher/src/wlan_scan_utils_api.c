@@ -1519,6 +1519,8 @@ util_scan_parse_vendor_ie(struct scan_cache_entry *scan_params,
 		scan_params->ie_list.rsnxo = (uint8_t *)ie;
 	} else if (is_vendor_wifi7_rsno_oui((uint8_t *)ie)) {
 		scan_params->ie_list.wifi7_rsno = (uint8_t *)ie;
+	} else if (is_sta_scan_param_oui((uint8_t *)ie)) {
+		scan_params->ie_list.sta_scan_param= (uint8_t *)(ie);
 	}
 
 	return QDF_STATUS_SUCCESS;

@@ -4422,6 +4422,39 @@ is_extender_oui(uint8_t *frm)
 		((QCA_OUI_EXTENDER_TYPE << 24) | QCA_OUI));
 }
 
+#define QCA_OUI_GENERIC_TYPE_1          0x04 /* WARNING: Please do not define
+					      * a new type for VIE. Please use
+					      * this type and use the subtype
+					      * for future use until subtype
+					      * reaches 255,then define
+					      * GENERIC_TYPE_2 as 5 and proceed.
+					      */
+#define QCA_OUI_SUB_BW_INFO_SUBTYPE     0x02 /* This represents Sub-Band Width
+                                              * info, refers to 5MHz/10MHz band
+                                              * width.
+                                              */
+#define QCA_OUI_LEN                     6     /* OUI len of SBW IE */
+
+#define QCA_OUI_STA_SCAN_PARAM_SUBTYPE     0x03 /* This represents STA
+						 * scan param IE sub type field
+						 */
+
+/**
+ * is_sta_scan_param_oui() - If vendor IE is STA scan param OUI
+ * @frm: vendor IE pointer
+ *
+ * API to check if vendor IE is STA scan param OUI
+ *
+ * Return: true if its STA scan param OUI
+ */
+static inline bool
+is_sta_scan_param_oui(uint8_t *frm)
+{
+	return (frm[1] > QCA_OUI_LEN) && (LE_READ_4(frm + 2) ==
+		((QCA_OUI_GENERIC_TYPE_1 << 24) | QCA_OUI)) &&
+		(frm[6] == QCA_OUI_STA_SCAN_PARAM_SUBTYPE);
+}
+
 /**
  * is_adaptive_11r_oui() - Function to check if vendor IE is ADAPTIVE 11R OUI
  * @frm: vendor IE pointer
@@ -4692,18 +4725,7 @@ struct csa_offload_params {
 	struct qdf_mac_addr bssid;
 };
 
-#define QCA_OUI_GENERIC_TYPE_1          0x04 /* WARNING: Please do not define
-					      * a new type for VIE. Please use
-					      * this type and use the subtype
-					      * for future use until subtype
-					      * reaches 255,then define
-					      * GENERIC_TYPE_2 as 5 and proceed.
-					      */
-#define QCA_OUI_SUB_BW_INFO_SUBTYPE     0x02 /* This represents Sub-Band Width
-                                              * info, refers to 5MHz/10MHz band
-                                              * width.
-                                              */
-#define QCA_OUI_LEN                     6     /* OUI len of SBW IE */
+
 /** SBW IE offset is 8, we have skipped the following fields
  * to read SBW channel width. Validation of the OUI is already
  * done before we read the SBW BW.
