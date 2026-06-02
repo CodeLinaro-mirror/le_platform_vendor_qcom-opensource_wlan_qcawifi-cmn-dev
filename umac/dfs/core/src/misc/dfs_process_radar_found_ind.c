@@ -150,6 +150,36 @@ int dfs_get_nol_subchannel_marking(struct wlan_dfs *dfs,
 	return 0;
 }
 
+/**
+ * dfs_radar_add_channel_range_to_nol() - Add the given channel range to NOL.
+ * @dfs: Pointer to DFS structure.
+ * @radar_freq_range: Input radar frequency range.
+ *
+ * Return: QDF_STATUS_SUCCESS if the range is added to NOL.
+ */
+static QDF_STATUS
+dfs_radar_add_channel_range_to_nol(struct wlan_dfs *dfs,
+				   struct dfs_freq_range radar_freq_range)
+{
+	qdf_freq_t cfreq;
+
+	cfreq = (radar_freq_range.start_freq + radar_freq_range.end_freq) / 2;
+	DFS_NOL_ADD_CHAN_LOCKED(dfs,
+				radar_freq_range,
+				dfs->wlan_dfs_nol_timeout);
+	utils_dfs_deliver_event(dfs->dfs_pdev_obj,
+				cfreq,
+				WLAN_EV_NOL_STARTED);
+	dfs_info(dfs, WLAN_DEBUG_DFS_NOL, "ch=%d Added to NOL",
+		 cfreq);
+
+	dfs_nol_update(dfs);
+	utils_dfs_save_nol(dfs->dfs_pdev_obj);
+
+	return QDF_STATUS_SUCCESS;
+}
+
+
 #ifdef CONFIG_CHAN_FREQ_API
 QDF_STATUS
 dfs_radar_add_channel_list_to_nol_for_freq(struct wlan_dfs *dfs,
@@ -168,6 +198,7 @@ dfs_radar_add_channel_list_to_nol_for_freq(struct wlan_dfs *dfs,
 	}
 
 	for (i = 0; i < *num_channels; i++) {
+                struct dfs_freq_range nol_freq_range;
 		if (freq_list[i] == 0 ||
 		    freq_list[i] == last_chan_freq)
 			continue;
@@ -177,10 +208,16 @@ dfs_radar_add_channel_list_to_nol_for_freq(struct wlan_dfs *dfs,
 				 freq_list[i]);
 			continue;
 		}
+		/*
+		 * freq_list contains 20Mhz subchannels,
+		 * hence range start and end are +/- 10Mhz.
+		 */
+		nol_freq_range.start_freq = freq_list[i] - 10;
+		nol_freq_range.end_freq = freq_list[i] + 10;
 
 		last_chan_freq = freq_list[i];
 		DFS_NOL_ADD_CHAN_LOCKED(dfs,
-					freq_list[i],
+					nol_freq_range,
 					dfs->wlan_dfs_nol_timeout);
 		nol_freq_list[num_ch++] = last_chan_freq;
 		utils_dfs_deliver_event(dfs->dfs_pdev_obj,
@@ -1071,6 +1108,99 @@ bool dfs_is_radarsource_agile(struct wlan_dfs *dfs,
 }
 #endif
 
+void
+dfs_convert_chan_to_freq_ranges(struct wlan_dfs *dfs,
+				struct dfs_channel *curchan,
+				qdf_freq_t center_freq,
+				struct dfs_freq_range *cur_freq_range,
+				uint8_t detector_id)
+{
+	qdf_freq_t start_freq, end_freq;
+
+	if (curchan->dfs_ch_flags & WLAN_CHAN_QUARTER) {
+		start_freq = center_freq - 2;
+		end_freq = center_freq + 2;
+	} else if (curchan->dfs_ch_flags & WLAN_CHAN_HALF) {
+		start_freq = center_freq - 5;
+		end_freq = center_freq + 5;
+	} else if (WLAN_IS_CHAN_MODE_20(curchan)) {
+		start_freq = center_freq - 10;
+		end_freq = center_freq + 10;
+	} else if (WLAN_IS_CHAN_MODE_40(curchan)) {
+		start_freq = center_freq - 20;
+		end_freq = center_freq + 20;
+	} else if (WLAN_IS_CHAN_MODE_80(curchan)) {
+		start_freq = center_freq - 40;
+		end_freq = center_freq + 40;
+	} else if (WLAN_IS_CHAN_MODE_160(curchan)) {
+		start_freq = curchan->dfs_ch_mhz_freq_seg2 - 80;
+		end_freq = curchan->dfs_ch_mhz_freq_seg2 + 80;
+	} else if (WLAN_IS_CHAN_MODE_80_80(curchan)) {
+		if (detector_id == dfs_get_agile_detector_id(dfs) &&
+		    dfs->dfs_precac_chwidth == CH_WIDTH_160MHZ) {
+			start_freq = dfs->dfs_agile_precac_freq_mhz - 80;
+			end_freq = dfs->dfs_agile_precac_freq_mhz + 80;
+		} else {
+			start_freq = center_freq - 40;
+			end_freq = center_freq + 40;
+		}
+	} else {
+		start_freq = 0;
+		end_freq = 0;
+	}
+
+	cur_freq_range->start_freq = start_freq;
+	cur_freq_range->end_freq = end_freq;
+}
+
+static void
+dfs_find_radar_affected_frequency_range(struct wlan_dfs *dfs,
+					struct radar_found_info *radar_found,
+					struct dfs_freq_range *r_freq_range,
+					uint32_t freq_center)
+{
+	qdf_freq_t start_freq, end_freq;
+	qdf_freq_t radar_freq = freq_center + radar_found->freq_offset;
+
+	if (radar_found->is_chirp) {
+		start_freq = radar_freq - 10;
+		end_freq = radar_freq + 10;
+	} else {
+		start_freq = radar_freq - 2;
+		end_freq = radar_freq + 2;
+	}
+
+	r_freq_range->start_freq = start_freq;
+	r_freq_range->end_freq = end_freq;
+}
+
+static void
+dfs_intersect_2_freq_ranges(struct dfs_freq_range cur_freq_range,
+			    struct dfs_freq_range *radar_freq_range)
+{
+	if (radar_freq_range->start_freq < cur_freq_range.start_freq)
+		radar_freq_range->start_freq = cur_freq_range.start_freq;
+	if (radar_freq_range->end_freq > cur_freq_range.end_freq)
+		radar_freq_range->end_freq = cur_freq_range.end_freq;
+}
+
+static void
+dfs_limit_range_with_dfs_edges(struct wlan_dfs *dfs,
+			       struct dfs_freq_range *radar_freq_range)
+{
+	if (radar_freq_range->start_freq < 5250)
+		radar_freq_range->start_freq = 5250;
+
+	if (wlan_reg_is_regdmn_en302502_applicable(dfs->dfs_pdev_obj)) {
+		if (radar_freq_range->end_freq > 5875)
+			radar_freq_range->end_freq = 5875;
+	} else {
+		if (radar_freq_range->end_freq > 5730)
+			radar_freq_range->end_freq = 5730;
+	}
+}
+
+
 #ifdef QCA_DFS_BW_PUNCTURE
 uint16_t dfs_generate_radar_bitmap(struct wlan_dfs *dfs,
 				   uint16_t *radar_freq_list,
@@ -1141,15 +1271,17 @@ dfs_process_radar_ind_on_home_chan(struct wlan_dfs *dfs,
 {
 	bool wait_for_csa = false;
 	uint16_t freq_list[MAX_20MHZ_SUBCHANS];
-	uint16_t nol_freq_list[MAX_20MHZ_SUBCHANS];
 	uint8_t num_channels;
 	QDF_STATUS status = QDF_STATUS_E_FAILURE;
 	uint32_t freq_center;
 	uint32_t radarfound_freq;
 	struct dfs_channel *dfs_curchan;
 	uint16_t dfs_radar_bitmap = 0;
+	struct dfs_freq_range curchan_freq_range;
+	struct dfs_freq_range radar_freq_range;
 
 	dfs_curchan = dfs->dfs_curchan;
+	qdf_mem_zero(&curchan_freq_range, sizeof(curchan_freq_range));
 
 	/* Check if the current channel is a non DFS channel
 	 * If the current channel is non-DFS and the radar is from Agile
@@ -1177,6 +1309,31 @@ dfs_process_radar_ind_on_home_chan(struct wlan_dfs *dfs,
 							radar_found,
 							freq_list,
 							freq_center);
+
+	dfs_convert_chan_to_freq_ranges(dfs,
+					dfs->dfs_curchan,
+					freq_center,
+					&curchan_freq_range,
+					radar_found->detector_id);
+
+
+	if ((dfs->dfs_use_nol_subchannel_marking) &&
+		 (!(dfs->dfs_bangradar_type) ||
+		 (dfs->dfs_bangradar_type ==
+		  DFS_BANGRADAR_FOR_SPECIFIC_SUBCHANS))) {
+		dfs_find_radar_affected_frequency_range(dfs,
+							radar_found,
+							&radar_freq_range,
+							freq_center);
+		dfs_intersect_2_freq_ranges(curchan_freq_range,
+					    &radar_freq_range);
+	} else {
+		radar_freq_range.start_freq = curchan_freq_range.start_freq;
+		radar_freq_range.end_freq = curchan_freq_range.end_freq;
+	}
+
+	dfs_limit_range_with_dfs_edges(dfs, &radar_freq_range);
+
 
 	/* For Scan radio, send DFS events to userspace and avoid mitigation
 	 * logic such as changing the channel and adding the channel to NOL
@@ -1219,10 +1376,8 @@ dfs_process_radar_ind_on_home_chan(struct wlan_dfs *dfs,
 			goto exit;
 	}
 
-	status = dfs_radar_add_channel_list_to_nol_for_freq(dfs,
-							    freq_list,
-							    nol_freq_list,
-							    &num_channels);
+	status = dfs_radar_add_channel_range_to_nol(dfs,
+						    radar_freq_range);
 	if (QDF_IS_STATUS_ERROR(status)) {
 		dfs_err(dfs, WLAN_DEBUG_DFS,
 			"radar event received on invalid channel");
@@ -1253,12 +1408,12 @@ dfs_process_radar_ind_on_home_chan(struct wlan_dfs *dfs,
 	dfs_mark_precac_nol_for_freq(dfs,
 				     dfs->is_radar_found_on_secondary_seg,
 				     radar_found->detector_id,
-				     nol_freq_list,
+				     freq_list,
 				     num_channels);
 
 	dfs_send_nol_ie_and_rcsa(dfs,
 				 radar_found,
-				 nol_freq_list,
+				 freq_list,
 				 num_channels,
 				 &wait_for_csa);
 
