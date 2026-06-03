@@ -3573,6 +3573,47 @@ struct cdp_tx_latency {
 };
 
 /**
+ * DP_TX_PIPELINE_HIST_MAX_BINS - maximum user-defined bin edges for the
+ * TX pipeline end-to-end latency histogram
+ */
+#define DP_TX_PIPELINE_HIST_MAX_BINS 16
+
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+/**
+ * struct cdp_tx_pipeline_hist_cfg - TX pipeline end-to-end latency histogram
+ *                                   configuration
+ * @enable: enable/disable the histogram
+ * @num_edges: number of valid ascending bin edges in @edges_us
+ * @edges_us: ascending latency bin edges in microseconds
+ */
+struct cdp_tx_pipeline_hist_cfg {
+	bool     enable;
+	uint8_t  num_edges;
+	uint32_t edges_us[DP_TX_PIPELINE_HIST_MAX_BINS];
+};
+
+/**
+ * struct cdp_tx_pipeline_hist_stats - TX pipeline latency histogram stats
+ * @count: packet count per bin; count[num_edges] is the overflow bucket
+ * @total_samples: total packets recorded
+ * @total_us: sum of all latency values in µs (for average)
+ * @min_us: minimum observed latency in µs
+ * @max_us: maximum observed latency in µs
+ * @num_edges: number of bin edges (mirrors cfg at capture time)
+ * @edges_us: copy of edge values used when stats were collected
+ */
+struct cdp_tx_pipeline_hist_stats {
+	uint64_t count[DP_TX_PIPELINE_HIST_MAX_BINS + 1];
+	uint64_t total_samples;
+	uint64_t total_us;
+	uint64_t min_us;
+	uint64_t max_us;
+	uint8_t  num_edges;
+	uint32_t edges_us[DP_TX_PIPELINE_HIST_MAX_BINS];
+};
+#endif /* WLAN_FEATURE_DP_TX_PIPELINE_HIST */
+
+/**
  * typedef cdp_tx_latency_cb() - callback for transmit latency
  * @vdev_id: vdev id
  * @stats_list: list of per-link transmit latency statistics

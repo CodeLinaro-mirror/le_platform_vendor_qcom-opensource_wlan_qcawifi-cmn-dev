@@ -4799,6 +4799,21 @@ struct dp_vdev {
 	bool dp_eapol_stats;
 	/* Tx NSS stats received from FW */
 	struct cdp_htt_stats_tx_vdev_nss_tlv tx_vdev_nss;
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+	/* TX pipeline end-to-end latency histogram configuration */
+	struct cdp_tx_pipeline_hist_cfg tx_pl_hist_cfg;
+	/* TX pipeline latency histogram accumulators (spinlock-protected) */
+	struct {
+		qdf_spinlock_t lock;
+		uint64_t count[DP_TX_PIPELINE_HIST_MAX_BINS + 1];
+		uint64_t total_samples;
+		uint64_t total_us;
+		uint64_t min_us;
+		uint64_t max_us;
+	} tx_pl_hist;
+	/* debugfs directory for TX pipeline hist */
+	qdf_dentry_t tx_pl_hist_dbgfs_dir;
+#endif /* WLAN_FEATURE_DP_TX_PIPELINE_HIST */
 };
 
 enum {

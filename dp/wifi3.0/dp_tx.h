@@ -2427,6 +2427,36 @@ QDF_STATUS dp_tx_latency_stats_register_cb(struct cdp_soc_t *handle,
 					   cdp_tx_latency_cb cb);
 #endif
 
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+/**
+ * dp_tx_pipeline_hist_config() - configure the TX pipeline latency histogram
+ * @vdev: DP vdev handle
+ * @cfg: new configuration to apply
+ *
+ * Return: None
+ */
+void dp_tx_pipeline_hist_config(struct dp_vdev *vdev,
+				struct cdp_tx_pipeline_hist_cfg *cfg);
+
+/**
+ * dp_tx_pipeline_hist_reset() - zero all histogram counters for a vdev
+ * @vdev: DP vdev handle
+ *
+ * Return: None
+ */
+void dp_tx_pipeline_hist_reset(struct dp_vdev *vdev);
+
+/**
+ * dp_tx_pipeline_hist_fetch() - snapshot histogram stats for a vdev
+ * @vdev: DP vdev handle
+ * @out: caller-allocated output struct
+ *
+ * Return: None
+ */
+void dp_tx_pipeline_hist_fetch(struct dp_vdev *vdev,
+			       struct cdp_tx_pipeline_hist_stats *out);
+#endif /* WLAN_FEATURE_DP_TX_PIPELINE_HIST */
+
 #ifdef QCA_DP_TX_NBUF_LIST_FREE
 static inline void
 dp_tx_nbuf_queue_head_init(qdf_nbuf_queue_head_t *nbuf_queue_head)
