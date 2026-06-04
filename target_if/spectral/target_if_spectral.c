@@ -529,6 +529,54 @@ target_if_spectral_get_vdev(struct target_if_spectral *spectral,
 }
 
 /**
+ * target_if_spectral_cap_fft_size_to_bw() - Cap FFT size to the maximum
+ * allowed for the given effective bandwidth
+ * @spectral: Pointer to Spectral target_if internal private data
+ * @fft_size: Requested FFT size
+ * @effective_bw: Effective channel width of the spectral scan
+ *
+ * FW silently caps the FFT size for reduced bandwidth scans (5/10 MHz)
+ * regardless of the host-configured value. This function mirrors that cap
+ * so host-side bin count calculations match what FW actually used.
+ * 5 MHz: max FFT size = 7 (128 bins), 10 MHz: max FFT size = 8 (256 bins).
+ *
+ * Return: Capped FFT size
+ */
+uint16_t
+target_if_spectral_cap_fft_size_to_bw(struct target_if_spectral *spectral,
+				      uint16_t fft_size,
+				      enum phy_ch_width effective_bw)
+{
+	uint16_t max_fft = 0;
+
+	if (!spectral)
+		return fft_size;
+
+	switch (effective_bw) {
+	case CH_WIDTH_5MHZ:
+		max_fft = 7;
+		break;
+	case CH_WIDTH_10MHZ:
+		max_fft = 8;
+		break;
+	default:
+		if (effective_bw >= CH_WIDTH_INVALID)
+			return fft_size;
+		max_fft = spectral->param_min_max.fft_size_max[effective_bw];
+		break;
+	}
+
+	if (max_fft == INVALID_FFT_SIZE || !max_fft)
+		return fft_size;
+
+	if (fft_size > max_fft)
+		spectral_debug("FFT size capped from %u to %u for %u MHz (quarter-rate) configuration",
+			       fft_size, max_fft, wlan_reg_get_bw_value(effective_bw));
+
+	return min(fft_size, max_fft);
+}
+
+/**
  * target_if_send_vdev_spectral_configure_cmd() - Send WMI command to configure
  * spectral parameters
  * @spectral: Pointer to Spectral target_if internal private data
@@ -581,7 +629,11 @@ target_if_send_vdev_spectral_configure_cmd(struct target_if_spectral *spectral,
 	sparam.period = param->ss_period;
 	sparam.fft_recap = param->ss_recapture;
 	sparam.spectral_pri = param->ss_spectral_pri;
-	sparam.fft_size = param->ss_fft_size;
+
+	sparam.fft_size = target_if_spectral_cap_fft_size_to_bw(
+				spectral, param->ss_fft_size,
+				param->ss_bandwidth);
+
 	sparam.gc_enable = param->ss_gc_ena;
 	sparam.restart_enable = param->ss_restart_ena;
 	sparam.noise_floor_ref = param->ss_noise_floor_ref;
