@@ -1995,7 +1995,7 @@ qdf_export_symbol(__qdf_nbuf_sock_is_udp_pkt);
  */
 bool __qdf_nbuf_sock_is_tcp_pkt(struct sk_buff *skb)
 {
-	if (skb->sk->sk_protocol == QDF_NBUF_TRAC_TCP_TYPE)
+	if (skb && skb->sk && skb->sk->sk_protocol == QDF_NBUF_TRAC_TCP_TYPE)
 		return true;
 	else
 		return false;
