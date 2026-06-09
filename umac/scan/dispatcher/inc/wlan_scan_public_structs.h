@@ -207,6 +207,7 @@ struct channel_info {
  * @adaptive_11r: pointer to adaptive 11r IE
  * @single_pmk: Pointer to sae single pmk IE
  * @rsnxe: Pointer to rsnxe IE
+ * @sta_scan_param: Pointer to AP specified STA scan param IE
  * @ehtcap: pointer to ehtcap ie
  * @ehtop: pointer to eht op ie
  * @bw_ind: pointer to bandwidth indication element sub ie
@@ -293,7 +294,7 @@ struct ie_list {
 	uint8_t *rsnxo;
 	uint8_t *wifi7_rsno;
 	uint8_t *sbw;
-
+	uint8_t *sta_scan_param;
 /*
  * For any new IEs in this structure, add handling in
  * util_scan_copy_beacon_data API.

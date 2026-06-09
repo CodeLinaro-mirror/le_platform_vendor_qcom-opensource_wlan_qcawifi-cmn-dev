@@ -3812,6 +3812,7 @@ struct wmi_unified {
 #endif /*WMI_INTERFACE_SEQUENCE_CHECK*/
 
 	qdf_atomic_t num_stats_over_qmi;
+	qdf_atomic_t bcn_tx_evt_refcnt;
 };
 
 #define WMI_MAX_RADIOS 3

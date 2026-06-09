@@ -1505,6 +1505,7 @@ dp_rx_mon_add_ppdu_info_to_wq(struct dp_pdev *pdev,
 	struct dp_mon_pdev_be *mon_pdev_be =
 		dp_get_be_mon_pdev_from_dp_mon_pdev(mon_pdev);
 	struct dp_mon_mac *mon_mac = dp_get_mon_mac(pdev, mac_id);
+	bool should_queue_work = false;
 
 	/* Full monitor or lite monitor mode is not enabled, return */
 	if (!mon_pdev->monitor_configured &&
@@ -1512,21 +1513,25 @@ dp_rx_mon_add_ppdu_info_to_wq(struct dp_pdev *pdev,
 		return QDF_STATUS_E_FAILURE;
 
 	if (qdf_likely(ppdu_info)) {
+		qdf_spin_lock_bh(&mon_pdev_be->rx_mon_wq_lock);
 		if (mon_pdev_be->rx_mon_queue_depth <
 		    wlan_cfg_get_rx_mon_wq_threshold(soc->wlan_cfg_ctx)) {
-			qdf_spin_lock_bh(&mon_pdev_be->rx_mon_wq_lock);
 			TAILQ_INSERT_TAIL(&mon_pdev_be->rx_mon_queue,
 					  ppdu_info, ppdu_list_elem);
 			mon_pdev_be->rx_mon_queue_depth++;
 			mon_mac->rx_mon_stats.total_ppdu_info_enq++;
+			if (mon_pdev_be->rx_mon_queue_depth >=
+			    wlan_cfg_get_rx_mon_wq_depth(soc->wlan_cfg_ctx))
+				should_queue_work = true;
 		} else {
 			mon_mac->rx_mon_stats.total_ppdu_info_drop++;
+			qdf_spin_unlock_bh(&mon_pdev_be->rx_mon_wq_lock);
 			dp_rx_mon_free_ppdu_info(pdev, ppdu_info);
+			return QDF_STATUS_SUCCESS;
 		}
 		qdf_spin_unlock_bh(&mon_pdev_be->rx_mon_wq_lock);
 
-		if (mon_pdev_be->rx_mon_queue_depth >=
-		    wlan_cfg_get_rx_mon_wq_depth(soc->wlan_cfg_ctx)) {
+		if (should_queue_work) {
 			qdf_queue_work(0, mon_pdev_be->rx_mon_workqueue,
 				       &mon_pdev_be->rx_mon_work);
 		}
@@ -2579,6 +2584,17 @@ dp_rx_mu_stats(struct dp_pdev *pdev, struct hal_rx_ppdu_info *ppdu_info)
 		dp_rx_he_ppdu_stats(pdev, ppdu_info);
 }
 
+#define DP_RX_MON_COOKIE_2_MASK 0xFFFFFF
+#define DP_RX_MON_COOKIE_2_HALF 0x800000
+
+static inline bool
+dp_rx_mon_cookie_2_after(uint32_t cookie_a, uint32_t cookie_b)
+{
+	uint32_t delta = (cookie_a - cookie_b) & DP_RX_MON_COOKIE_2_MASK;
+
+	return delta && delta < DP_RX_MON_COOKIE_2_HALF;
+}
+
 static inline uint32_t
 dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 			   uint32_t mac_id, uint32_t quota)
@@ -2596,6 +2612,7 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 	struct hal_rx_ppdu_info *ppdu_info = NULL;
 	QDF_STATUS status;
 	uint32_t cookie_2;
+	bool srng_access_started = false;
 	struct dp_mon_mac *mon_mac;
 
 	if (!pdev || !hal_soc) {
@@ -2623,6 +2640,7 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 		qdf_spin_unlock_bh(&mon_mac->mon_lock);
 		return work_done;
 	}
+	srng_access_started = true;
 
 	while (qdf_likely((rx_mon_dst_ring_desc =
 			  (void *)hal_srng_dst_peek(hal_soc, mon_dst_srng))
@@ -2651,6 +2669,21 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 		qdf_assert_always(mon_desc);
 
 		if (mon_desc->cookie_2 != cookie_2) {
+			/*
+			 * RXMON hardware can report a stale duplicate dst entry after
+			 * the same software descriptor has already been reposted with
+			 * a newer generation. Do not touch the live descriptor for the
+			 * old entry; just consume that stale dst entry.
+			 */
+			if (mon_desc->magic == DP_MON_DESC_MAGIC &&
+			    mon_desc->in_use &&
+			    dp_rx_mon_cookie_2_after(mon_desc->cookie_2,
+						     cookie_2)) {
+				mon_mac->rx_mon_stats.dup_mon_buf_cnt++;
+				hal_srng_dst_get_next(hal_soc, mon_dst_srng);
+				continue;
+			}
+
 			mon_mac->rx_mon_stats.dup_mon_sw_desc++;
 			qdf_err("duplicate cookie found mon_desc:%pK", mon_desc);
 			qdf_assert_always(0);
@@ -2683,12 +2716,14 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 			dp_mon_debug("end_resaon: %d mon_pdev: %pK",
 				     hal_mon_rx_desc.end_reason, mon_pdev);
 			mon_mac->rx_mon_stats.status_ppdu_drop++;
+			rx_mon_dst_ring_desc = hal_srng_dst_get_next(hal_soc,
+							mon_dst_srng);
+			dp_rx_srng_access_end(int_ctx, soc, mon_dst_srng);
+			srng_access_started = false;
 			dp_rx_mon_handle_flush_n_trucated_ppdu(soc,
 							       pdev,
 							       mon_desc);
-			rx_mon_dst_ring_desc = hal_srng_dst_get_next(hal_soc,
-							mon_dst_srng);
-			continue;
+			goto restart_srng_access;
 		}
 		if (mon_pdev_be->desc_count >= DP_MON_MAX_STATUS_BUF)
 			qdf_assert_always(0);
@@ -2717,18 +2752,29 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 							   rx_mon_dst_ring_desc,
 							   &hal_mon_rx_desc);
 				if (hal_mon_rx_desc.empty_descriptor == 1) {
-					dp_rx_mon_flush_status_buf_queue(pdev, 0,
-									 mon_pdev_be->desc_count);
-					dp_rx_mon_update_drop_cnt(mon_mac, &hal_mon_rx_desc);
 					rx_mon_dst_ring_desc =
 						hal_srng_dst_get_next(hal_soc,
 								      mon_dst_srng);
-					continue;
+					dp_rx_srng_access_end(int_ctx, soc,
+						       mon_dst_srng);
+					srng_access_started = false;
+					dp_rx_mon_flush_status_buf_queue(pdev, 0,
+									 mon_pdev_be->desc_count);
+					dp_rx_mon_update_drop_cnt(mon_mac, &hal_mon_rx_desc);
+					goto restart_srng_access;
 				}
 			}
 		}
 
 		mon_mac->rx_mon_stats.status_ppdu_done++;
+
+		/*
+		 * Publish consumed RXMON dst entries before returning the status
+		 * descriptors to the free list. Otherwise refill can repost the
+		 * same desc generation while HW still observes the old dst TP.
+		 */
+		dp_rx_srng_access_end(int_ctx, soc, mon_dst_srng);
+		srng_access_started = false;
 
 		ppdu_info = dp_rx_mon_process_status_tlv(pdev);
 
@@ -2766,8 +2812,21 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 			qdf_assert_always(0);
 
 		mon_pdev_be->desc_count = 0;
+
+restart_srng_access:
+		if (!quota)
+			break;
+
+		if (qdf_unlikely(dp_rx_srng_access_start(int_ctx, soc,
+						       mon_dst_srng))) {
+			dp_mon_err("%s %d : HAL Mon Dest Ring access Failed -- %pK",
+				   __func__, __LINE__, mon_dst_srng);
+			break;
+		}
+		srng_access_started = true;
 	}
-	dp_rx_srng_access_end(int_ctx, soc, mon_dst_srng);
+	if (srng_access_started)
+		dp_rx_srng_access_end(int_ctx, soc, mon_dst_srng);
 
 	qdf_spin_unlock_bh(&mon_mac->mon_lock);
 	dp_mon_info("mac_id: %d, work_done:%d", mac_id, work_done);

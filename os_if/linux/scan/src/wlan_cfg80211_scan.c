@@ -1624,6 +1624,8 @@ int wlan_cfg80211_scan(struct wlan_objmgr_vdev *vdev,
 	QDF_STATUS qdf_status;
 	enum QDF_OPMODE opmode;
 	uint32_t extra_ie_len = 0;
+	uint32_t chan_cnt = 0;
+	struct ieee80211vap *vap = NULL;
 
 	psoc = wlan_pdev_get_psoc(pdev);
 	if (!psoc) {
@@ -1761,6 +1763,33 @@ int wlan_cfg80211_scan(struct wlan_objmgr_vdev *vdev,
 	scan_req_chan_cnt = &req->scan_req.chan_list.num_chan;
 	*scan_req_chan_cnt = 0;
 
+	vap = wlan_vdev_get_mlme_ext_obj(vdev);
+	if (!vap) {
+		osif_debug("vap object NULL");
+		return -EINVAL;
+	}
+
+	if (vap != NULL && vap->iv_opmode == IEEE80211_M_STA &&
+		vap->iv_specified_scan_param_enable) {
+		osif_debug("STA use AP specified scan param, scan cnt %d",
+			   vap->iv_specified_scan_cnt);
+		if (vap->iv_specified_scan_cnt == 0)
+			vap->iv_specified_scan_param_enable = false;
+		if (!ieee80211_vap_is_connected(vap) &&
+		    vap->iv_specified_scan_cnt)
+			vap->iv_specified_scan_cnt--;
+	}
+
+	if (vap != NULL && vap->iv_specified_scan_param_enable) {
+		chan_cnt = vap->iv_scan_numchan_sap_set_sta;
+		if (vap->iv_sap_specified_idle_time)
+			req->scan_req.idle_time = vap->iv_sap_specified_idle_time;
+		osif_debug("[STA_SCAN_IE] STA scan override: chan_cnt=%d idle=%d scan_cnt=%d",
+			chan_cnt, req->scan_req.idle_time, vap->iv_specified_scan_cnt);
+	} else {
+		chan_cnt = request->n_channels;
+	}
+
 	if (params->scan_f_2ghz && !params->scan_f_5ghz) {
 		req->scan_req.scan_f_2ghz = true;
 		req->scan_req.scan_f_5ghz = false;
@@ -1769,12 +1798,16 @@ int wlan_cfg80211_scan(struct wlan_objmgr_vdev *vdev,
 		req->scan_req.scan_f_5ghz = true;
 	}
 
-	if (request->n_channels) {
+	if (chan_cnt) {
 #ifdef WLAN_POLICY_MGR_ENABLE
 		bool ap_or_go_present = wlan_cfg80211_is_ap_go_present(psoc);
 #endif
-		for (i = 0; i < request->n_channels; i++) {
-			c_freq = request->channels[i]->center_freq;
+		for (i = 0; i < chan_cnt; i++) {
+			if (vap != NULL && vap->iv_specified_scan_param_enable) {
+				c_freq = (uint32_t)vap->iv_scan_chlist_sap_set_sta[i];
+				osif_debug("[STA_SCAN_IE] STA scan chan[%d]=%d MHz", i, c_freq);
+			} else
+				c_freq = request->channels[i]->center_freq;
 
 			if (freq_already_in_scan_start_req(c_freq, req))
 				continue;
