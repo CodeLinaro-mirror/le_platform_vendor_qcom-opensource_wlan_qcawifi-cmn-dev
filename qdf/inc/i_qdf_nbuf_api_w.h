@@ -342,4 +342,13 @@ qdf_nbuf_rx_get_band(qdf_nbuf_t nbuf)
 {
 	return 0;
 }
+
+static inline qdf_time_t qdf_nbuf_get_tx_ts(qdf_nbuf_t buf, bool clear)
+{
+	qdf_time_t ts = (qdf_time_t)__qdf_nbuf_get_tx_ts(buf);
+
+	if (clear)
+		__qdf_nbuf_clear_tx_ts(buf);
+	return ts;
+}
 #endif /* _QDF_NBUF_W_H */

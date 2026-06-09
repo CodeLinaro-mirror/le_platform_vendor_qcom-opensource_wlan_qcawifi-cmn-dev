@@ -2447,13 +2447,14 @@ void dp_tx_pipeline_hist_config(struct dp_vdev *vdev,
 void dp_tx_pipeline_hist_reset(struct dp_vdev *vdev);
 
 /**
- * dp_tx_pipeline_hist_fetch() - snapshot histogram stats for a vdev
+ * dp_tx_pipeline_hist_fetch() - snapshot histogram stats for a vdev/TID
  * @vdev: DP vdev handle
- * @out: caller-allocated output struct
+ * @tid:  TID index 0-7, or DP_TX_PIPELINE_HIST_AGG_IDX for aggregate
+ * @out:  caller-allocated output struct
  *
  * Return: None
  */
-void dp_tx_pipeline_hist_fetch(struct dp_vdev *vdev,
+void dp_tx_pipeline_hist_fetch(struct dp_vdev *vdev, uint8_t tid,
 			       struct cdp_tx_pipeline_hist_stats *out);
 #endif /* WLAN_FEATURE_DP_TX_PIPELINE_HIST */
 

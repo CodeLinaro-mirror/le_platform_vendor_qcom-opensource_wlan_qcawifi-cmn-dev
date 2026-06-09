@@ -2741,11 +2741,70 @@ dp_tx_get_driver_ingress_ts(struct dp_vdev *vdev,
 			    struct dp_tx_msdu_info_s *msdu_info,
 			    qdf_nbuf_t nbuf)
 {
-	if (!dp_tx_latency_stats_enabled(vdev))
+	bool need_ts = dp_tx_latency_stats_enabled(vdev);
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+	need_ts = need_ts || vdev->tx_pl_hist_cfg.enable;
+#endif
+	if (!need_ts)
 		return;
 
 	msdu_info->driver_ingress_ts = qdf_nbuf_get_tx_ts(nbuf, true);
+	if (!msdu_info->driver_ingress_ts)
+		msdu_info->driver_ingress_ts = qdf_ktime_real_get();
 }
+
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+/*
+ * RFC 8325 DSCP-to-TID map for histogram only — independent of
+ * pdev->dscp_tid_map (which may be unconfigured).  Index = DSCP (0–63).
+ *
+ *  0- 7  CS0/DF         → TID 0  (AC_BE)
+ *  8-15  CS1/AF11-13    → TID 1/0 (AC_BK / AC_BE)
+ *    8   CS1            → TID 1  (AC_BK)
+ *  9-15  AF11-13        → TID 0  (AC_BE)
+ * 16-17  CS2            → TID 0  (AC_BE)
+ * 18-23  AF21-23        → TID 3  (AC_BE — UP 3)
+ * 24-39  CS3/AF3x/CS4/AF4x → TID 4 (AC_VI)
+ * 40-43  CS5            → TID 5  (AC_VI — UP 5)
+ * 44-47  VA, EF         → TID 6  (AC_VO — UP 6)
+ * 48-63  CS6, CS7       → TID 7  (AC_VO — UP 7)
+ */
+static const uint8_t dp_tx_pl_hist_wmm_dscp_tid[64] = {
+	[0  ... 7]  = 0,  /* CS0/DF   → BE TID 0 */
+	[8  ... 8]  = 1,  /* CS1      → BK TID 1 */
+	[9  ... 17] = 0,  /* AF11-13, CS2 → BE TID 0 */
+	[18 ... 23] = 3,  /* AF21-23  → BE TID 3 */
+	[24 ... 39] = 4,  /* CS3/AF3x/CS4/AF4x → VI TID 4 */
+	[40 ... 43] = 5,  /* CS5      → VI TID 5 */
+	[44 ... 47] = 6,  /* VA, EF   → VO TID 6 */
+	[48 ... 63] = 7,  /* CS6, CS7 → VO TID 7 */
+};
+
+/*
+ * dp_tx_pl_hist_get_tid() - derive WMM TID from the IP DSCP field for
+ * histogram purposes, bypassing pdev->dscp_tid_map (which may be unset).
+ */
+static inline uint8_t dp_tx_pl_hist_get_tid(qdf_nbuf_t nbuf)
+{
+	uint8_t tos = 0;
+
+	if (qdf_nbuf_is_ipv4_pkt(nbuf)) {
+		qdf_net_iphdr_t *ip = (qdf_net_iphdr_t *)
+			(qdf_nbuf_data(nbuf) + sizeof(qdf_ether_header_t));
+
+		tos = ip->ip_tos;
+	} else if (qdf_nbuf_is_ipv6_pkt(nbuf)) {
+		unsigned long *p = (unsigned long *)
+			(qdf_nbuf_data(nbuf) + sizeof(qdf_ether_header_t));
+		unsigned long vtf = ntohl(*p);
+
+		tos = (uint8_t)((vtf & IPV6_FLOWINFO_PRIORITY) >>
+				DP_IPV6_PRIORITY_SHIFT);
+	}
+
+	return dp_tx_pl_hist_wmm_dscp_tid[(tos >> 2) & 0x3f];
+}
+#endif /* WLAN_FEATURE_DP_TX_PIPELINE_HIST */
 
 /**
  * dp_tx_update_ts_on_enqueued() - set driver ingress/egress timestamp in
@@ -2759,13 +2818,27 @@ dp_tx_get_driver_ingress_ts(struct dp_vdev *vdev,
 static inline void
 dp_tx_update_ts_on_enqueued(struct dp_vdev *vdev,
 			    struct dp_tx_msdu_info_s *msdu_info,
-			    struct dp_tx_desc_s *tx_desc)
+			    struct dp_tx_desc_s *tx_desc,
+			    qdf_nbuf_t nbuf)
 {
-	if (!dp_tx_latency_stats_enabled(vdev))
+	bool need_ts = dp_tx_latency_stats_enabled(vdev);
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+	need_ts = need_ts || vdev->tx_pl_hist_cfg.enable;
+#endif
+	if (!need_ts)
 		return;
 
 	tx_desc->driver_ingress_ts = msdu_info->driver_ingress_ts;
 	tx_desc->driver_egress_ts = qdf_ktime_real_get();
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+	if (vdev->tx_pl_hist_cfg.enable) {
+		uint8_t tid = msdu_info->tid;
+
+		if (tid >= CDP_MAX_DATA_TIDS)
+			tid = dp_tx_pl_hist_get_tid(nbuf);
+		tx_desc->pl_hist_tid = tid;
+	}
+#endif
 }
 
 /**
@@ -3314,7 +3387,8 @@ dp_tx_get_driver_ingress_ts(struct dp_vdev *vdev,
 static inline void
 dp_tx_update_ts_on_enqueued(struct dp_vdev *vdev,
 			    struct dp_tx_msdu_info_s *msdu_info,
-			    struct dp_tx_desc_s *tx_desc)
+			    struct dp_tx_desc_s *tx_desc,
+			    qdf_nbuf_t nbuf)
 {
 }
 
@@ -3343,8 +3417,9 @@ dp_tx_pipeline_hist_update(struct dp_vdev *vdev,
 			   qdf_ktime_t comp_ts)
 {
 	struct cdp_tx_pipeline_hist_cfg *cfg = &vdev->tx_pl_hist_cfg;
+	struct dp_tx_pipeline_hist_slot *agg, *slot;
 	uint64_t delta_us;
-	uint8_t bin, n;
+	uint8_t bin, n, tid;
 
 	if (!cfg->enable || !tx_desc->driver_ingress_ts)
 		return;
@@ -3359,14 +3434,32 @@ dp_tx_pipeline_hist_update(struct dp_vdev *vdev,
 	}
 	/* bin == n  =>  delta_us >= last edge (overflow bucket) */
 
+	tid = tx_desc->pl_hist_tid;
+
 	qdf_spin_lock_bh(&vdev->tx_pl_hist.lock);
-	vdev->tx_pl_hist.count[bin]++;
-	vdev->tx_pl_hist.total_samples++;
-	vdev->tx_pl_hist.total_us += delta_us;
-	if (!vdev->tx_pl_hist.min_us || delta_us < vdev->tx_pl_hist.min_us)
-		vdev->tx_pl_hist.min_us = delta_us;
-	if (delta_us > vdev->tx_pl_hist.max_us)
-		vdev->tx_pl_hist.max_us = delta_us;
+
+	/* aggregate slot */
+	agg = &vdev->tx_pl_hist.per_tid[DP_TX_PIPELINE_HIST_AGG_IDX];
+	agg->count[bin]++;
+	agg->total++;
+	agg->sum_us += delta_us;
+	if (!agg->min_us || delta_us < agg->min_us)
+		agg->min_us = delta_us;
+	if (delta_us > agg->max_us)
+		agg->max_us = delta_us;
+
+	/* per-TID slot (TIDs 0-7 only) */
+	if (tid < 8) {
+		slot = &vdev->tx_pl_hist.per_tid[tid];
+		slot->count[bin]++;
+		slot->total++;
+		slot->sum_us += delta_us;
+		if (!slot->min_us || delta_us < slot->min_us)
+			slot->min_us = delta_us;
+		if (delta_us > slot->max_us)
+			slot->max_us = delta_us;
+	}
+
 	qdf_spin_unlock_bh(&vdev->tx_pl_hist.lock);
 }
 #endif /* WLAN_FEATURE_DP_TX_PIPELINE_HIST && WLAN_FEATURE_TX_LATENCY_STATS */
@@ -3392,6 +3485,9 @@ dp_tx_pipeline_hist_config(struct dp_vdev *vdev,
 		vcfg->num_edges = cfg->num_edges;
 		qdf_mem_copy(vcfg->edges_us, cfg->edges_us,
 			     cfg->num_edges * sizeof(cfg->edges_us[0]));
+		/* Reset all per-TID counters so stale samples don't pollute the new bin layout */
+		qdf_mem_zero(vdev->tx_pl_hist.per_tid,
+			     sizeof(vdev->tx_pl_hist.per_tid));
 		vcfg->enable = true;
 	}
 	qdf_spin_unlock_bh(&vdev->tx_pl_hist.lock);
@@ -3407,11 +3503,8 @@ void
 dp_tx_pipeline_hist_reset(struct dp_vdev *vdev)
 {
 	qdf_spin_lock_bh(&vdev->tx_pl_hist.lock);
-	qdf_mem_zero(&vdev->tx_pl_hist.count, sizeof(vdev->tx_pl_hist.count));
-	vdev->tx_pl_hist.total_samples = 0;
-	vdev->tx_pl_hist.total_us      = 0;
-	vdev->tx_pl_hist.min_us        = 0;
-	vdev->tx_pl_hist.max_us        = 0;
+	qdf_mem_zero(vdev->tx_pl_hist.per_tid,
+		     sizeof(vdev->tx_pl_hist.per_tid));
 	qdf_spin_unlock_bh(&vdev->tx_pl_hist.lock);
 }
 
@@ -3423,20 +3516,23 @@ dp_tx_pipeline_hist_reset(struct dp_vdev *vdev)
  * Return: None
  */
 void
-dp_tx_pipeline_hist_fetch(struct dp_vdev *vdev,
+dp_tx_pipeline_hist_fetch(struct dp_vdev *vdev, uint8_t tid,
 			  struct cdp_tx_pipeline_hist_stats *out)
 {
 	struct cdp_tx_pipeline_hist_cfg *cfg = &vdev->tx_pl_hist_cfg;
+	struct dp_tx_pipeline_hist_slot snap;
+	uint8_t tidx = (tid < 8) ? tid : DP_TX_PIPELINE_HIST_AGG_IDX;
 
 	qdf_spin_lock_bh(&vdev->tx_pl_hist.lock);
-	qdf_mem_copy(out->count, vdev->tx_pl_hist.count, sizeof(out->count));
-	out->total_samples = vdev->tx_pl_hist.total_samples;
-	out->total_us      = vdev->tx_pl_hist.total_us;
-	out->min_us        = vdev->tx_pl_hist.min_us;
-	out->max_us        = vdev->tx_pl_hist.max_us;
+	snap = vdev->tx_pl_hist.per_tid[tidx];
 	qdf_spin_unlock_bh(&vdev->tx_pl_hist.lock);
 
-	out->num_edges = cfg->num_edges;
+	qdf_mem_copy(out->count, snap.count, sizeof(out->count));
+	out->total_samples = snap.total;
+	out->total_us      = snap.sum_us;
+	out->min_us        = snap.min_us;
+	out->max_us        = snap.max_us;
+	out->num_edges     = cfg->num_edges;
 	qdf_mem_copy(out->edges_us, cfg->edges_us,
 		     cfg->num_edges * sizeof(cfg->edges_us[0]));
 }
@@ -3528,7 +3624,7 @@ dp_tx_send_msdu_single(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 		goto release_desc;
 	}
 
-	dp_tx_update_ts_on_enqueued(vdev, msdu_info, tx_desc);
+	dp_tx_update_ts_on_enqueued(vdev, msdu_info, tx_desc, nbuf);
 
 	tx_sw_drop_stats_inc(pdev, nbuf, drop_code, enable_eapol_drop_stats);
 	return NULL;
@@ -3891,7 +3987,7 @@ qdf_nbuf_t dp_tx_send_msdu_multiple(struct dp_vdev *vdev, qdf_nbuf_t nbuf,
 			goto done;
 		}
 
-		dp_tx_update_ts_on_enqueued(vdev, msdu_info, tx_desc);
+		dp_tx_update_ts_on_enqueued(vdev, msdu_info, tx_desc, nbuf);
 
 		/*
 		 * TODO
@@ -7181,6 +7277,11 @@ dp_tx_comp_process_desc_list(struct dp_soc *soc,
 					       desc->id, DP_TX_COMP_UNMAP);
 			dp_tx_nbuf_unmap(soc, desc);
 			dp_tx_nbuf_dev_queue_free(&h, desc);
+#if defined(WLAN_FEATURE_DP_TX_PIPELINE_HIST) && defined(WLAN_FEATURE_TX_LATENCY_STATS)
+			if (qdf_likely(txrx_peer))
+				dp_tx_pipeline_hist_update(txrx_peer->vdev,
+							   desc, comp_ts);
+#endif
 			dp_tx_desc_free(soc, desc, desc->pool_id);
 			desc = next;
 			continue;

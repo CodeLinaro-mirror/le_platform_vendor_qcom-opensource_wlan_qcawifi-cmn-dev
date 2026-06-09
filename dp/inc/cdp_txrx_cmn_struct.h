@@ -3576,7 +3576,10 @@ struct cdp_tx_latency {
  * DP_TX_PIPELINE_HIST_MAX_BINS - maximum user-defined bin edges for the
  * TX pipeline end-to-end latency histogram
  */
-#define DP_TX_PIPELINE_HIST_MAX_BINS 16
+#define DP_TX_PIPELINE_HIST_MAX_BINS   16
+/* TIDs 0-7 tracked individually; index 8 is the aggregate slot */
+#define DP_TX_PIPELINE_HIST_TID_COUNT  9
+#define DP_TX_PIPELINE_HIST_AGG_IDX    8
 
 #ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
 /**

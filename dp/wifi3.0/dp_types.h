@@ -831,6 +831,9 @@ struct dp_tx_desc_s {
 	qdf_ktime_t driver_egress_ts;
 	qdf_ktime_t driver_ingress_ts;
 #endif
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+	uint8_t pl_hist_tid;
+#endif
 #ifdef WLAN_SOFTUMAC_SUPPORT
 	void *tcl_cmd_vaddr;
 	qdf_dma_addr_t tcl_cmd_paddr;
@@ -863,6 +866,9 @@ struct dp_tx_desc_s {
 #ifdef WLAN_FEATURE_TX_LATENCY_STATS
 	qdf_ktime_t driver_egress_ts;
 	qdf_ktime_t driver_ingress_ts;
+#endif
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+	uint8_t pl_hist_tid;
 #endif
 	struct hal_tx_desc_comp_s comp;
 #ifdef WLAN_SOFTUMAC_SUPPORT
@@ -4802,14 +4808,17 @@ struct dp_vdev {
 #ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
 	/* TX pipeline end-to-end latency histogram configuration */
 	struct cdp_tx_pipeline_hist_cfg tx_pl_hist_cfg;
-	/* TX pipeline latency histogram accumulators (spinlock-protected) */
+	/* TX pipeline latency histogram accumulators (spinlock-protected).
+	 * per_tid[0..7] track individual TIDs; per_tid[8] is the aggregate. */
 	struct {
 		qdf_spinlock_t lock;
-		uint64_t count[DP_TX_PIPELINE_HIST_MAX_BINS + 1];
-		uint64_t total_samples;
-		uint64_t total_us;
-		uint64_t min_us;
-		uint64_t max_us;
+		struct dp_tx_pipeline_hist_slot {
+			uint64_t count[DP_TX_PIPELINE_HIST_MAX_BINS + 1];
+			uint64_t total;
+			uint64_t sum_us;
+			uint64_t min_us;
+			uint64_t max_us;
+		} per_tid[DP_TX_PIPELINE_HIST_TID_COUNT];
 	} tx_pl_hist;
 	/* debugfs directory for TX pipeline hist */
 	qdf_dentry_t tx_pl_hist_dbgfs_dir;
