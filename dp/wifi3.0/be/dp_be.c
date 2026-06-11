@@ -3319,7 +3319,8 @@ static void dp_get_vdev_stats_for_unmap_peer_mlo(struct dp_vdev *vdev,
 	if (!IS_MLO_DP_LINK_PEER(peer)) {
 		per_pkt_stats = &txrx_peer->stats[0].per_pkt_stats;
 		dp_update_vdev_basic_stats(txrx_peer, vdev_stats);
-		DP_UPDATE_PER_PKT_STATS(vdev_stats, per_pkt_stats);
+		DP_UPDATE_VDEV_PER_PKT_STATS(vdev_stats, per_pkt_stats,
+					      txrx_peer);
 	}
 
 	if (IS_MLO_DP_LINK_PEER(peer)) {
@@ -3327,7 +3328,8 @@ static void dp_get_vdev_stats_for_unmap_peer_mlo(struct dp_vdev *vdev,
 		if (link_id > 0) {
 			per_pkt_stats =
 				&txrx_peer->stats[link_id].per_pkt_stats;
-			DP_UPDATE_PER_PKT_STATS(vdev_stats, per_pkt_stats);
+			DP_UPDATE_VDEV_PER_PKT_STATS(vdev_stats, per_pkt_stats,
+						      txrx_peer);
 		}
 	}
 
