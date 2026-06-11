@@ -2780,6 +2780,7 @@ static void dp_vdev_txrx_hw_stats_handler(struct htt_soc *soc,
 	uint64_t pkt_count = 0;
 	uint64_t byte_count = 0;
 	uint64_t soc_drop_cnt = 0;
+	struct cdp_pkt_info tx_success = { 0 };
 	struct cdp_pkt_info tx_comp = { 0 };
 	struct cdp_pkt_info tx_failed =  { 0 };
 
@@ -2852,12 +2853,14 @@ static void dp_vdev_txrx_hw_stats_handler(struct htt_soc *soc,
 			tag_buf = tlv_buf_temp +
 				HTT_VDEV_STATS_GET_INDEX(TX_SUCCESS_PKT_CNT);
 			pkt_count = HTT_VDEV_GET_STATS_U64(tag_buf);
+			tx_success.num = pkt_count;
 			tx_comp.num = pkt_count;
 
 			/* Extract tx success packet byte count from buffer */
 			tag_buf = tlv_buf_temp +
 				HTT_VDEV_STATS_GET_INDEX(TX_SUCCESS_BYTE_CNT);
 			byte_count = HTT_VDEV_GET_STATS_U64(tag_buf);
+			tx_success.bytes = byte_count;
 			tx_comp.bytes = byte_count;
 
 			/* Extract tx retry packet count from buffer */
@@ -2916,6 +2919,8 @@ static void dp_vdev_txrx_hw_stats_handler(struct htt_soc *soc,
 
 			DP_STATS_UPD(vdev, tx.comp_pkt.num, tx_comp.num);
 			DP_STATS_UPD(vdev, tx.comp_pkt.bytes, tx_comp.bytes);
+			DP_STATS_UPD(vdev, tx.tx_success.num, tx_success.num);
+			DP_STATS_UPD(vdev, tx.tx_success.bytes, tx_success.bytes);
 
 			DP_STATS_UPD(vdev, tx.tx_failed, tx_failed.num);
 
