@@ -2426,6 +2426,17 @@ void dp_update_vdev_stats_on_peer_unmap(struct dp_vdev *vdev,
 		DP_UPDATE_PER_PKT_TX_TQM_RR_STATS(_tgtobj, _srcobj); \
 	} while (0)
 
+#define DP_UPDATE_VDEV_PER_PKT_STATS(_tgtobj, _srcobj, _txrx_peer) \
+	do { \
+		DP_UPDATE_PER_PKT_STATS(_tgtobj, _srcobj); \
+		if ((_txrx_peer)->hw_txrx_stats_en) { \
+			(_tgtobj)->tx.tx_success.num -= \
+				(_srcobj)->tx.tx_success.num; \
+			(_tgtobj)->tx.tx_success.bytes -= \
+				(_srcobj)->tx.tx_success.bytes; \
+		} \
+	} while (0)
+
 #define DP_UPDATE_VDEV_STATS(_tgtobj, _srcobj) \
 	do { \
 		DP_UPDATE_PER_PKT_TX_RX_STATS(_tgtobj, _srcobj); \
