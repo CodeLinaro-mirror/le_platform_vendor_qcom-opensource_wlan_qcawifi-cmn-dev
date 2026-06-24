@@ -212,8 +212,16 @@ dfs_radar_add_channel_list_to_nol_for_freq(struct wlan_dfs *dfs,
 		 * freq_list contains 20Mhz subchannels,
 		 * hence range start and end are +/- 10Mhz.
 		 */
+	if (dfs->dfs_curchan->dfs_ch_flags & WLAN_CHAN_QUARTER) {
+		nol_freq_range.start_freq = freq_list[i] - 2;
+		nol_freq_range.end_freq = freq_list[i] + 2;
+	} else if (dfs->dfs_curchan->dfs_ch_flags & WLAN_CHAN_HALF) {
+		nol_freq_range.start_freq = freq_list[i] - 5;
+		nol_freq_range.end_freq = freq_list[i] + 5;
+	} else {
 		nol_freq_range.start_freq = freq_list[i] - 10;
 		nol_freq_range.end_freq = freq_list[i] + 10;
+	}
 
 		last_chan_freq = freq_list[i];
 		DFS_NOL_ADD_CHAN_LOCKED(dfs,
@@ -1108,6 +1116,24 @@ bool dfs_is_radarsource_agile(struct wlan_dfs *dfs,
 }
 #endif
 
+/**
+ * dfs_get_160m_cfreq_based_on_rf_detector_id() - Get 160MHz center
+ * freq based on the detector id where radar is found.
+ * @dfs: Pointer to struct wlan_dfs
+ * @detector_id: Detector id
+ *
+ * Return - Center frequency in MHz
+ */
+static qdf_freq_t
+dfs_get_160m_cfreq_based_on_rf_detector_id(struct wlan_dfs *dfs,
+					   uint8_t detector_id)
+{
+	if (detector_id == dfs_get_agile_detector_id(dfs))
+		return dfs->dfs_agile_precac_freq_mhz;
+	else
+		return dfs->dfs_curchan->dfs_ch_mhz_freq_seg2;
+}
+
 void
 dfs_convert_chan_to_freq_ranges(struct wlan_dfs *dfs,
 				struct dfs_channel *curchan,
@@ -1133,8 +1159,11 @@ dfs_convert_chan_to_freq_ranges(struct wlan_dfs *dfs,
 		start_freq = center_freq - 40;
 		end_freq = center_freq + 40;
 	} else if (WLAN_IS_CHAN_MODE_160(curchan)) {
-		start_freq = curchan->dfs_ch_mhz_freq_seg2 - 80;
-		end_freq = curchan->dfs_ch_mhz_freq_seg2 + 80;
+		center_freq =
+			dfs_get_160m_cfreq_based_on_rf_detector_id(dfs,
+								   detector_id);
+		start_freq = center_freq - 80;
+		end_freq = center_freq + 80;
 	} else if (WLAN_IS_CHAN_MODE_80_80(curchan)) {
 		if (detector_id == dfs_get_agile_detector_id(dfs) &&
 		    dfs->dfs_precac_chwidth == CH_WIDTH_160MHZ) {
@@ -1409,7 +1438,9 @@ dfs_process_radar_ind_on_home_chan(struct wlan_dfs *dfs,
 				     dfs->is_radar_found_on_secondary_seg,
 				     radar_found->detector_id,
 				     freq_list,
-				     num_channels);
+				     num_channels,
+				     &radar_freq_range,
+				     1);
 
 	dfs_send_nol_ie_and_rcsa(dfs,
 				 radar_found,
