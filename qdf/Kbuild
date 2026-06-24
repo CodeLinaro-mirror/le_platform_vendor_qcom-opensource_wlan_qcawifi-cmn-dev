@@ -84,7 +84,9 @@ $(HOST_QAL_SRC)/linux/src/qal_notifier.o \
 $(HOST_QAL_SRC)/linux/src/qal_devnode.o \
 $(HOST_QAL_SRC)/linux/src/qal_bond.o
 ifeq ($(DBDC_REPEATER_SUPPORT),1)
+ifneq ($(strip ${DISABLE_QAL_BRIDGE}),1)
 qal-objs += $(HOST_QAL_SRC)/linux/src/qal_bridge.o
+endif
 endif
 
 #linux/src/qdf_net.o \
