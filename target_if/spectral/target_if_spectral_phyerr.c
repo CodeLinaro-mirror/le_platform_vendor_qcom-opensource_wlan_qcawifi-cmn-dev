@@ -1080,7 +1080,10 @@ target_if_populate_fft_bins_info(struct target_if_spectral *spectral,
 
 	ch_width = spectral->report_info[smode].sscan_bw;
 	is_fragmentation_160 = spectral->rparams.fragmentation_160[smode];
-	spectral_fft_size = spectral->params[smode].ss_fft_size;
+	spectral_fft_size = target_if_spectral_cap_fft_size_to_bw(
+				spectral,
+				spectral->params[smode].ss_fft_size,
+				spectral->params[smode].ss_bandwidth);
 	rpt_mode = spectral->params[smode].ss_rpt_mode;
 	num_fft_bins =
 		target_if_spectral_get_num_fft_bins(spectral_fft_size,

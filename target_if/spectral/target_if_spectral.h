@@ -3174,4 +3174,19 @@ target_if_wmi_extract_spectral_fft_size_caps(
 			struct wlan_objmgr_psoc *psoc,
 			uint8_t *evt_buf,
 			struct spectral_fft_size_capabilities *fft_size_caps);
+
+/**
+ * target_if_spectral_cap_fft_size_to_bw() - Cap FFT size to the maximum
+ * allowed for the given effective bandwidth
+ * @spectral: Pointer to Spectral target_if internal private data
+ * @fft_size: Requested FFT size
+ * @effective_bw: Effective channel width of the spectral scan
+ *
+ * Return: Capped FFT size
+ */
+uint16_t
+target_if_spectral_cap_fft_size_to_bw(struct target_if_spectral *spectral,
+				      uint16_t fft_size,
+				      enum phy_ch_width effective_bw);
+
 #endif /* _TARGET_IF_SPECTRAL_H_ */
