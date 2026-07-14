@@ -2595,6 +2595,30 @@ dp_rx_mon_cookie_2_after(uint32_t cookie_a, uint32_t cookie_b)
 	return delta && delta < DP_RX_MON_COOKIE_2_HALF;
 }
 
+static inline bool
+dp_rx_mon_is_desc_from_pool(struct dp_mon_desc_pool *mon_desc_pool,
+			    struct dp_mon_desc *mon_desc)
+{
+	uintptr_t desc_addr;
+	uintptr_t pool_start;
+	uintptr_t pool_end;
+	uintptr_t elem_size = sizeof(union dp_mon_desc_list_elem_t);
+
+	if (!mon_desc_pool || !mon_desc_pool->array || !mon_desc_pool->pool_size ||
+	    !mon_desc)
+		return false;
+
+	desc_addr = (uintptr_t)mon_desc;
+	pool_start = (uintptr_t)&mon_desc_pool->array[0].mon_desc;
+	if (mon_desc_pool->pool_size >
+	    (~(uintptr_t)0 - pool_start) / elem_size)
+		return false;
+	pool_end = pool_start + mon_desc_pool->pool_size * elem_size;
+
+	return desc_addr >= pool_start && desc_addr < pool_end &&
+	       !((desc_addr - pool_start) % elem_size);
+}
+
 static inline uint32_t
 dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 			   uint32_t mac_id, uint32_t quota)
@@ -2647,6 +2671,7 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 				&& quota--)) {
 		struct hal_mon_desc hal_mon_rx_desc = {0};
 		struct dp_mon_desc *mon_desc;
+		bool valid_desc;
 		unsigned long long desc;
 		hal_be_get_mon_dest_status(soc->hal_soc,
 					   rx_mon_dst_ring_desc,
@@ -2666,7 +2691,16 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 		cookie_2 = DP_MON_GET_COOKIE(desc);
 		mon_desc = dp_mon_get_desc_addr(desc);
 
-		qdf_assert_always(mon_desc);
+		valid_desc = dp_rx_mon_is_desc_from_pool(rx_mon_desc_pool,
+							    mon_desc);
+		if (qdf_unlikely(!valid_desc || !mon_desc->in_use)) {
+			dp_mon_debug("sw_desc invalid mon_desc:%pK valid:%d in_use:%d desc:0x%llx cookie_2:%u",
+				     mon_desc, valid_desc,
+				     valid_desc ? mon_desc->in_use : -1,
+				     desc, cookie_2);
+			hal_srng_dst_get_next(hal_soc, mon_dst_srng);
+			continue;
+		}
 
 		if (mon_desc->cookie_2 != cookie_2) {
 			/*
@@ -2685,8 +2719,18 @@ dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
 			}
 
 			mon_mac->rx_mon_stats.dup_mon_sw_desc++;
-			qdf_err("duplicate cookie found mon_desc:%pK", mon_desc);
-			qdf_assert_always(0);
+			/*
+			 * The descriptor is valid and in use, but this dst entry does
+			 * not match the descriptor's current generation. Since SW cannot
+			 * prove this entry owns the current buffer, do not retire the
+			 * descriptor here; freeing it can corrupt a live reposted buffer.
+			 */
+			dp_mon_debug("cookie mismatch drop mon_desc:%pK desc:0x%llx sw_cookie_2:%u hw_cookie_2:%u in_use:%d magic:0x%x",
+				     mon_desc, desc, mon_desc->cookie_2,
+				     cookie_2, mon_desc->in_use,
+				     mon_desc->magic);
+			hal_srng_dst_get_next(hal_soc, mon_dst_srng);
+			continue;
 		}
 
 		if ((mon_desc == mon_pdev_be->prev_rxmon_desc) &&
