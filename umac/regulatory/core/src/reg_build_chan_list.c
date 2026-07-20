@@ -3481,45 +3481,6 @@ void reg_modify_sp_channels(struct regulatory_channel *chan_list)
 }
 #endif
 
-/**
- * reg_disable_dfs_for_half_qtr_chans() - If the maximum BW of reg
- * chan is less than 20MHZ and the channel is DFS, mark the channel as
- * non-DFS. To mark the channel as non-DFS, modify the state of the
- * channel from 'CHANNEL_STATE_DFS' to CHANNEL_STATE_ENABLE'. Also clear
- * the REGULATORY_CHAN_RADAR channel flag.Also, disable dfs for the channels
- * that are enabled by the regualtory. Do not enable the channels that
- * are already marked disabled.
- * @pdev: Pointer to wlan_objmgr_pdev
- * @chan_list: Pointer to regulatory_channel
- *
- * Return - None.
- */
-#ifdef CONFIG_HALF_QUARTER_RATE_FOR_ALL_CHANS
-static void
-reg_disable_dfs_for_half_qtr_chans(struct wlan_objmgr_pdev *pdev,
-				   struct regulatory_channel *chan_list)
-{
-	enum channel_enum chan_enum;
-
-	for (chan_enum = 0; chan_enum < NUM_CHANNELS; chan_enum++) {
-		if (chan_list[chan_enum].chan_flags &
-			REGULATORY_CHAN_DISABLED)
-			continue;
-		if ((chan_list[chan_enum].chan_flags & REGULATORY_CHAN_RADAR) &&
-		    (chan_list[chan_enum].max_bw < BW_20_MHZ)) {
-			chan_list[chan_enum].state = CHANNEL_STATE_ENABLE;
-			chan_list[chan_enum].chan_flags &=
-				~REGULATORY_CHAN_RADAR;
-		}
-	}
-}
-#else
-static void
-reg_disable_dfs_for_half_qtr_chans(struct wlan_objmgr_pdev *pdev,
-				   struct regulatory_channel *chan_list)
-{
-}
-#endif
 
 void reg_compute_pdev_current_chan_list(struct wlan_regulatory_pdev_priv_obj
 					*pdev_priv_obj)
@@ -3581,9 +3542,6 @@ void reg_compute_pdev_current_chan_list(struct wlan_regulatory_pdev_priv_obj
 	reg_modify_chan_list_for_avoid_chan_ext(pdev_priv_obj);
 
 	reg_modify_sec_chan_list_for_6g_edge_chan(pdev_priv_obj);
-
-	reg_disable_dfs_for_half_qtr_chans(pdev_priv_obj->pdev_ptr,
-					   pdev_priv_obj->cur_chan_list);
 
 	reg_disable_enable_opclass_channels(pdev_priv_obj);
 }
