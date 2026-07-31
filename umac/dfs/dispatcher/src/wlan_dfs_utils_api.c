@@ -39,7 +39,6 @@
 #include <qdf_module.h>
 #include "wlan_dfs_lmac_api.h"
 #include "../../core/src/dfs_internal.h"
-#include <wlan_reg_channel_api.h>
 #include <wlan_utility.h>
 
 struct dfs_nol_info {
@@ -75,6 +74,22 @@ bool utils_dfs_is_freq_in_nol(struct wlan_objmgr_pdev *pdev, uint32_t freq)
 		return false;
 
 	return dfs_is_freq_in_nol(dfs, freq);
+}
+bool utils_dfs_is_chan_range_in_nol(struct wlan_objmgr_pdev *pdev,
+				    qdf_freq_t start_freq,
+				    qdf_freq_t end_freq)
+{
+	struct wlan_dfs *dfs;
+	bool in_nol;
+
+	dfs = wlan_pdev_get_dfs_obj(pdev);
+	if (!dfs) {
+		return false;
+	}
+
+	in_nol = dfs_is_chan_range_in_nol(dfs, start_freq, end_freq);
+
+	return in_nol;
 }
 
 #ifdef CONFIG_CHAN_FREQ_API
@@ -521,12 +536,15 @@ QDF_STATUS utils_dfs_nol_addchan(struct wlan_objmgr_pdev *pdev,
 		uint32_t dfs_nol_timeout)
 {
 	struct wlan_dfs *dfs;
+	struct dfs_freq_range nol_freq_range;
 
 	dfs = wlan_pdev_get_dfs_obj(pdev);
 	if (!dfs)
 		return  QDF_STATUS_E_FAILURE;
+	nol_freq_range.start_freq = freq - 10;
+	nol_freq_range.end_freq = freq + 10;
 
-	DFS_NOL_ADD_CHAN_LOCKED(dfs, freq, dfs_nol_timeout);
+	DFS_NOL_ADD_CHAN_LOCKED(dfs, nol_freq_range, dfs_nol_timeout);
 
 	return QDF_STATUS_SUCCESS;
 }
@@ -664,23 +682,6 @@ QDF_STATUS utils_dfs_set_cac_timer_running(struct wlan_objmgr_pdev *pdev,
 }
 qdf_export_symbol(utils_dfs_set_cac_timer_running);
 
-QDF_STATUS utils_dfs_get_nol_chfreq_and_chwidth(struct wlan_objmgr_pdev *pdev,
-		void *nollist,
-		uint32_t *nol_chfreq,
-		uint32_t *nol_chwidth,
-		int index)
-{
-	struct wlan_dfs *dfs;
-
-	dfs = wlan_pdev_get_dfs_obj(pdev);
-	if (!dfs)
-		return  QDF_STATUS_E_FAILURE;
-
-	dfs_get_nol_chfreq_and_chwidth(nollist, nol_chfreq, nol_chwidth, index);
-
-	return QDF_STATUS_SUCCESS;
-}
-qdf_export_symbol(utils_dfs_get_nol_chfreq_and_chwidth);
 
 QDF_STATUS utils_dfs_update_cur_chan_flags(struct wlan_objmgr_pdev *pdev,
 		uint64_t flags,
@@ -718,6 +719,7 @@ void utils_dfs_get_chan_list(struct wlan_objmgr_pdev *pdev,
 	struct regulatory_channel *cur_chan_list;
 	struct wlan_dfs *dfs;
 	struct dfs_channel *chan_list = (struct dfs_channel *)clist;
+	uint16_t req_bw = BW_20_MHZ;
 
 	dfs = wlan_pdev_get_dfs_obj(pdev);
 	if (!dfs) {
@@ -739,13 +741,17 @@ void utils_dfs_get_chan_list(struct wlan_objmgr_pdev *pdev,
 				"failed to get curr channel list");
 		return;
 	}
+	if (dfs->dfs_curchan->dfs_ch_flags & WLAN_CHAN_HALF)
+		req_bw = BW_10_MHZ;
+	else if (dfs->dfs_curchan->dfs_ch_flags & WLAN_CHAN_QUARTER)
+		req_bw = BW_5_MHZ;
 
 	for (i = 0; i < NUM_CHANNELS; i++) {
-		uint16_t freq =  cur_chan_list[i].center_freq;
+		if (req_bw < cur_chan_list[i].min_bw || req_bw > cur_chan_list[i].max_bw)
+			continue;
 		state = cur_chan_list[i].state;
-		if ((state == CHANNEL_STATE_DFS ||
-				state == CHANNEL_STATE_ENABLE) &&
-		    wlan_reg_is_freq_full_rate_supptd(pdev, freq)) {
+		if (state == CHANNEL_STATE_DFS ||
+				state == CHANNEL_STATE_ENABLE) {
 			chan_list[j].dfs_ch_ieee = cur_chan_list[i].chan_num;
 			chan_list[j].dfs_ch_freq = cur_chan_list[i].center_freq;
 			if (state == CHANNEL_STATE_DFS)
@@ -965,8 +971,10 @@ QDF_STATUS utils_dfs_get_vdev_random_channel_for_freq(
 
 	wlan_reg_get_dfs_region(pdev, &dfs_reg);
 	chan_list = qdf_mem_malloc(num_chan * sizeof(*chan_list));
-	if (!chan_list)
+	if (!chan_list) {
+		qdf_err("failed to allocate DFS channel list");
 		goto random_chan_error;
+	}
 
 	utils_dfs_get_channel_list(pdev, vdev, chan_list, &num_chan);
 	if (!num_chan) {
@@ -974,9 +982,10 @@ QDF_STATUS utils_dfs_get_vdev_random_channel_for_freq(
 		goto random_chan_error;
 	}
 
-	if (!chan_params->ch_width)
+	if (!chan_params->ch_width) {
 		utils_dfs_get_max_sup_width(pdev,
 					    (uint8_t *)&chan_params->ch_width);
+	}
 
 	*target_chan_freq = dfs_prepare_random_channel_for_freq(
 			dfs, chan_list, num_chan, flags, chan_params,

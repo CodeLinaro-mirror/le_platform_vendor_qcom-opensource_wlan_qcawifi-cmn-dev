@@ -1208,11 +1208,6 @@ struct wlan_lmac_if_ftm_rx_ops {
  * 6GHz 80p80 channel.
  * @is_freq_80p80_supported: Callback function to check if the given primary
  * frequency supports 80P80 mode of operation.
- * @reg_is_chanbw_20mhz: Checks if the user configured chanbw is 20MHZ. If
- *                      user configured chanbw is half/quarter, the channel is
- *                      considered non-DFS irrespective of the regulatory
- *                      channel flag. If chanbw is full rate, the channel is
- *                      marked DFS based on regulatory channel flag.
  */
 struct wlan_lmac_if_reg_tx_ops {
 	QDF_STATUS (*register_master_handler)(struct wlan_objmgr_psoc *psoc,
@@ -1288,7 +1283,6 @@ struct wlan_lmac_if_reg_tx_ops {
 	bool (*is_80p80_supported)(struct wlan_objmgr_pdev *pdev);
 	bool (*is_freq_80p80_supported)(struct wlan_objmgr_pdev *pdev,
 					qdf_freq_t freq);
-	bool (*reg_is_chanbw_20mhz) (struct wlan_objmgr_pdev *pdev);
 
 };
 
