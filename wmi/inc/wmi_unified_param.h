@@ -6860,6 +6860,7 @@ typedef enum {
 	wmi_service_peer_ul_rtd_estimate,
 	wmi_service_dcm_ulofdma_support,
 	wmi_service_vdev_pure11be_support,
+	wmi_service_private_csa_support,
 
 	wmi_services_max,
 } wmi_conv_service_ids;
@@ -10640,6 +10641,7 @@ enum wmi_vdev_vendor_evt_subtypes {
 };
 
 enum wmi_pdev_vendor_evt_subtypes {
+	WMI_PDEV_VENDOR_EVT_PRIV_CSA,
 	WMI_PDEV_VENDOR_EVT_NUM_SUBTYPES
 };
 
@@ -10713,6 +10715,12 @@ struct wmi_vendor_pdev_event {
 	uint8_t pdev_id;
 	enum wmi_pdev_vendor_evt_subtypes sub_type;
 	union wmi_host_pdev_vendor_event_val val;
+	union {
+		struct {
+			uint16_t chwidth;
+			uint16_t chan_num;
+		} csa_param;
+	} evt;
 };
 #endif /* WLAN_VENDOR_EXTN */
 
