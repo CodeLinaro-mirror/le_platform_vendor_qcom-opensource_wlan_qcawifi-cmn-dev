@@ -396,6 +396,7 @@ void dfs_nol_addchan(struct wlan_dfs *dfs,
 	elem->nol_timeout_ms = dfs_nol_timeout*TIME_IN_MS;
 	elem->nol_freq_range.start_freq = nol_freq_range.start_freq;
 	elem->nol_freq_range.end_freq = nol_freq_range.end_freq;
+	elem->nol_chwidth = nol_freq_range.end_freq - nol_freq_range.start_freq;
 	elem->nol_next = NULL;
 	if (prev) {
 		prev->nol_next = elem;
