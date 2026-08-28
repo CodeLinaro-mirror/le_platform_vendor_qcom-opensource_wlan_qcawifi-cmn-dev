@@ -24,6 +24,7 @@
 #include "wlan_objmgr_cmn.h"
 #include "wlan_objmgr_psoc_obj.h"
 #include "wlan_objmgr_pdev_obj.h"
+#include "wlan_lmac_if_def.h"
 
 /**
  * wlan_lmac_if_umac_rx_ops_register() - UMAC rx handler register
@@ -224,6 +225,35 @@ mgmt_txrx_tx_completion_handler(struct wlan_objmgr_pdev *pdev,
 }
 
 /**
+ * mgmt_txrx_acquire_desc() - claim a management descriptor for completion
+ * @pdev: pdev context
+ * @desc_id: mgmt desc_id
+ * @desc_info: caller-owned descriptor snapshot
+ *
+ * Return: QDF_STATUS_SUCCESS - in case of success
+ *         error status - in case of failure
+ */
+QDF_STATUS mgmt_txrx_acquire_desc(
+		struct wlan_objmgr_pdev *pdev, uint32_t desc_id,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
+
+/**
+ * mgmt_txrx_tx_completion_handler_held() - complete a claimed mgmt descriptor
+ * @pdev: pdev context
+ * @desc_id: mgmt desc_id
+ * @status: tx status
+ * @params: tx params
+ * @desc_info: descriptor snapshot from mgmt_txrx_acquire_desc()
+ *
+ * Return: QDF_STATUS_SUCCESS - in case of success
+ *         error status - in case of failure
+ */
+QDF_STATUS mgmt_txrx_tx_completion_handler_held(
+		struct wlan_objmgr_pdev *pdev, uint32_t desc_id,
+		uint32_t status, void *params,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
+
+/**
  * mgmt_txrx_rx_handler() - mgmt rx frame handler
  * @psoc: psoc context
  * @nbuf: nbuf
@@ -299,6 +329,34 @@ mgmt_txrx_get_vdev_id(struct wlan_objmgr_pdev *pdev, uint32_t desc_id)
 
 	return WLAN_UMAC_VDEV_ID_MAX;
 }
+
+/**
+ * mgmt_txrx_drop_desc() - drop a late management descriptor
+ * @pdev: pdev context
+ * @desc_id: mgmt desc_id
+ *
+ * API to retire a late management descriptor without re-entering
+ * normal completion callback flow.
+ *
+ * Return: QDF_STATUS_SUCCESS - in case of success
+ *         error status - in case of failure
+ */
+QDF_STATUS mgmt_txrx_drop_desc(struct wlan_objmgr_pdev *pdev,
+			       uint32_t desc_id);
+
+/**
+ * mgmt_txrx_drop_desc_held() - retire a claimed late management descriptor
+ * @pdev: pdev context
+ * @desc_id: mgmt desc_id
+ * @desc_info: descriptor snapshot from mgmt_txrx_acquire_desc()
+ *
+ * Return: QDF_STATUS_SUCCESS - in case of success
+ *         error status - in case of failure
+ */
+QDF_STATUS mgmt_txrx_drop_desc_held(
+		struct wlan_objmgr_pdev *pdev, uint32_t desc_id,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
+
 /**
  * mgmt_txrx_get_free_desc_count() - retrieve vdev_id from mgmt desc_id
  * @pdev: pdev context
