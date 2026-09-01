@@ -2683,8 +2683,18 @@ static void dp_print_tx_tqm_pdev_stats_tlv_v(uint32_t *tag_buf)
 		       dp_stats_buf->enqueue_notify);
 	DP_PRINT_STATS("notify_mpdu_at_head = %u",
 		       dp_stats_buf->notify_mpdu_at_head);
-	DP_PRINT_STATS("notify_mpdu_state_valid = %u\n",
+	DP_PRINT_STATS("notify_mpdu_state_valid = %u",
 		       dp_stats_buf->notify_mpdu_state_valid);
+	DP_PRINT_STATS("tqm_enqueue_msdu_count = %u",
+		       dp_stats_buf->tqm_enqueue_msdu_count);
+	DP_PRINT_STATS("tqm_dropped_msdu_count = %u",
+		       dp_stats_buf->tqm_dropped_msdu_count);
+	DP_PRINT_STATS("tqm_dequeue_msdu_count = %u",
+		       dp_stats_buf->tqm_dequeue_msdu_count);
+	DP_PRINT_STATS("remove_mpdu_ttl = %u",
+		       dp_stats_buf->remove_mpdu_ttl);
+	DP_PRINT_STATS("remove_mpdu_ttl_cmd = %u\n",
+		       dp_stats_buf->remove_mpdu_ttl_cmd);
 }
 
 /**
