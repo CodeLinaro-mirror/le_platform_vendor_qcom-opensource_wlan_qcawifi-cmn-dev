@@ -2071,24 +2071,54 @@ struct wlan_lmac_if_tx_ops {
 };
 
 /**
+ * struct wlan_lmac_if_mgmt_txrx_desc_info - snapshot of a claimed mgmt desc
+ * @nbuf: frame buffer tracked by the descriptor
+ * @peer: peer reference held on behalf of the descriptor
+ * @context: caller specific completion context
+ * @tx_dwnld_cmpl_cb: tx download completion callback
+ * @tx_ota_cmpl_cb: ota completion callback
+ */
+struct wlan_lmac_if_mgmt_txrx_desc_info {
+	qdf_nbuf_t nbuf;
+	struct wlan_objmgr_peer *peer;
+	void *context;
+	mgmt_tx_download_comp_cb tx_dwnld_cmpl_cb;
+	mgmt_ota_comp_cb tx_ota_cmpl_cb;
+};
+
+/**
  * struct wlan_lmac_if_mgmt_txrx_rx_ops - structure of rx function
  *                  pointers for mgmt txrx component
+ * @mgmt_txrx_acquire_desc: function pointer to claim a mgmt desc
  * @mgmt_tx_completion_handler: function pointer to give tx completions
  *                              to mgmt txrx comp.
+ * @mgmt_tx_completion_handler_held: function pointer to complete a claimed
+ *                                   mgmt desc
  * @mgmt_rx_frame_handler: function pointer to give rx frame to mgmt txrx comp.
  * @mgmt_txrx_get_nbuf_from_desc_id: function pointer to get nbuf from desc id
  * @mgmt_txrx_get_peer_from_desc_id: function pointer to get peer from desc id
  * @mgmt_txrx_get_vdev_id_from_desc_id: function pointer to get vdev id from
  *                                      desc id
+ * @mgmt_txrx_drop_desc: function pointer to drop a late mgmt desc
+ * @mgmt_txrx_drop_desc_held: function pointer to drop a claimed late mgmt desc
  * @mgmt_txrx_get_free_desc_pool_count:
  * @mgmt_rx_frame_entry: Entry point for Rx frames into MGMT TxRx component
  * @mgmt_rx_reo_rx_ops: rxops of MGMT Rx REO module
  */
 struct wlan_lmac_if_mgmt_txrx_rx_ops {
+	QDF_STATUS (*mgmt_txrx_acquire_desc)(
+			struct wlan_objmgr_pdev *pdev,
+			uint32_t desc_id,
+			struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
 	QDF_STATUS (*mgmt_tx_completion_handler)(
 			struct wlan_objmgr_pdev *pdev,
 			uint32_t desc_id, uint32_t status,
 			void *tx_compl_params);
+	QDF_STATUS (*mgmt_tx_completion_handler_held)(
+			struct wlan_objmgr_pdev *pdev,
+			uint32_t desc_id, uint32_t status,
+			void *tx_compl_params,
+			struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
 	QDF_STATUS (*mgmt_rx_frame_handler)(
 			struct wlan_objmgr_psoc *psoc,
 			qdf_nbuf_t buf,
@@ -2101,6 +2131,13 @@ struct wlan_lmac_if_mgmt_txrx_rx_ops {
 	uint8_t (*mgmt_txrx_get_vdev_id_from_desc_id)(
 			struct wlan_objmgr_pdev *pdev,
 			uint32_t desc_id);
+	QDF_STATUS (*mgmt_txrx_drop_desc)(
+			struct wlan_objmgr_pdev *pdev,
+			uint32_t desc_id);
+	QDF_STATUS (*mgmt_txrx_drop_desc_held)(
+			struct wlan_objmgr_pdev *pdev,
+			uint32_t desc_id,
+			struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
 	uint32_t (*mgmt_txrx_get_free_desc_pool_count)(
 			struct wlan_objmgr_pdev *pdev);
 	QDF_STATUS (*mgmt_rx_frame_entry)(

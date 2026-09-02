@@ -975,10 +975,8 @@ QDF_STATUS wlan_mgmt_txrx_vdev_drain(struct wlan_objmgr_vdev *vdev,
 {
 	struct wlan_objmgr_pdev *pdev;
 	struct mgmt_txrx_priv_pdev_context *mgmt_txrx_pdev_ctx;
-	struct mgmt_txrx_desc_elem_t *mgmt_desc;
-	struct wlan_objmgr_peer *peer;
-	struct wlan_objmgr_vdev *peer_vdev;
 	uint32_t pool_size;
+	u8 vdev_id;
 	int i;
 
 	if (!vdev) {
@@ -1005,19 +1003,41 @@ QDF_STATUS wlan_mgmt_txrx_vdev_drain(struct wlan_objmgr_vdev *vdev,
 		return QDF_STATUS_E_FAILURE;
 	}
 
+	vdev_id = wlan_vdev_get_id(vdev);
+
 	for (i = 0; i < pool_size; i++) {
 		if (mgmt_txrx_pdev_ctx->mgmt_desc_pool.pool[i].in_use) {
-			mgmt_desc = &mgmt_txrx_pdev_ctx->mgmt_desc_pool.pool[i];
-			peer = mgmt_txrx_get_peer(pdev, mgmt_desc->desc_id);
-			if (peer) {
-				peer_vdev = wlan_peer_get_vdev(peer);
-				if (peer_vdev == vdev) {
-					if (mgmt_fill_peer_cb)
-						mgmt_fill_peer_cb(peer, mgmt_desc->nbuf);
-					mgmt_txrx_tx_completion_handler(pdev,
-						mgmt_desc->desc_id, 0, status);
-				}
+			struct wlan_lmac_if_mgmt_txrx_desc_info desc_info = {0};
+			QDF_STATUS qdf_status;
+			u32 desc_id = i;
+
+			qdf_status =
+				tgt_mgmt_txrx_acquire_desc_by_vdev(
+					pdev, desc_id, vdev_id, &desc_info);
+			if (QDF_IS_STATUS_ERROR(qdf_status)) {
+				if (qdf_status != QDF_STATUS_E_ALREADY &&
+				    qdf_status != QDF_STATUS_E_INVAL)
+					mgmt_txrx_debug("skip drain desc %u status %d",
+							desc_id, qdf_status);
+				continue;
 			}
+
+			/*
+			 * In MLO teardown windows, peer->vdev mapping may already be
+			 * detached even though the descriptor still belongs to this
+			 * vdev. Use desc->vdev_id as the authoritative selector and
+			 * fill peer from descriptor as a fallback.
+			 */
+			if (mgmt_fill_peer_cb && desc_info.peer)
+				mgmt_fill_peer_cb(desc_info.peer,
+						  desc_info.nbuf);
+
+			qdf_status =
+				tgt_mgmt_txrx_tx_completion_handler_held(
+					pdev, desc_id, 0, status, &desc_info);
+			if (QDF_IS_STATUS_ERROR(qdf_status))
+				mgmt_txrx_err("failed to drain desc %u status %d",
+					      desc_id, qdf_status);
 		}
 	}
 
