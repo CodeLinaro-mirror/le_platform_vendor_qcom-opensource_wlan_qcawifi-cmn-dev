@@ -817,6 +817,20 @@ static os_timer_func(dfs_remove_from_nol)
 	if (remaining_ms)
 		qdf_timer_mod(&dfs->dfs_nol_timer, remaining_ms);
 
+	/* Unmark the 5/10MHz preCAC list entries for expired NOL channels. */
+	if (nol_count) {
+		struct dfs_freq_range noldel_freq_range[MAX_NOL];
+
+		for (i = 0; i < nol_count; i++)
+			noldel_freq_range[i] =
+				dfs_create_range_from_freq_bw(nol_freq[i],
+							      nol_chwidth[i]);
+		dfs_modify_precac_5_10_mhz_list_for_nol(dfs,
+							 noldel_freq_range,
+							 nol_count,
+							 false);
+	}
+
 	for (i = 0; i < nol_count; i++)
 		dfs_action_on_expired_nol_elem(dfs,
 					       nol_freq[i],

@@ -758,6 +758,27 @@ struct dfs_freq_range {
 
 
 /**
+ * struct dfs_precac_5_10_entry - PreCAC 5/10MHz channel entry.
+ * @pe_5_10_list:  STAILQ entry for 5/10MHz preCAC list.
+ * @center_freq:   Center frequency in MHz.
+ * @is_cac_done:   True if CAC has been completed on this channel.
+ * @is_freq_nol:   True if this channel is radar-infected (NOL).
+ * @bandwidth:     Channel bandwidth (5 or 10 MHz).
+ */
+struct dfs_precac_5_10_entry {
+	STAILQ_ENTRY(dfs_precac_5_10_entry) pe_5_10_list;
+	qdf_freq_t center_freq;
+	bool       is_cac_done;
+	bool       is_freq_nol;
+	uint8_t    bandwidth;
+};
+
+/* Named list-head type so dfs_precac_5m_list and dfs_precac_10m_list share
+ * the same struct type, enabling typed pointer operations.
+ */
+STAILQ_HEAD(dfs_precac_5_10_list, dfs_precac_5_10_entry);
+
+/**
  * struct dfs_state - DFS state.
  * @rs_chan:            Channel info.
  * @rs_chanindex:       Channel index in radar structure.
@@ -1210,6 +1231,8 @@ struct dfs_punc_unpunc {
  * @dfs_precac_timeout_override:     Overridden precac timeout.
  * @dfs_disable_radar_marking:       To mark or unmark NOL chan as radar hit.
  * @dfs_precac_list:                 PreCAC list (contains individual trees).
+ * @dfs_precac_5m_list:              PreCAC list of 5MHz channels.
+ * @dfs_precac_10m_list:             PreCAC list of 10MHz channels.
  * @dfs_precac_chwidth:              PreCAC channel width enum.
  * @dfs_curchan:                     DFS current channel.
  * @dfs_prevchan:                    DFS previous channel.
@@ -1397,6 +1420,8 @@ struct wlan_dfs {
 	uint8_t        dfs_disable_radar_marking;
 #endif
 	TAILQ_HEAD(, dfs_precac_entry) dfs_precac_list;
+	struct dfs_precac_5_10_list dfs_precac_5m_list;
+	struct dfs_precac_5_10_list dfs_precac_10m_list;
 	enum phy_ch_width dfs_precac_chwidth;
 
 	struct dfs_channel *dfs_curchan;

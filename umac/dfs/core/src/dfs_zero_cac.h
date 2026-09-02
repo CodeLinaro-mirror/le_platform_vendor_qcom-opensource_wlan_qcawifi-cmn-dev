@@ -57,6 +57,8 @@
 #define NEXT_40_CHAN_OFFSET               8
 #define NEXT_80_CHAN_OFFSET              16
 
+#define DFS_CHWIDTH_5_VAL                 5
+#define DFS_CHWIDTH_10_VAL                10
 #define DFS_CHWIDTH_20_VAL               20
 #define DFS_CHWIDTH_40_VAL               40
 #define DFS_CHWIDTH_80_VAL               80
@@ -256,6 +258,89 @@ static inline void dfs_zero_cac_detach(struct wlan_dfs *dfs)
  * @dfs: Pointer to wlan_dfs dtructure.
  */
 void dfs_init_precac_list(struct wlan_dfs *dfs);
+
+/**
+ * dfs_init_precac_5_and_10_lists() - Initialize the 5MHz and 10MHz preCAC
+ * linked lists within the wlan_dfs object.
+ * @dfs: Pointer to wlan_dfs structure.
+ */
+void dfs_init_precac_5_and_10_lists(struct wlan_dfs *dfs);
+
+/**
+ * dfs_delete_5_and_10m_precac_lists() - Free all entries in the 5MHz and
+ * 10MHz preCAC lists.
+ * @dfs: Pointer to wlan_dfs structure.
+ */
+void dfs_delete_5_and_10m_precac_lists(struct wlan_dfs *dfs);
+
+/**
+ * dfs_mark_5_and_10mhz_list_as_cac_done() - Mark the 5/10MHz channels as
+ * CAC done if they are subsets of the given channel range.
+ * @dfs:       Pointer to wlan_dfs structure.
+ * @center_freq: Center frequency in MHz.
+ * @bw: Channel bandwidth (5 or 10 MHz).
+ * connected clients.
+ * @is_unmark: Bool to indicate whether cac done should be unmarked.
+ */
+void dfs_mark_5_and_10mhz_list_as_cac_done(struct wlan_dfs *dfs,
+					    qdf_freq_t center_freq,
+					    uint8_t bw,
+					    bool is_unmark);
+
+/**
+ * dfs_is_cac_done_in_5_10_mhz_list() - Find out if CAC is done on the
+ * given channel range.
+ * @dfs:        Pointer to wlan_dfs structure.
+ * @chan_range:  Channel frequency range.
+ *
+ * Return: true if CAC is done, false otherwise.
+ */
+bool dfs_is_cac_done_in_5_10_mhz_list(struct wlan_dfs *dfs,
+				       struct dfs_freq_range chan_range);
+
+/**
+ * dfs_modify_precac_5_10_mhz_list_for_nol() - Mark or unmark channels in
+ * the 5/10MHz preCAC list as NOL.
+ * @dfs:             Pointer to wlan_dfs structure.
+ * @nol_ranges:      Pointer to array of NOL frequency ranges.
+ * @nol_range_count: Number of NOL frequency ranges.
+ * @is_nol_found:    true to mark as NOL, false to unmark.
+ */
+void dfs_modify_precac_5_10_mhz_list_for_nol(struct wlan_dfs *dfs,
+					      struct dfs_freq_range *nol_ranges,
+					      uint8_t nol_range_count,
+					      bool is_nol_found);
+
+/**
+ * dfs_create_range_from_freq_bw() - Create a frequency range from center
+ * frequency and bandwidth.
+ * @center_freq: Center frequency in MHz.
+ * @bw: Bandwidth in MHz.
+ *
+ * Return: struct dfs_freq_range
+ */
+struct dfs_freq_range dfs_create_range_from_freq_bw(qdf_freq_t center_freq,
+						     uint8_t bw);
+
+/**
+ * dfs_is_range_overlap() - Check if two frequency ranges overlap.
+ * @range1: First frequency range.
+ * @range2: Second frequency range.
+ *
+ * Return: true if they overlap, false otherwise.
+ */
+bool dfs_is_range_overlap(struct dfs_freq_range range1,
+			  struct dfs_freq_range range2);
+
+/**
+ * dfs_is_range_subset() - Check if range_small is a subset of range_large.
+ * @range_large: The larger frequency range.
+ * @range_small: The smaller frequency range.
+ *
+ * Return: true if range_small is within range_large.
+ */
+bool dfs_is_range_subset(struct dfs_freq_range range_large,
+			 struct dfs_freq_range range_small);
 
 #if !defined(MOBILE_DFS_SUPPORT) && (defined(ATH_SUPPORT_ZERO_CAC_DFS) || \
 				     defined(QCA_SUPPORT_AGILE_DFS))
@@ -857,7 +942,9 @@ void dfs_mark_precac_nol_for_freq(struct wlan_dfs *dfs,
 				  uint8_t is_radar_found_on_secondary_seg,
 				  uint8_t detector_id,
 				  uint16_t *freq_list,
-				  uint8_t num_channels);
+				  uint8_t num_channels,
+				  struct dfs_freq_range *radar_freq_range,
+				  uint8_t range_count);
 #endif
 
 /**
@@ -896,7 +983,9 @@ dfs_mark_precac_nol_for_freq(struct wlan_dfs *dfs,
 			     uint8_t is_radar_found_on_secondary_seg,
 			     uint8_t detector_id,
 			     uint16_t *freq,
-			     uint8_t num_channels)
+			     uint8_t num_channels,
+			     struct dfs_freq_range *radar_freq_range,
+			     uint8_t range_count)
 {
 }
 #endif
