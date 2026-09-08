@@ -47,7 +47,7 @@ dp_tx_pl_hist_compute_percentile(const struct cdp_tx_pipeline_hist_stats *stats,
 	if (!stats->total_samples)
 		return 0;
 
-	threshold = (stats->total_samples * pct + 99) / 100;
+	threshold = qdf_do_div(stats->total_samples * pct + 99, 100);
 
 	for (i = 0; i <= stats->num_edges; i++) {
 		cumulative += stats->count[i];
@@ -167,7 +167,7 @@ dp_tx_pl_hist_print_slot(qdf_debugfs_file_t file,
 	uint32_t prev_edge;
 	uint8_t i;
 
-	avg_us = s->total_samples ? (s->total_us / s->total_samples) : 0;
+	avg_us = s->total_samples ? qdf_do_div(s->total_us, (uint32_t)s->total_samples) : 0;
 	p95    = dp_tx_pl_hist_compute_percentile(s, 95);
 	p99    = dp_tx_pl_hist_compute_percentile(s, 99);
 
@@ -250,7 +250,7 @@ dp_tx_pl_hist_stats_show(qdf_debugfs_file_t file, void *arg)
 			dp_tx_pl_hist_ac[ac].name,
 			ac_total,
 			ac_min,
-			ac_total ? (ac_sum / ac_total) : 0,
+			ac_total ? qdf_do_div(ac_sum, (uint32_t)ac_total) : 0,
 			ac_max);
 
 		{
