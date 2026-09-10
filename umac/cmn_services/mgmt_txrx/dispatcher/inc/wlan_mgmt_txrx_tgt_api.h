@@ -68,6 +68,84 @@ QDF_STATUS tgt_mgmt_txrx_tx_completion_handler(
 			void *tx_compl_params);
 
 /**
+ * tgt_mgmt_txrx_acquire_desc() - claims a mgmt descriptor for completion
+ * @pdev: pdev context
+ * @desc_id: mgmt descriptor id
+ * @desc_info: caller-owned snapshot of descriptor state
+ *
+ * This function serializes access to a mgmt descriptor so that only one
+ * teardown/completion path touches the backing nbuf and callbacks.
+ *
+ * Return: QDF_STATUS_SUCCESS - descriptor claimed successfully
+ *         QDF_STATUS_E_ALREADY - another path already owns completion
+ *         error status - descriptor unavailable
+ */
+QDF_STATUS
+tgt_mgmt_txrx_acquire_desc(
+		struct wlan_objmgr_pdev *pdev, uint32_t desc_id,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
+
+/**
+ * tgt_mgmt_txrx_acquire_desc_by_vdev() - claim a mgmt desc for a vdev drain
+ * @pdev: pdev context
+ * @desc_id: mgmt descriptor id
+ * @expected_vdev_id: vdev id expected by the caller
+ * @desc_info: caller-owned snapshot of descriptor state
+ *
+ * This helper claims a descriptor only if it still belongs to the expected
+ * vdev when ownership is taken under desc_pool_lock.
+ *
+ * Return: QDF_STATUS_SUCCESS - descriptor claimed successfully
+ *         QDF_STATUS_E_ALREADY - another path already owns completion
+ *         QDF_STATUS_E_INVAL - descriptor no longer belongs to the vdev
+ *         error status - descriptor unavailable
+ */
+QDF_STATUS
+tgt_mgmt_txrx_acquire_desc_by_vdev(
+		struct wlan_objmgr_pdev *pdev, uint32_t desc_id,
+		u8 expected_vdev_id,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
+
+/**
+ * tgt_mgmt_txrx_tx_completion_handler_held() - completes a claimed mgmt desc
+ * @pdev: pdev context
+ * @desc_id: mgmt descriptor id
+ * @status: status of download of tx packet
+ * @tx_compl_params: tx completion params
+ * @desc_info: descriptor snapshot returned by tgt_mgmt_txrx_acquire_desc()
+ *
+ * This function completes a descriptor that has already been claimed by the
+ * caller, preventing concurrent drain and async completion paths from
+ * double-processing the same nbuf.
+ *
+ * Return: QDF_STATUS_SUCCESS - in case of success
+ *         error status - in case of failure
+ */
+QDF_STATUS
+tgt_mgmt_txrx_tx_completion_handler_held(
+		struct wlan_objmgr_pdev *pdev, uint32_t desc_id,
+		uint32_t status, void *tx_compl_params,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
+
+/**
+ * tgt_mgmt_txrx_drop_desc_id_held() - retires a claimed mgmt descriptor
+ * @pdev: pdev context
+ * @desc_id: desc_id
+ * @desc_info: descriptor snapshot returned by tgt_mgmt_txrx_acquire_desc()
+ *
+ * This function is used for late teardown completions where the caller has
+ * already claimed the descriptor and only needs to release descriptor/peer
+ * ownership without re-entering the normal completion path.
+ *
+ * Return: QDF_STATUS_SUCCESS - in case of success
+ *         error status - in case of failure
+ */
+QDF_STATUS
+tgt_mgmt_txrx_drop_desc_id_held(
+		struct wlan_objmgr_pdev *pdev, u32 desc_id,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info);
+
+/**
  * tgt_mgmt_txrx_get_nbuf_from_desc_id() - extracts nbuf from mgmt desc
  * @pdev: pdev context
  * @desc_id: desc_id
@@ -95,6 +173,20 @@ struct wlan_objmgr_peer *
 tgt_mgmt_txrx_get_peer_from_desc_id(
 			struct wlan_objmgr_pdev *pdev,
 			uint32_t desc_id);
+
+/**
+ * tgt_mgmt_txrx_drop_desc_id() - drops a late mgmt desc without nbuf cleanup
+ * @pdev: pdev context
+ * @desc_id: desc_id
+ *
+ * This function is used for late teardown completions where the host must
+ * retire the descriptor without re-entering the normal completion/free path.
+ *
+ * Return: QDF_STATUS_SUCCESS - in case of success
+ *         error status - in case of failure
+ */
+QDF_STATUS
+tgt_mgmt_txrx_drop_desc_id(struct wlan_objmgr_pdev *pdev, u32 desc_id);
 
 /**
  * tgt_mgmt_txrx_get_vdev_id_from_desc_id() - extracts vdev id from mgmt desc

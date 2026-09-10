@@ -839,8 +839,12 @@ wlan_lmac_if_mgmt_txrx_rx_ops_register(struct wlan_lmac_if_rx_ops *rx_ops)
 	/* mgmt txrx rx ops */
 	mgmt_txrx_rx_ops = &rx_ops->mgmt_txrx_rx_ops;
 
+	mgmt_txrx_rx_ops->mgmt_txrx_acquire_desc =
+			tgt_mgmt_txrx_acquire_desc;
 	mgmt_txrx_rx_ops->mgmt_tx_completion_handler =
 			tgt_mgmt_txrx_tx_completion_handler;
+	mgmt_txrx_rx_ops->mgmt_tx_completion_handler_held =
+			tgt_mgmt_txrx_tx_completion_handler_held;
 	mgmt_txrx_rx_ops->mgmt_rx_frame_handler =
 			tgt_mgmt_txrx_rx_frame_handler;
 	mgmt_txrx_rx_ops->mgmt_txrx_get_nbuf_from_desc_id =
@@ -849,6 +853,10 @@ wlan_lmac_if_mgmt_txrx_rx_ops_register(struct wlan_lmac_if_rx_ops *rx_ops)
 			tgt_mgmt_txrx_get_peer_from_desc_id;
 	mgmt_txrx_rx_ops->mgmt_txrx_get_vdev_id_from_desc_id =
 			tgt_mgmt_txrx_get_vdev_id_from_desc_id;
+	mgmt_txrx_rx_ops->mgmt_txrx_drop_desc =
+			tgt_mgmt_txrx_drop_desc_id;
+	mgmt_txrx_rx_ops->mgmt_txrx_drop_desc_held =
+			tgt_mgmt_txrx_drop_desc_id_held;
 	mgmt_txrx_rx_ops->mgmt_txrx_get_free_desc_pool_count =
 			tgt_mgmt_txrx_get_free_desc_pool_count;
 	mgmt_txrx_rx_ops->mgmt_rx_frame_entry =
@@ -856,6 +864,89 @@ wlan_lmac_if_mgmt_txrx_rx_ops_register(struct wlan_lmac_if_rx_ops *rx_ops)
 
 	return wlan_lmac_if_mgmt_rx_reo_rx_ops_register(mgmt_txrx_rx_ops);
 }
+
+QDF_STATUS mgmt_txrx_acquire_desc(
+		struct wlan_objmgr_pdev *pdev, uint32_t desc_id,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info)
+{
+	struct wlan_lmac_if_mgmt_txrx_rx_ops *mgmt_rx_ops;
+	struct wlan_objmgr_psoc *psoc;
+
+	if (!pdev)
+		return QDF_STATUS_E_NULL_VALUE;
+
+	psoc = wlan_pdev_get_psoc(pdev);
+	mgmt_rx_ops = wlan_lmac_if_get_mgmt_txrx_rx_ops(psoc);
+
+	if (mgmt_rx_ops && mgmt_rx_ops->mgmt_txrx_acquire_desc)
+		return mgmt_rx_ops->mgmt_txrx_acquire_desc(pdev, desc_id,
+							   desc_info);
+
+	return tgt_mgmt_txrx_acquire_desc(pdev, desc_id, desc_info);
+}
+qdf_export_symbol(mgmt_txrx_acquire_desc);
+
+QDF_STATUS mgmt_txrx_tx_completion_handler_held(
+		struct wlan_objmgr_pdev *pdev, uint32_t desc_id,
+		uint32_t status, void *params,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info)
+{
+	struct wlan_lmac_if_mgmt_txrx_rx_ops *mgmt_rx_ops;
+	struct wlan_objmgr_psoc *psoc;
+
+	if (!pdev)
+		return QDF_STATUS_E_NULL_VALUE;
+
+	psoc = wlan_pdev_get_psoc(pdev);
+	mgmt_rx_ops = wlan_lmac_if_get_mgmt_txrx_rx_ops(psoc);
+
+	if (mgmt_rx_ops && mgmt_rx_ops->mgmt_tx_completion_handler_held)
+		return mgmt_rx_ops->mgmt_tx_completion_handler_held(
+				pdev, desc_id, status, params, desc_info);
+
+	return tgt_mgmt_txrx_tx_completion_handler_held(pdev, desc_id, status,
+							params, desc_info);
+}
+qdf_export_symbol(mgmt_txrx_tx_completion_handler_held);
+
+QDF_STATUS mgmt_txrx_drop_desc(struct wlan_objmgr_pdev *pdev, uint32_t desc_id)
+{
+	struct wlan_lmac_if_mgmt_txrx_rx_ops *mgmt_rx_ops;
+	struct wlan_objmgr_psoc *psoc;
+
+	if (!pdev)
+		return QDF_STATUS_E_NULL_VALUE;
+
+	psoc = wlan_pdev_get_psoc(pdev);
+	mgmt_rx_ops = wlan_lmac_if_get_mgmt_txrx_rx_ops(psoc);
+
+	if (mgmt_rx_ops && mgmt_rx_ops->mgmt_txrx_drop_desc)
+		return mgmt_rx_ops->mgmt_txrx_drop_desc(pdev, desc_id);
+
+	return tgt_mgmt_txrx_drop_desc_id(pdev, desc_id);
+}
+qdf_export_symbol(mgmt_txrx_drop_desc);
+
+QDF_STATUS mgmt_txrx_drop_desc_held(
+		struct wlan_objmgr_pdev *pdev, uint32_t desc_id,
+		struct wlan_lmac_if_mgmt_txrx_desc_info *desc_info)
+{
+	struct wlan_lmac_if_mgmt_txrx_rx_ops *mgmt_rx_ops;
+	struct wlan_objmgr_psoc *psoc;
+
+	if (!pdev)
+		return QDF_STATUS_E_NULL_VALUE;
+
+	psoc = wlan_pdev_get_psoc(pdev);
+	mgmt_rx_ops = wlan_lmac_if_get_mgmt_txrx_rx_ops(psoc);
+
+	if (mgmt_rx_ops && mgmt_rx_ops->mgmt_txrx_drop_desc_held)
+		return mgmt_rx_ops->mgmt_txrx_drop_desc_held(pdev, desc_id,
+							     desc_info);
+
+	return tgt_mgmt_txrx_drop_desc_id_held(pdev, desc_id, desc_info);
+}
+qdf_export_symbol(mgmt_txrx_drop_desc_held);
 
 #if defined(WLAN_DFS_PARTIAL_OFFLOAD) && defined(HOST_DFS_SPOOF_TEST)
 static void dfs_action_on_status_assign(

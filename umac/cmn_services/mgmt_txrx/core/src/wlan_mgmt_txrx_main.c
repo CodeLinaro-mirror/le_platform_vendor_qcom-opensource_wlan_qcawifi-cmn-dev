@@ -149,6 +149,7 @@ struct mgmt_txrx_desc_elem_t *wlan_mgmt_txrx_desc_get(
 	mgmt_txrx_desc = qdf_container_of(desc_node,
 					  struct mgmt_txrx_desc_elem_t,
 					  entry);
+	mgmt_txrx_desc->completion_in_progress = false;
 	mgmt_txrx_desc->in_use = true;
 
 	qdf_spin_unlock_bh(&mgmt_txrx_pdev_ctx->mgmt_desc_pool.desc_pool_lock);
@@ -179,6 +180,7 @@ void wlan_mgmt_txrx_desc_put(
 		return;
 	}
 	desc->in_use = false;
+	desc->completion_in_progress = false;
 	desc->context = NULL;
 	desc->peer = NULL;
 	desc->nbuf = NULL;

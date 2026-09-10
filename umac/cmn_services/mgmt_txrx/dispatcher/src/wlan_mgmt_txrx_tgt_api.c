@@ -1631,16 +1631,35 @@ QDF_STATUS tgt_mgmt_txrx_tx_completion_handler(
 			uint32_t desc_id, uint32_t status,
 			void *tx_compl_params)
 {
+	struct wlan_lmac_if_mgmt_txrx_desc_info desc_info = {0};
+	QDF_STATUS qdf_status;
+
+	qdf_status = tgt_mgmt_txrx_acquire_desc(pdev, desc_id, &desc_info);
+	if (QDF_IS_STATUS_ERROR(qdf_status))
+		return qdf_status;
+
+	return tgt_mgmt_txrx_tx_completion_handler_held(pdev, desc_id, status,
+							tx_compl_params,
+							&desc_info);
+}
+
+static QDF_STATUS
+tgt_mgmt_txrx_acquire_desc_internal(struct wlan_objmgr_pdev *pdev, u32 desc_id,
+				    struct wlan_lmac_if_mgmt_txrx_desc_info
+					    *desc_info,
+				    bool validate_vdev_id,
+				    u8 expected_vdev_id)
+{
 	struct mgmt_txrx_priv_pdev_context *mgmt_txrx_pdev_ctx;
 	struct mgmt_txrx_desc_elem_t *mgmt_desc;
-	void *cb_context;
-	mgmt_tx_download_comp_cb tx_compl_cb;
-	mgmt_ota_comp_cb  ota_comp_cb;
-	qdf_nbuf_t nbuf;
 
+	if (!desc_info)
+		return QDF_STATUS_E_INVAL;
+
+	qdf_mem_zero(desc_info, sizeof(*desc_info));
 	mgmt_txrx_pdev_ctx = (struct mgmt_txrx_priv_pdev_context *)
-			wlan_objmgr_pdev_get_comp_private_obj(pdev,
-				WLAN_UMAC_COMP_MGMT_TXRX);
+		wlan_objmgr_pdev_get_comp_private_obj(pdev,
+						      WLAN_UMAC_COMP_MGMT_TXRX);
 	if (!mgmt_txrx_pdev_ctx) {
 		mgmt_txrx_err("Mgmt txrx context empty for pdev %pK", pdev);
 		return QDF_STATUS_E_NULL_VALUE;
@@ -1650,15 +1669,84 @@ QDF_STATUS tgt_mgmt_txrx_tx_completion_handler(
 		return QDF_STATUS_E_INVAL;
 	}
 	mgmt_desc = &mgmt_txrx_pdev_ctx->mgmt_desc_pool.pool[desc_id];
+	qdf_spin_lock_bh(&mgmt_txrx_pdev_ctx->mgmt_desc_pool.desc_pool_lock);
 	if (!mgmt_desc || !mgmt_desc->in_use) {
+		qdf_spin_unlock_bh(
+			&mgmt_txrx_pdev_ctx->mgmt_desc_pool.desc_pool_lock);
 		mgmt_txrx_err("Mgmt desc empty for id %d pdev %pK ",
-				desc_id, pdev);
+			      desc_id, pdev);
 		return QDF_STATUS_E_NULL_VALUE;
 	}
-	tx_compl_cb = mgmt_desc->tx_dwnld_cmpl_cb;
-	ota_comp_cb = mgmt_desc->tx_ota_cmpl_cb;
-	nbuf = mgmt_desc->nbuf;
+	if (validate_vdev_id && mgmt_desc->vdev_id != expected_vdev_id) {
+		qdf_spin_unlock_bh(
+			&mgmt_txrx_pdev_ctx->mgmt_desc_pool.desc_pool_lock);
+		return QDF_STATUS_E_INVAL;
+	}
+	if (mgmt_desc->completion_in_progress) {
+		qdf_spin_unlock_bh(
+			&mgmt_txrx_pdev_ctx->mgmt_desc_pool.desc_pool_lock);
+		mgmt_txrx_debug("Mgmt desc busy for id %d pdev %pK",
+				desc_id, pdev);
+		return QDF_STATUS_E_ALREADY;
+	}
+	if (!mgmt_desc->nbuf) {
+		qdf_spin_unlock_bh(
+			&mgmt_txrx_pdev_ctx->mgmt_desc_pool.desc_pool_lock);
+		mgmt_txrx_err("Mgmt desc missing nbuf for id %d pdev %pK",
+			      desc_id, pdev);
+		return QDF_STATUS_E_NULL_VALUE;
+	}
+	mgmt_desc->completion_in_progress = true;
+	desc_info->nbuf = mgmt_desc->nbuf;
+	desc_info->peer = mgmt_desc->peer;
+	desc_info->context = mgmt_desc->context;
+	desc_info->tx_dwnld_cmpl_cb = mgmt_desc->tx_dwnld_cmpl_cb;
+	desc_info->tx_ota_cmpl_cb = mgmt_desc->tx_ota_cmpl_cb;
+	qdf_spin_unlock_bh(&mgmt_txrx_pdev_ctx->mgmt_desc_pool.desc_pool_lock);
 
+	return QDF_STATUS_SUCCESS;
+}
+
+QDF_STATUS
+tgt_mgmt_txrx_acquire_desc(struct wlan_objmgr_pdev *pdev, u32 desc_id,
+			   struct wlan_lmac_if_mgmt_txrx_desc_info
+				   *desc_info)
+{
+	return tgt_mgmt_txrx_acquire_desc_internal(pdev, desc_id, desc_info,
+						   false,
+						   WLAN_UMAC_VDEV_ID_MAX);
+}
+
+QDF_STATUS
+tgt_mgmt_txrx_acquire_desc_by_vdev(struct wlan_objmgr_pdev *pdev, u32 desc_id,
+				   u8 expected_vdev_id,
+				   struct wlan_lmac_if_mgmt_txrx_desc_info
+					   *desc_info)
+{
+	return tgt_mgmt_txrx_acquire_desc_internal(pdev, desc_id, desc_info,
+						   true, expected_vdev_id);
+}
+
+QDF_STATUS
+tgt_mgmt_txrx_tx_completion_handler_held(struct wlan_objmgr_pdev *pdev,
+					 u32 desc_id, u32 status,
+					 void *tx_compl_params,
+					 struct wlan_lmac_if_mgmt_txrx_desc_info
+						 *desc_info)
+{
+	struct mgmt_txrx_priv_pdev_context *mgmt_txrx_pdev_ctx;
+	void *cb_context;
+
+	if (!desc_info)
+		return QDF_STATUS_E_INVAL;
+
+	mgmt_txrx_pdev_ctx = (struct mgmt_txrx_priv_pdev_context *)
+		wlan_objmgr_pdev_get_comp_private_obj(pdev,
+						      WLAN_UMAC_COMP_MGMT_TXRX);
+	if (!mgmt_txrx_pdev_ctx) {
+		mgmt_txrx_err("Mgmt txrx context empty for pdev %pK", pdev);
+		return QDF_STATUS_E_NULL_VALUE;
+	}
 	/*
 	 *      TO DO
 	 * Make the API more generic to handle tx download completion as well
@@ -1675,28 +1763,31 @@ QDF_STATUS tgt_mgmt_txrx_tx_completion_handler(
 	 *    calling mgmt txrx API for sending mgmt frame. This caller specific
 	 *    context is passed as cb_context in completion callbacks.
 	 */
-	if (mgmt_desc->context)
-		cb_context = mgmt_desc->context;
+	if (desc_info->context)
+		cb_context = desc_info->context;
 	else
-		cb_context = (void *)mgmt_desc->peer;
+		cb_context = (void *)desc_info->peer;
 
-	if (!tx_compl_cb && !ota_comp_cb) {
-		qdf_nbuf_free(nbuf);
+	if (!desc_info->tx_dwnld_cmpl_cb && !desc_info->tx_ota_cmpl_cb) {
+		qdf_nbuf_free(desc_info->nbuf);
 		goto no_registered_cb;
 	}
 
-	if (tx_compl_cb)
-		tx_compl_cb(cb_context, nbuf, status);
+	if (desc_info->tx_dwnld_cmpl_cb)
+		desc_info->tx_dwnld_cmpl_cb(cb_context, desc_info->nbuf,
+						 status);
 
-	if (ota_comp_cb)
-		ota_comp_cb(cb_context, nbuf, status, tx_compl_params);
+	if (desc_info->tx_ota_cmpl_cb)
+		desc_info->tx_ota_cmpl_cb(cb_context, desc_info->nbuf, status,
+					  tx_compl_params);
 
 no_registered_cb:
 	/*
 	 * decrementing the peer ref count that was incremented while
 	 * accessing peer in wlan_mgmt_txrx_mgmt_frame_tx
 	 */
-	wlan_objmgr_peer_release_ref(mgmt_desc->peer, WLAN_MGMT_NB_ID);
+	if (desc_info->peer)
+		wlan_objmgr_peer_release_ref(desc_info->peer, WLAN_MGMT_NB_ID);
 	wlan_mgmt_txrx_desc_put(mgmt_txrx_pdev_ctx, desc_id);
 	return QDF_STATUS_SUCCESS;
 }
@@ -1750,6 +1841,10 @@ tgt_mgmt_txrx_get_peer_from_desc_id(
 		mgmt_txrx_err("Mgmt txrx context empty for pdev %pK", pdev);
 		goto fail;
 	}
+	if (desc_id >= MGMT_DESC_POOL_MAX) {
+		mgmt_txrx_err("desc_id:%u is out of bounds", desc_id);
+		goto fail;
+	}
 
 	mgmt_desc = &mgmt_txrx_pdev_ctx->mgmt_desc_pool.pool[desc_id];
 	if (!mgmt_desc || !mgmt_desc->in_use) {
@@ -1763,6 +1858,62 @@ tgt_mgmt_txrx_get_peer_from_desc_id(
 
 fail:
 	return NULL;
+}
+
+QDF_STATUS
+tgt_mgmt_txrx_drop_desc_id(struct wlan_objmgr_pdev *pdev, u32 desc_id)
+{
+	struct wlan_lmac_if_mgmt_txrx_desc_info desc_info = {0};
+	QDF_STATUS qdf_status;
+
+	qdf_status = tgt_mgmt_txrx_acquire_desc(pdev, desc_id, &desc_info);
+	if (QDF_IS_STATUS_ERROR(qdf_status))
+		return qdf_status;
+
+	return tgt_mgmt_txrx_drop_desc_id_held(pdev, desc_id, &desc_info);
+}
+
+QDF_STATUS
+tgt_mgmt_txrx_drop_desc_id_held(struct wlan_objmgr_pdev *pdev, u32 desc_id,
+				struct wlan_lmac_if_mgmt_txrx_desc_info
+					*desc_info)
+{
+	struct mgmt_txrx_priv_pdev_context *mgmt_txrx_pdev_ctx;
+	struct mgmt_txrx_desc_elem_t *mgmt_desc;
+
+	if (!desc_info)
+		return QDF_STATUS_E_INVAL;
+	mgmt_txrx_pdev_ctx = (struct mgmt_txrx_priv_pdev_context *)
+		wlan_objmgr_pdev_get_comp_private_obj(pdev,
+						      WLAN_UMAC_COMP_MGMT_TXRX);
+	if (!mgmt_txrx_pdev_ctx) {
+		mgmt_txrx_err("Mgmt txrx context empty for pdev %pK", pdev);
+		return QDF_STATUS_E_NULL_VALUE;
+	}
+	if (desc_id >= MGMT_DESC_POOL_MAX) {
+		mgmt_txrx_err("desc_id:%u is out of bounds", desc_id);
+		return QDF_STATUS_E_INVAL;
+	}
+
+	mgmt_desc = &mgmt_txrx_pdev_ctx->mgmt_desc_pool.pool[desc_id];
+	if (!mgmt_desc || !mgmt_desc->in_use) {
+		mgmt_txrx_err("Mgmt descriptor unavailable for id %d pdev %pK",
+			      desc_id, pdev);
+		return QDF_STATUS_E_NULL_VALUE;
+	}
+	if (!mgmt_desc->completion_in_progress) {
+		mgmt_txrx_err("Mgmt descriptor %d pdev %pK is not claimed",
+			      desc_id, pdev);
+		return QDF_STATUS_E_ALREADY;
+	}
+	if (desc_info->peer)
+		wlan_objmgr_peer_release_ref(desc_info->peer, WLAN_MGMT_NB_ID);
+
+	mgmt_txrx_err_rl("Drop late mgmt completion desc_id:%u nbuf:%pK",
+			 desc_id, desc_info->nbuf);
+	wlan_mgmt_txrx_desc_put(mgmt_txrx_pdev_ctx, desc_id);
+
+	return QDF_STATUS_SUCCESS;
 }
 
 uint8_t tgt_mgmt_txrx_get_vdev_id_from_desc_id(

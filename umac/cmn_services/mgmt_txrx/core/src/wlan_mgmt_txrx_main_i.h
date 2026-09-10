@@ -109,6 +109,7 @@ struct mgmt_txrx_desc_elem_t {
 	struct wlan_objmgr_peer *peer;
 	void *context;
 	uint8_t vdev_id;
+	bool completion_in_progress;
 	bool in_use;
 };
 

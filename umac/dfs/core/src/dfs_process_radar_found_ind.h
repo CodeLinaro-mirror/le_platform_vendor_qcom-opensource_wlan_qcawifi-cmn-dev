@@ -29,12 +29,13 @@
 #include "dfs_partial_offload_radar.h"
 
 #define BW_INVALID    0
-#define BW_10        10
-#define BW_20        20
-#define BW_40        40
-#define BW_80        80
-#define BW_160      160
-#define BW_320      320
+#define BW_5          5
+#define BW_10         10
+#define BW_20         20
+#define BW_40         40
+#define BW_80         80
+#define BW_160        160
+#define BW_320        320
 /**
  * dfs_flush_additional_pulses() - Reset dfs radar detection related
  * variables and queues after processing radar and disabling phyerror reception.
