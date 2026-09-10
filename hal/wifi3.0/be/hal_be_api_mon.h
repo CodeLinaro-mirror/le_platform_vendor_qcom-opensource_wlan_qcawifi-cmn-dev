@@ -3194,6 +3194,10 @@ hal_rx_status_get_tlv_info_generic_be(void *rx_tlv_hdr, void *ppduinfo,
 
 		ppdu_info->rx_status.nss = rx_ppdu_end_user->nss + 1;
 		ppdu_info->rx_status.mcs = rx_ppdu_end_user->mcs;
+		if (ppdu_info->rx_status.preamble_type == HAL_RX_PKT_TYPE_11N)
+			ppdu_info->rx_status.ht_mcs =
+				ppdu_info->rx_status.mcs +
+				HT_MCS_NSS_OFFSET * (ppdu_info->rx_status.nss - 1);
 
 		if (user_id < HAL_MAX_UL_MU_USERS) {
 			mon_rx_user_status =
