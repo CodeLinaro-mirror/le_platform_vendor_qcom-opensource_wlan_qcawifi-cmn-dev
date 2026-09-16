@@ -23026,9 +23026,11 @@ extract_vendor_pdev_event_tlv(wmi_unified_t wmi_handle,
 	if(evt_param->sub_type == WMI_PDEV_VENDOR_EVT_PRIV_CSA ) {
 		wmi_pdev_vendor_csa_param *csa_param =
 			(wmi_pdev_vendor_csa_param *)&evt_fixed_hdr->evt;
-		wmi_debug("PRIV_CSA::channel width = %u, channel number = %u",
-			  csa_param->channel_bw, csa_param->channel_num);
+		wmi_debug("PRIV_CSA::channel width = %u, channel band = %u, channel number = %u",
+			  csa_param->channel_bw, csa_param->channel_band,
+			  csa_param->channel_num);
 		evt_param->evt.csa_param.chwidth = csa_param->channel_bw;
+		evt_param->evt.csa_param.band = csa_param->channel_band;
 		evt_param->evt.csa_param.chan_num = csa_param->channel_num;
 	}
 	return QDF_STATUS_SUCCESS;
