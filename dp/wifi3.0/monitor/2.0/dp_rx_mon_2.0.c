@@ -815,6 +815,84 @@ dp_rx_mon_handle_msdu_end(struct dp_pdev *pdev,
 	qdf_mem_zero(msdu_info, sizeof(*msdu_info));
 }
 
+
+static inline bool
+dp_rx_mon_is_desc_from_pool(struct dp_mon_desc_pool *mon_desc_pool,
+			    struct dp_mon_desc *mon_desc)
+{
+	uintptr_t desc_addr;
+	uintptr_t pool_start;
+	uintptr_t pool_end;
+	uintptr_t elem_size = sizeof(union dp_mon_desc_list_elem_t);
+
+	if (!mon_desc_pool || !mon_desc_pool->array ||
+	    !mon_desc_pool->pool_size || !mon_desc)
+		return false;
+
+	desc_addr = (uintptr_t)mon_desc;
+	pool_start = (uintptr_t)&mon_desc_pool->array[0].mon_desc;
+	if (mon_desc_pool->pool_size >
+	    (~(uintptr_t)0 - pool_start) / elem_size)
+		return false;
+	pool_end = pool_start + mon_desc_pool->pool_size * elem_size;
+
+	return desc_addr >= pool_start && desc_addr < pool_end &&
+	       !((desc_addr - pool_start) % elem_size);
+}
+
+static inline bool
+dp_rx_mon_validate_mon_desc(struct dp_mon_desc_pool *mon_desc_pool,
+			    struct dp_mon_desc *mon_desc,
+			    unsigned long long desc,
+			    uint32_t cookie_2,
+			    struct dp_mon_mac *mon_mac)
+{
+	bool valid_desc;
+
+	valid_desc = dp_rx_mon_is_desc_from_pool(
+		mon_desc_pool, mon_desc);
+	if (qdf_unlikely(!valid_desc ||
+			 !mon_desc->in_use ||
+			 mon_desc->magic != DP_MON_DESC_MAGIC)) {
+		dp_mon_debug("invalid mon desc:%pK valid:%d in_use:%d magic:0x%x",
+			     mon_desc, valid_desc,
+			     valid_desc ? mon_desc->in_use : -1,
+			     valid_desc ? mon_desc->magic : 0);
+		return false;
+	}
+
+	if (mon_desc->cookie_2 != cookie_2) {
+		mon_mac->rx_mon_stats.dup_mon_sw_desc++;
+		qdf_err("duplicate cookie desc:0x%llx "
+			"mon_desc:%pK hw_cookie_2:%u sw_cookie_2:%u",
+			desc, mon_desc, cookie_2, mon_desc->cookie_2);
+		return false;
+	}
+
+	return true;
+}
+
+static inline bool
+dp_rx_mon_check_duplicate_pkt_desc(
+	struct dp_mon_pdev *mon_pdev,
+	struct dp_mon_pdev_be *mon_pdev_be,
+	struct dp_mon_desc *mon_desc,
+	struct dp_mon_mac *mon_mac)
+{
+	if ((mon_desc == mon_pdev_be->prev_rxmon_pkt_desc) &&
+	    (mon_desc->cookie == mon_pdev_be->prev_rxmon_pkt_cookie)) {
+		dp_mon_err("duplicate pkt desc found mon_pdev: %pK mon_desc: %pK cookie: %d",
+			   mon_pdev, mon_desc,
+			   mon_desc->cookie);
+		mon_mac->rx_mon_stats.dup_mon_buf_cnt++;
+		return true;
+	}
+
+	mon_pdev_be->prev_rxmon_pkt_desc = mon_desc;
+	mon_pdev_be->prev_rxmon_pkt_cookie = mon_desc->cookie;
+	return false;
+}
+
 /**
  * dp_rx_mon_handle_mon_buf_addr() - Process MON BUF ADDR TLV
  *
@@ -833,6 +911,8 @@ dp_rx_mon_handle_mon_buf_addr(struct dp_pdev *pdev,
 {
 	struct dp_soc *soc = pdev->soc;
 	struct dp_mon_soc *mon_soc = soc->monitor_soc;
+	struct dp_mon_soc_be *mon_soc_be =
+		dp_get_be_mon_soc_from_dp_mon_soc(mon_soc);
 	struct dp_mon_pdev *mon_pdev = pdev->monitor_pdev;
 	struct dp_mon_pdev_be *mon_pdev_be =
 			dp_get_be_mon_pdev_from_dp_mon_pdev(mon_pdev);
@@ -862,31 +942,14 @@ dp_rx_mon_handle_mon_buf_addr(struct dp_pdev *pdev,
 
 	cookie_2 = DP_MON_GET_COOKIE(desc);
 	mon_desc = dp_mon_get_desc_addr(desc);
-	qdf_assert_always(mon_desc);
-
-	if (mon_desc->cookie_2 != cookie_2) {
-		mon_mac->rx_mon_stats.dup_mon_sw_desc++;
-		qdf_err("duplicate cookie found mon_desc:%pK", mon_desc);
-		qdf_assert_always(0);
-	}
-
-	if (mon_desc->magic != DP_MON_DESC_MAGIC)
-		qdf_assert_always(0);
-
-	/* WAR: sometimes duplicate pkt desc are received
-	 * from HW this check gracefully handles
-	 * such cases.
-	 */
-	if ((mon_desc == mon_pdev_be->prev_rxmon_pkt_desc) &&
-	    (mon_desc->cookie == mon_pdev_be->prev_rxmon_pkt_cookie)) {
-		dp_mon_err("duplicate pkt desc found mon_pdev: %pK mon_desc: %pK cookie: %d",
-			   mon_pdev, mon_desc,
-			   mon_desc->cookie);
-		mon_mac->rx_mon_stats.dup_mon_buf_cnt++;
+	if (!dp_rx_mon_validate_mon_desc(&mon_soc_be->rx_desc_mon,
+					 mon_desc, desc, cookie_2,
+					 mon_mac))
 		return num_buf_reaped;
-	}
-	mon_pdev_be->prev_rxmon_pkt_desc = mon_desc;
-	mon_pdev_be->prev_rxmon_pkt_cookie = mon_desc->cookie;
+
+	if (dp_rx_mon_check_duplicate_pkt_desc(
+			mon_pdev, mon_pdev_be, mon_desc, mon_mac))
+		return num_buf_reaped;
 
 	addr = mon_desc->buf_addr;
 	qdf_assert_always(addr);
@@ -1928,6 +1991,8 @@ dp_rx_mon_flush_packet_tlv(struct dp_pdev *pdev, void *buf, uint16_t end_offset,
 	struct dp_mon_pdev_be *mon_pdev_be =
 			dp_get_be_mon_pdev_from_dp_mon_pdev(mon_pdev);
 	struct dp_mon_soc *mon_soc = soc->monitor_soc;
+	struct dp_mon_soc_be *mon_soc_be =
+		dp_get_be_mon_soc_from_dp_mon_soc(mon_soc);
 	uint16_t work_done = 0;
 	qdf_frag_t addr;
 	uint8_t *rx_tlv;
@@ -1962,30 +2027,15 @@ dp_rx_mon_flush_packet_tlv(struct dp_pdev *pdev, void *buf, uint16_t end_offset,
 
 			cookie_2 = DP_MON_GET_COOKIE(desc);
 			mon_desc = dp_mon_get_desc_addr(desc);
-
-			qdf_assert_always(mon_desc);
-
-			if (mon_desc->cookie_2 != cookie_2) {
-				mon_mac->rx_mon_stats.dup_mon_sw_desc++;
-				qdf_err("duplicate cookie found mon_desc:%pK", mon_desc);
-				qdf_assert_always(0);
-			}
-
-			/* WAR: sometimes duplicate pkt desc are received
-			 * from HW, this check gracefully handles
-			 * such cases.
-			 */
-			if ((mon_desc == mon_pdev_be->prev_rxmon_pkt_desc) &&
-			    (mon_desc->cookie ==
-			     mon_pdev_be->prev_rxmon_pkt_cookie)) {
-				dp_mon_err("duplicate pkt desc found mon_pdev: %pK mon_desc: %pK cookie: %d",
-					   mon_pdev, mon_desc,
-					   mon_desc->cookie);
-				mon_mac->rx_mon_stats.dup_mon_buf_cnt++;
+			if (!dp_rx_mon_validate_mon_desc(
+					&mon_soc_be->rx_desc_mon,
+					mon_desc, desc, cookie_2, mon_mac))
 				goto end;
-			}
-			mon_pdev_be->prev_rxmon_pkt_desc = mon_desc;
-			mon_pdev_be->prev_rxmon_pkt_cookie = mon_desc->cookie;
+
+			if (dp_rx_mon_check_duplicate_pkt_desc(
+					mon_pdev, mon_pdev_be,
+					mon_desc, mon_mac))
+				goto end;
 
 			addr = mon_desc->buf_addr;
 
@@ -2595,29 +2645,6 @@ dp_rx_mon_cookie_2_after(uint32_t cookie_a, uint32_t cookie_b)
 	return delta && delta < DP_RX_MON_COOKIE_2_HALF;
 }
 
-static inline bool
-dp_rx_mon_is_desc_from_pool(struct dp_mon_desc_pool *mon_desc_pool,
-			    struct dp_mon_desc *mon_desc)
-{
-	uintptr_t desc_addr;
-	uintptr_t pool_start;
-	uintptr_t pool_end;
-	uintptr_t elem_size = sizeof(union dp_mon_desc_list_elem_t);
-
-	if (!mon_desc_pool || !mon_desc_pool->array || !mon_desc_pool->pool_size ||
-	    !mon_desc)
-		return false;
-
-	desc_addr = (uintptr_t)mon_desc;
-	pool_start = (uintptr_t)&mon_desc_pool->array[0].mon_desc;
-	if (mon_desc_pool->pool_size >
-	    (~(uintptr_t)0 - pool_start) / elem_size)
-		return false;
-	pool_end = pool_start + mon_desc_pool->pool_size * elem_size;
-
-	return desc_addr >= pool_start && desc_addr < pool_end &&
-	       !((desc_addr - pool_start) % elem_size);
-}
 
 static inline uint32_t
 dp_rx_mon_srng_process_2_0(struct dp_soc *soc, struct dp_intr *int_ctx,
