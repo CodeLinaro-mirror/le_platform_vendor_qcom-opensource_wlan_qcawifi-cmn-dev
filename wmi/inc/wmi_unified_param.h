@@ -10717,7 +10717,8 @@ struct wmi_vendor_pdev_event {
 	union wmi_host_pdev_vendor_event_val val;
 	union {
 		struct {
-			uint16_t chwidth;
+			uint8_t chwidth;
+			uint8_t band;
 			uint16_t chan_num;
 		} csa_param;
 	} evt;

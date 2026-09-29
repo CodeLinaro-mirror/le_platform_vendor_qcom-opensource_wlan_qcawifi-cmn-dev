@@ -54,6 +54,15 @@ qdf_ktime_t qdf_ns_to_ktime(uint64_t ns);
 qdf_ktime_t qdf_ktime_add(qdf_ktime_t ktime1, qdf_ktime_t ktime2);
 
 /**
+ * qdf_ktime_sub() - Subtracts one qdf_ktime_t object from another
+ * @ktime1: time as qdf_ktime_t object
+ * @ktime2: time as qdf_ktime_t object
+ *
+ * Return: difference of ktime1 - ktime2 as qdf_ktime_t object
+ */
+qdf_ktime_t qdf_ktime_sub(qdf_ktime_t ktime1, qdf_ktime_t ktime2);
+
+/**
  * qdf_ktime_get() - Gets the current time as qdf_ktime_t object
  *
  * Return: current time as qdf_ktime_t object
@@ -343,6 +352,11 @@ static inline qdf_ktime_t qdf_ns_to_ktime(uint64_t ns)
 static inline qdf_ktime_t qdf_ktime_add(qdf_ktime_t ktime1, qdf_ktime_t ktime2)
 {
 	return __qdf_ktime_add(ktime1, ktime2);
+}
+
+static inline qdf_ktime_t qdf_ktime_sub(qdf_ktime_t ktime1, qdf_ktime_t ktime2)
+{
+	return ktime_sub(ktime1, ktime2);
 }
 
 static inline qdf_ktime_t qdf_ktime_get(void)

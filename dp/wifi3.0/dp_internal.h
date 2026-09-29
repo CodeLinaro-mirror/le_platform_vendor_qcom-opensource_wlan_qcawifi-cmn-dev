@@ -5047,6 +5047,37 @@ dp_pdev_htt_stats_dbgfs_deinit(struct dp_pdev *pdev)
 }
 #endif /* HTT_STATS_DEBUGFS_SUPPORT */
 
+#ifdef WLAN_FEATURE_DP_TX_PIPELINE_HIST
+/**
+ * dp_tx_pipeline_hist_dbgfs_init() - create debugfs files for TX pipeline
+ *                                    latency histogram under a vdev
+ * @vdev: DP vdev handle
+ *
+ * Return: QDF_STATUS
+ */
+QDF_STATUS dp_tx_pipeline_hist_dbgfs_init(struct dp_vdev *vdev);
+
+/**
+ * dp_tx_pipeline_hist_dbgfs_deinit() - remove debugfs files for TX pipeline
+ *                                      latency histogram under a vdev
+ * @vdev: DP vdev handle
+ *
+ * Return: None
+ */
+void dp_tx_pipeline_hist_dbgfs_deinit(struct dp_vdev *vdev);
+#else
+static inline QDF_STATUS
+dp_tx_pipeline_hist_dbgfs_init(struct dp_vdev *vdev)
+{
+	return QDF_STATUS_SUCCESS;
+}
+
+static inline void
+dp_tx_pipeline_hist_dbgfs_deinit(struct dp_vdev *vdev)
+{
+}
+#endif /* WLAN_FEATURE_DP_TX_PIPELINE_HIST */
+
 #ifndef WLAN_DP_FEATURE_SW_LATENCY_MGR
 /**
  * dp_soc_swlm_attach() - attach the software latency manager resources

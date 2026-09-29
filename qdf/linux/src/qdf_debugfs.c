@@ -495,6 +495,40 @@ static int qdf_debugfs_single_open(struct inode *inode, struct file *file)
 			   inode->i_private);
 }
 
+/* .write() for simplified debugfs files */
+static ssize_t qdf_debugfs_simple_write(struct file *filp,
+					const char __user *ubuf,
+					size_t len, loff_t *ppos)
+{
+	struct qdf_debugfs_fops *fops;
+	struct seq_file *seq;
+	QDF_STATUS status;
+	u8 *buf;
+
+	if (!len)
+		return 0;
+
+	seq = filp->private_data;
+	fops = seq->private;
+	if (!fops || !fops->write)
+		return -EINVAL;
+
+	buf = qdf_mem_malloc(len + 1);
+	if (!buf)
+		return -ENOMEM;
+
+	buf[len] = '\0';
+	if (copy_from_user(buf, ubuf, len)) {
+		qdf_mem_free(buf);
+		return -EFAULT;
+	}
+
+	status = fops->write(fops->priv, buf, len);
+	qdf_mem_free(buf);
+
+	return QDF_IS_STATUS_SUCCESS(status) ? (ssize_t)len : -EINVAL;
+}
+
 /* File operations for the simplified version */
 static const struct file_operations qdf_debugfs_fops_simple = {
 	.owner          = THIS_MODULE,
@@ -502,6 +536,7 @@ static const struct file_operations qdf_debugfs_fops_simple = {
 	.release        = single_release,
 	.read           = seq_read,
 	.llseek         = seq_lseek,
+	.write          = qdf_debugfs_simple_write,
 };
 
 qdf_dentry_t qdf_debugfs_create_file_simplified(

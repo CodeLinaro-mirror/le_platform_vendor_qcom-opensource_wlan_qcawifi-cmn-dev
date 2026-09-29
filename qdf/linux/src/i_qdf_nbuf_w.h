@@ -602,6 +602,15 @@ QDF_COMPILE_TIME_ASSERT(qdf_nbuf_cb_size,
 #define __qdf_nbuf_get_tx_fctx(skb) \
 		 QDF_NBUF_CB_TX_FCTX((skb))
 
+#define __qdf_nbuf_set_tx_ts(skb, ts) \
+	do { (skb)->tstamp = (ts); } while (0)
+
+#define __qdf_nbuf_clear_tx_ts(skb) \
+	do { (skb)->tstamp = 0; } while (0)
+
+#define __qdf_nbuf_get_tx_ts(skb) \
+	((skb)->tstamp)
+
 #define QDF_NBUF_CB_RX_PROTOCOL_TAG(skb) \
 		(((struct qdf_nbuf_cb *)((skb)->cb))->u.rx.protocol_tag)
 

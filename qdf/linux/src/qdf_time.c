@@ -40,6 +40,13 @@ qdf_ktime_t qdf_ktime_add(qdf_ktime_t ktime1, qdf_ktime_t ktime2)
 
 qdf_export_symbol(qdf_ktime_add);
 
+qdf_ktime_t qdf_ktime_sub(qdf_ktime_t ktime1, qdf_ktime_t ktime2)
+{
+	return ktime_sub(ktime1, ktime2);
+}
+
+qdf_export_symbol(qdf_ktime_sub);
+
 qdf_ktime_t qdf_ktime_get(void)
 {
 	return __qdf_ktime_get();
